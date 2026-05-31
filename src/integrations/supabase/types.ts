@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      parts: {
+        Row: {
+          brand: string | null
+          category: string | null
+          city: string | null
+          condition: string
+          created_at: string
+          description: string | null
+          id: string
+          model: string | null
+          photos: string[]
+          price: number | null
+          seller_id: string
+          title: string
+          updated_at: string
+          whatsapp: string
+          year: number | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          city?: string | null
+          condition?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          model?: string | null
+          photos?: string[]
+          price?: number | null
+          seller_id: string
+          title: string
+          updated_at?: string
+          whatsapp: string
+          year?: number | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          city?: string | null
+          condition?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          model?: string | null
+          photos?: string[]
+          price?: number | null
+          seller_id?: string
+          title?: string
+          updated_at?: string
+          whatsapp?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          city: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
