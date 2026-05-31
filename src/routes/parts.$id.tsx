@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MessageCircle, MapPin, Calendar, Tag } from "lucide-react";
+import { ArrowLeft, MessageCircle, MapPin, Calendar, Tag, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/parts/$id")({
