@@ -118,11 +118,16 @@ function PartDetail() {
       </div>
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border safe-bottom">
-        <div className="max-w-md mx-auto p-3">
+        <div className="max-w-md mx-auto p-3 flex gap-3">
+          <a href={`tel:+${waNumber.startsWith("90") ? waNumber : `90${waNumber}`}`}
+            className="flex-1 flex items-center justify-center gap-2 h-14 rounded-xl bg-card border border-border text-foreground font-semibold text-sm active:scale-[0.98] transition-transform">
+            <Phone className="size-5 text-gold" />
+            Satıcıyı Ara
+          </a>
           <a href={waUrl} target="_blank" rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-2 h-14 rounded-xl bg-whatsapp text-white font-semibold text-base shadow-lg active:scale-[0.98] transition-transform">
-            <MessageCircle className="size-6" />
-            WhatsApp ile İletişime Geç
+            className="flex-1 flex items-center justify-center gap-2 h-14 rounded-xl bg-whatsapp text-white font-semibold text-sm shadow-lg active:scale-[0.98] transition-transform">
+            <MessageCircle className="size-5" />
+            WhatsApp'tan Yaz
           </a>
         </div>
       </div>
