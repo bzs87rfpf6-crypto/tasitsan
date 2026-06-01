@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { MapPin, Package } from "lucide-react";
+import { useState } from "react";
+import { ImageOff, MapPin, Package } from "lucide-react";
+import { getSafePartPhotos } from "@/lib/part-images";
 
 export interface Part {
   id: string;
@@ -15,14 +17,15 @@ export interface Part {
   oem_code?: string | null;
 }
 
-// Match the detail page: skip browser-unrenderable formats (HEIC, DNG, RAW…)
-// that would otherwise show a broken icon and waste decode bandwidth.
-const UNRENDERABLE_EXT = /\.(heic|heif|dng|raw|cr2|cr3|nef|arw|orf|rw2|tif|tiff)(\?|$)/i;
-
 export function PartCard({ part }: { part: Part }) {
-  const photo = (Array.isArray(part.photos) ? part.photos : []).find(
-    (u) => typeof u === "string" && u.trim() && !UNRENDERABLE_EXT.test(u),
-  );
+  const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
+  const photo = getSafePartPhotos(part.photos, brokenPhotos, 420)[0];
+
+  const markBroken = () => {
+    if (!photo) return;
+    console.warn("[part-card] image failed to load", { partId: part.id, image: photo.original });
+    setBrokenPhotos((prev) => new Set(prev).add(photo.original).add(photo.display));
+  };
 
   return (
     <Link
@@ -33,14 +36,19 @@ export function PartCard({ part }: { part: Part }) {
       <div className="aspect-square bg-secondary relative overflow-hidden">
         {photo ? (
           <img
-            src={photo}
+            src={photo.display}
             alt={part.title}
             loading="lazy"
+            decoding="async"
+            onError={markBroken}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full grid place-items-center text-muted-foreground text-xs">
-            Fotoğraf yok
+          <div className="w-full h-full grid place-items-center text-muted-foreground text-xs text-center px-2">
+            <div className="space-y-1">
+              <ImageOff className="size-6 mx-auto" />
+              <span>Fotoğraf yok</span>
+            </div>
           </div>
         )}
         <span className="absolute top-2 left-2 text-[10px] uppercase tracking-wider bg-background/80 text-gold px-2 py-0.5 rounded-full border border-gold/30">
