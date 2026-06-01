@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil, Trash2, Users as UsersIcon, LayoutDashboard, ClipboardList } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil, Trash2, Users as UsersIcon, LayoutDashboard, ClipboardList, AlertTriangle, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -133,6 +133,8 @@ function AdminPage() {
   const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PartItem | null>(null);
+  const [rejecting, setRejecting] = useState<PartItem | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
@@ -349,7 +351,11 @@ function AdminPage() {
           filteredParts.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
           ) : filteredParts.map((p) => (
-            <article key={p.id} className="bg-card rounded-xl border border-border p-3 sm:p-4 space-y-3">
+            <article key={p.id} className={`bg-card rounded-xl border p-3 sm:p-4 space-y-3 transition-shadow ${
+              p.status === "pending"
+                ? "border-gold/60 shadow-[0_0_0_1px_rgba(201,168,76,0.15)]"
+                : "border-border"
+            }`}>
               <div className="flex gap-3">
                 <div className="size-20 sm:size-24 rounded-lg overflow-hidden bg-secondary shrink-0">
                   {p.photos?.[0] ? (
@@ -386,7 +392,23 @@ function AdminPage() {
                 <div className="bg-background/50 rounded-lg p-2.5 text-[11px] leading-relaxed line-clamp-3">{p.description}</div>
               )}
 
-              <div className="grid grid-cols-4 gap-2 pt-1">
+              {p.status === "rejected" && p.admin_notes && (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-2.5 text-[11px] leading-relaxed">
+                  <div className="flex items-center gap-1.5 text-destructive font-semibold mb-1">
+                    <MessageSquare className="size-3" /> Red nedeni (satıcıya iletilir)
+                  </div>
+                  {p.admin_notes}
+                </div>
+              )}
+
+              {p.status === "pending" && (
+                <div className="flex items-center gap-2 rounded-lg bg-gold/5 border border-gold/20 p-2.5">
+                  <AlertTriangle className="size-4 text-gold shrink-0" />
+                  <span className="text-[11px] text-gold">Bu ilan onay bekliyor. Onayla veya reddet.</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                 <Button size="sm" variant="outline" onClick={() => setEditing(p)} className="h-9 text-xs">
                   <Pencil className="size-3.5 mr-1" /> Düzenle
                 </Button>
@@ -400,7 +422,7 @@ function AdminPage() {
                   className="h-9 text-xs">
                   Beklet
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => updatePartStatus(p.id, "rejected")}
+                <Button size="sm" variant="outline" onClick={() => { setRejecting(p); setRejectNote(p.admin_notes || ""); }}
                   disabled={p.status === "rejected"}
                   className="h-9 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
                   <XIcon className="size-3.5 mr-1" /> Reddet
@@ -566,6 +588,23 @@ function AdminPage() {
           setEditing(null);
         }}
       />
+
+      <RejectDialog
+        part={rejecting}
+        note={rejectNote}
+        onNoteChange={setRejectNote}
+        onClose={() => setRejecting(null)}
+        onConfirm={async (id, note) => {
+          const { error } = await supabase.from("parts")
+            .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null, admin_notes: note.trim() || null })
+            .eq("id", id);
+          if (error) { toast.error(error.message); return; }
+          setParts((prev) => prev.map((p) => (p.id === id ? { ...p, status: "rejected", admin_notes: note.trim() || null } : p)));
+          setRejecting(null);
+          setRejectNote("");
+          toast.success("İlan reddedildi");
+        }}
+      />
     </div>
   );
 }
@@ -663,6 +702,54 @@ function EditPartDialog({
             {saving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
           </Button>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RejectDialog({
+  part, note, onNoteChange, onClose, onConfirm,
+}: {
+  part: PartItem | null;
+  note: string;
+  onNoteChange: (v: string) => void;
+  onClose: () => void;
+  onConfirm: (id: string, note: string) => void;
+}) {
+  if (!part) return null;
+  return (
+    <Dialog open={!!part} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display tracking-wide text-destructive flex items-center gap-2">
+            <XIcon className="size-5" /> İlanı Reddet
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="bg-background/50 rounded-lg p-3 space-y-1">
+            <p className="text-sm font-semibold">{part.title}</p>
+            <p className="text-[11px] text-muted-foreground">{[part.brand, part.model, part.year].filter(Boolean).join(" • ")}</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground">Red nedeni (isteğe bağlı — satıcıya iletilir)</label>
+            <Textarea
+              placeholder="Örn: Fotoğraf net değil, OEM kodu eksik, uyumsuz kategori..."
+              rows={3}
+              value={note}
+              onChange={(e) => onNoteChange(e.target.value)}
+              className="resize-none text-xs"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" onClick={onClose} className="flex-1 h-9 text-xs">İptal</Button>
+            <Button
+              onClick={() => onConfirm(part.id, note)}
+              className="flex-1 h-9 text-xs bg-destructive hover:bg-destructive/90 text-white"
+            >
+              <XIcon className="size-3.5 mr-1" /> Reddet
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
