@@ -20,6 +20,7 @@ interface PartFull {
   category: string | null; condition: string; price: number | null;
   city: string | null; photos: string[];
   seller_id: string; created_at: string;
+  oem_code: string | null; stock_quantity: number | null;
 }
 
 function PartDetail() {
@@ -37,7 +38,7 @@ function PartDetail() {
     (async () => {
       const { data } = await supabase
         .from("parts")
-        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at")
+        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,stock_quantity")
         .eq("id", id).maybeSingle();
       setPart(data as PartFull | null);
       setLoading(false);
@@ -125,8 +126,18 @@ function PartDetail() {
           {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
         </span>
         <h1 className="font-display text-2xl tracking-wide leading-tight">{part.title}</h1>
-        <div className="text-3xl font-display text-gold tracking-wider">
-          {part.price != null ? `₺${Number(part.price).toLocaleString("tr-TR")}` : "Fiyat sor"}
+        <div className="flex items-end gap-4 flex-wrap">
+          <div className="text-3xl font-display text-gold tracking-wider">
+            {part.price != null ? `₺${Number(part.price).toLocaleString("tr-TR")}` : "Fiyat sor"}
+          </div>
+          {part.stock_quantity != null && (
+            <div className="text-xs">
+              <span className="text-muted-foreground">Stok: </span>
+              <span className={`font-semibold ${part.stock_quantity > 0 ? "text-foreground" : "text-destructive"}`}>
+                {part.stock_quantity > 0 ? `${part.stock_quantity} adet` : "Tükendi"}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -136,7 +147,7 @@ function PartDetail() {
           {part.year && <Info icon={<Calendar className="size-4" />} label="Yıl" value={String(part.year)} />}
           {part.category && <Info icon={<Tag className="size-4" />} label="Kategori" value={part.category} />}
           {part.city && <Info icon={<MapPin className="size-4" />} label="Bölge" value={part.city} />}
-          
+          {part.oem_code && <Info icon={<Tag className="size-4" />} label="OEM Kodu" value={part.oem_code} />}
         </div>
 
         {part.description && (

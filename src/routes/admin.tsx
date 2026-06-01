@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 type Status = "new" | "in_progress" | "resolved";
+type Tab = "inquiries" | "requests";
 
 interface Inquiry {
   id: string;
@@ -27,6 +28,23 @@ interface Inquiry {
   part?: { title: string; brand: string | null; model: string | null; whatsapp: string; city: string | null; seller_id: string } | null;
   buyer?: { display_name: string | null } | null;
   seller?: { display_name: string | null; whatsapp: string | null } | null;
+}
+
+interface PartRequest {
+  id: string;
+  buyer_id: string | null;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  search_query: string | null;
+  brand: string | null;
+  model: string | null;
+  year: number | null;
+  category: string | null;
+  oem_code: string | null;
+  message: string;
+  status: Status;
+  created_at: string;
 }
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -45,7 +63,9 @@ function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [items, setItems] = useState<Inquiry[]>([]);
+  const [tab, setTab] = useState<Tab>("inquiries");
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [requests, setRequests] = useState<PartRequest[]>([]);
   const [filter, setFilter] = useState<Status | "all">("all");
   const [loading, setLoading] = useState(true);
 
@@ -66,14 +86,16 @@ function AdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data: inquiries, error } = await supabase
-      .from("inquiries")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    const [iq, rq] = await Promise.all([
+      supabase.from("inquiries").select("*").order("created_at", { ascending: false }),
+      supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (iq.error) { toast.error(iq.error.message); }
+    if (rq.error) { toast.error(rq.error.message); }
 
-    const partIds = Array.from(new Set((inquiries ?? []).map((i) => i.part_id)));
-    const buyerIds = Array.from(new Set((inquiries ?? []).map((i) => i.buyer_id).filter(Boolean) as string[]));
+    const inqs = (iq.data ?? []) as any[];
+    const partIds = Array.from(new Set(inqs.map((i) => i.part_id)));
+    const buyerIds = Array.from(new Set(inqs.map((i) => i.buyer_id).filter(Boolean) as string[]));
 
     const [partsRes, buyersRes] = await Promise.all([
       partIds.length
@@ -93,7 +115,7 @@ function AdminPage() {
     const buyersMap = new Map((buyersRes.data ?? []).map((p: any) => [p.id, p]));
     const sellersMap = new Map((sellersRes.data ?? []).map((p: any) => [p.id, p]));
 
-    setItems((inquiries ?? []).map((i: any) => {
+    setInquiries(inqs.map((i: any) => {
       const part = partsMap.get(i.part_id);
       return {
         ...i,
@@ -102,13 +124,21 @@ function AdminPage() {
         seller: part ? sellersMap.get(part.seller_id) ?? null : null,
       };
     }));
+    setRequests((rq.data ?? []) as PartRequest[]);
     setLoading(false);
   };
 
-  const updateStatus = async (id: string, status: Status) => {
+  const updateInquiryStatus = async (id: string, status: Status) => {
     const { error } = await supabase.from("inquiries").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
+    setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
+    toast.success("Durum güncellendi");
+  };
+
+  const updateRequestStatus = async (id: string, status: Status) => {
+    const { error } = await supabase.from("part_requests").update({ status }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setRequests((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     toast.success("Durum güncellendi");
   };
 
@@ -127,6 +157,7 @@ function AdminPage() {
     );
   }
 
+  const items = tab === "inquiries" ? inquiries : requests;
   const filtered = filter === "all" ? items : items.filter((i) => i.status === filter);
 
   return (
@@ -136,10 +167,24 @@ function AdminPage() {
           <Link to="/" className="size-9 rounded-full bg-card grid place-items-center"><ArrowLeft className="size-4" /></Link>
           <div>
             <h1 className="font-display text-lg tracking-wide">Yönetici Paneli</h1>
-            <p className="text-[11px] text-muted-foreground">Tüm talepler — {items.length} kayıt</p>
+            <p className="text-[11px] text-muted-foreground">
+              {inquiries.length} teklif · {requests.length} parça talebi
+            </p>
           </div>
         </div>
-        <div className="max-w-2xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
+
+        <div className="max-w-2xl mx-auto px-4 flex gap-1.5 border-b border-border">
+          {(["inquiries", "requests"] as Tab[]).map((t) => (
+            <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+                tab === t ? "border-gold text-gold" : "border-transparent text-muted-foreground"
+              }`}>
+              {t === "inquiries" ? `Teklif Talepleri (${inquiries.length})` : `Parça Talepleri (${requests.length})`}
+            </button>
+          ))}
+        </div>
+
+        <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
           {(["all", "new", "in_progress", "resolved"] as const).map((s) => (
             <button key={s} onClick={() => setFilter(s)}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
@@ -155,55 +200,100 @@ function AdminPage() {
         {loading ? (
           <p className="text-center text-muted-foreground text-sm py-8">Yükleniyor...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground text-sm py-8">Talep yok.</p>
-        ) : filtered.map((i) => (
-          <article key={i.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <Link to="/parts/$id" params={{ id: i.part_id }}
-                  className="font-semibold text-sm hover:text-gold transition-colors line-clamp-1">
-                  {i.part?.title ?? "Silinmiş ilan"}
-                </Link>
-                {i.part && (
+          <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
+        ) : tab === "inquiries" ? (
+          (filtered as Inquiry[]).map((i) => (
+            <article key={i.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Link to="/parts/$id" params={{ id: i.part_id }}
+                    className="font-semibold text-sm hover:text-gold transition-colors line-clamp-1">
+                    {i.part?.title ?? "Silinmiş ilan"}
+                  </Link>
+                  {i.part && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {[i.part.brand, i.part.model, i.part.city].filter(Boolean).join(" • ")}
+                    </p>
+                  )}
+                </div>
+                <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border ${STATUS_COLOR[i.status]}`}>
+                  {STATUS_LABEL[i.status]}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <Field label="Talep eden" value={i.full_name} />
+                <Field label="Telefon" value={i.phone} icon={<Phone className="size-3" />} />
+                {i.email && <Field label="E-posta" value={i.email} icon={<Mail className="size-3" />} />}
+                <Field label="Tarih" value={new Date(i.created_at).toLocaleString("tr-TR")} icon={<Calendar className="size-3" />} />
+              </div>
+
+              <div className="bg-background/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">
+                {i.message}
+              </div>
+
+              {i.part && (
+                <div className="rounded-lg border border-gold/20 bg-gold/5 p-3 text-[11px] space-y-1">
+                  <p className="text-gold font-semibold uppercase tracking-wider">Satıcı bilgileri (sadece admin)</p>
+                  <p>{i.seller?.display_name ?? "—"} · {i.seller?.whatsapp ?? i.part.whatsapp}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                {(["new", "in_progress", "resolved"] as Status[]).map((s) => (
+                  <Button key={s} type="button" variant={i.status === s ? "default" : "outline"}
+                    onClick={() => updateInquiryStatus(i.id, s)}
+                    className={`flex-1 h-9 text-xs ${i.status === s ? "bg-gold-gradient text-gold-foreground hover:opacity-90" : ""}`}>
+                    {STATUS_LABEL[s]}
+                  </Button>
+                ))}
+              </div>
+            </article>
+          ))
+        ) : (
+          (filtered as PartRequest[]).map((r) => (
+            <article key={r.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <Search className="size-3.5 text-gold" />
+                    <p className="font-semibold text-sm line-clamp-1">
+                      {r.search_query || r.oem_code || `${r.brand ?? ""} ${r.model ?? ""}`.trim() || "Parça talebi"}
+                    </p>
+                  </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {[i.part.brand, i.part.model, i.part.city].filter(Boolean).join(" • ")}
+                    {[r.brand, r.model, r.year, r.category].filter(Boolean).join(" • ")}
                   </p>
-                )}
+                  {r.oem_code && <p className="text-[10px] font-mono text-muted-foreground/80 mt-0.5">OEM: {r.oem_code}</p>}
+                </div>
+                <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border ${STATUS_COLOR[r.status]}`}>
+                  {STATUS_LABEL[r.status]}
+                </span>
               </div>
-              <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border ${STATUS_COLOR[i.status]}`}>
-                {STATUS_LABEL[i.status]}
-              </span>
-            </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <Field label="Talep eden" value={i.full_name} />
-              <Field label="Telefon" value={i.phone} icon={<Phone className="size-3" />} />
-              {i.email && <Field label="E-posta" value={i.email} icon={<Mail className="size-3" />} />}
-              <Field label="Tarih" value={new Date(i.created_at).toLocaleString("tr-TR")} icon={<Calendar className="size-3" />} />
-            </div>
-
-            <div className="bg-background/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">
-              {i.message}
-            </div>
-
-            {i.part && (
-              <div className="rounded-lg border border-gold/20 bg-gold/5 p-3 text-[11px] space-y-1">
-                <p className="text-gold font-semibold uppercase tracking-wider">Satıcı bilgileri (sadece admin)</p>
-                <p>{i.seller?.display_name ?? "—"} · {i.seller?.whatsapp ?? i.part.whatsapp}</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <Field label="Talep eden" value={r.full_name} />
+                <Field label="Telefon" value={r.phone} icon={<Phone className="size-3" />} />
+                {r.email && <Field label="E-posta" value={r.email} icon={<Mail className="size-3" />} />}
+                <Field label="Tarih" value={new Date(r.created_at).toLocaleString("tr-TR")} icon={<Calendar className="size-3" />} />
               </div>
-            )}
 
-            <div className="flex gap-2 pt-1">
-              {(["new", "in_progress", "resolved"] as Status[]).map((s) => (
-                <Button key={s} type="button" variant={i.status === s ? "default" : "outline"}
-                  onClick={() => updateStatus(i.id, s)}
-                  className={`flex-1 h-9 text-xs ${i.status === s ? "bg-gold-gradient text-gold-foreground hover:opacity-90" : ""}`}>
-                  {STATUS_LABEL[s]}
-                </Button>
-              ))}
-            </div>
-          </article>
-        ))}
+              <div className="bg-background/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">
+                {r.message}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                {(["new", "in_progress", "resolved"] as Status[]).map((s) => (
+                  <Button key={s} type="button" variant={r.status === s ? "default" : "outline"}
+                    onClick={() => updateRequestStatus(r.id, s)}
+                    className={`flex-1 h-9 text-xs ${r.status === s ? "bg-gold-gradient text-gold-foreground hover:opacity-90" : ""}`}>
+                    {STATUS_LABEL[s]}
+                  </Button>
+                ))}
+              </div>
+            </article>
+          ))
+        )}
       </main>
     </div>
   );

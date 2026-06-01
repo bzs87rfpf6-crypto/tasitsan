@@ -15,7 +15,10 @@ export const Route = createFileRoute("/sell")({
   component: SellPage,
 });
 
-const CATEGORIES = ["Motor", "Şanzıman", "Kaporta", "Fren", "Elektrik", "Lastik", "İç Aksam", "Diğer"];
+const CATEGORIES = [
+  "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
+  "Süspansiyon", "Klima", "Yakıt Sistemi", "Aydınlatma", "Diğer",
+];
 
 function SellPage() {
   const { user, loading: authLoading } = useAuth();
@@ -23,8 +26,8 @@ function SellPage() {
   const [profileWa, setProfileWa] = useState("");
 
   const [form, setForm] = useState({
-    title: "", description: "", brand: "", model: "", year: "",
-    category: "Motor", condition: "used", price: "", city: "", whatsapp: "",
+    title: "", description: "", brand: "", model: "", year: "", oem_code: "",
+    category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "", whatsapp: "",
   });
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -74,9 +77,11 @@ function SellPage() {
         brand: form.brand || null,
         model: form.model || null,
         year: form.year ? parseInt(form.year) : null,
+        oem_code: form.oem_code || null,
         category: form.category,
         condition: form.condition,
         price: form.price ? parseFloat(form.price) : null,
+        stock_quantity: form.stock_quantity ? Math.max(0, parseInt(form.stock_quantity)) : 1,
         city: form.city || null,
         photos: photoUrls,
         whatsapp: form.whatsapp,
@@ -141,6 +146,10 @@ function SellPage() {
           <Input placeholder="Şehir" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="h-12 bg-card" />
         </div>
 
+        <Input placeholder="OEM Kodu (opsiyonel)" value={form.oem_code}
+          onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })}
+          maxLength={60} className="h-12 bg-card font-mono" />
+
         <div>
           <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">Kategori</label>
           <div className="flex flex-wrap gap-2">
@@ -165,11 +174,16 @@ function SellPage() {
           </div>
         </div>
 
-        <div className="relative">
-          <Input placeholder="Fiyat" inputMode="decimal" value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.]/g, "") })}
-            className="h-12 bg-card pl-8" />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold">₺</span>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="relative">
+            <Input placeholder="Fiyat" inputMode="decimal" value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.]/g, "") })}
+              className="h-12 bg-card pl-8" />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold">₺</span>
+          </div>
+          <Input placeholder="Stok Adedi" inputMode="numeric" value={form.stock_quantity}
+            onChange={(e) => setForm({ ...form, stock_quantity: e.target.value.replace(/\D/g, "") })}
+            className="h-12 bg-card" />
         </div>
 
         <Textarea placeholder="Açıklama, uyumlu modeller, kusurlar..." value={form.description}
