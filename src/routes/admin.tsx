@@ -137,19 +137,23 @@ function AdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const [iq, rq, pt] = await Promise.all([
+    const [iq, rq, pt, qt] = await Promise.all([
       supabase.from("inquiries").select("*").order("created_at", { ascending: false }),
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
+      supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
     ]);
     if (iq.error) toast.error(iq.error.message);
     if (rq.error) toast.error(rq.error.message);
     if (pt.error) toast.error(pt.error.message);
+    if (qt.error) toast.error(qt.error.message);
 
     const inqs = (iq.data ?? []) as any[];
+    const quoteRows = (qt.data ?? []) as any[];
     const partIds = Array.from(new Set(inqs.map((i) => i.part_id)));
     const buyerIds = Array.from(new Set(inqs.map((i) => i.buyer_id).filter(Boolean) as string[]));
-    const sellerIds = Array.from(new Set([...(pt.data ?? []).map((p: any) => p.seller_id)]));
+    const quoteSellerIds = Array.from(new Set(quoteRows.map((q) => q.seller_id)));
+    const sellerIds = Array.from(new Set([...(pt.data ?? []).map((p: any) => p.seller_id), ...quoteSellerIds]));
 
     const [partsRes, buyersRes, sellersRes] = await Promise.all([
       partIds.length
