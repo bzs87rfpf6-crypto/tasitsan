@@ -406,6 +406,10 @@ function AdminPage() {
                   <XIcon className="size-3.5 mr-1" /> Reddet
                 </Button>
               </div>
+              <Button size="sm" variant="outline" onClick={() => deletePart(p.id)}
+                className="w-full h-9 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Trash2 className="size-3.5 mr-1" /> İlanı Sil
+              </Button>
             </article>
           ))
         ) : tab === "inquiries" ? (
