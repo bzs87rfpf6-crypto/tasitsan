@@ -10,7 +10,7 @@ export function isDisplayablePartImageUrl(value: unknown): value is string {
     const parsed = new URL(url);
     return parsed.protocol === "https:" || parsed.protocol === "http:";
   } catch {
-    return false;
+    return !url.includes(":") && !url.startsWith("/");
   }
 }
 
@@ -19,7 +19,11 @@ export function getPartImageDisplayUrl(value: unknown, width = 640): string | nu
   const original = value.trim();
 
   try {
-    const parsed = new URL(original);
+    const baseUrl = typeof import.meta !== "undefined" ? import.meta.env?.VITE_SUPABASE_URL : undefined;
+    const publicUrl = original.startsWith("http")
+      ? original
+      : `${baseUrl}/storage/v1/object/public/part-photos/${original.replace(/^part-photos\//, "")}`;
+    const parsed = new URL(publicUrl);
     if (parsed.pathname.includes(PART_PHOTOS_OBJECT_PATH)) {
       parsed.pathname = parsed.pathname.replace(PART_PHOTOS_OBJECT_PATH, PART_PHOTOS_RENDER_PATH);
     }
