@@ -133,6 +133,8 @@ function AdminPage() {
   const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PartItem | null>(null);
+  const [rejecting, setRejecting] = useState<PartItem | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
