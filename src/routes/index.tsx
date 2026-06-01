@@ -192,7 +192,27 @@ function Index() {
         </div>
       </section>
 
+      {/* Akıllı Talep Havuzu CTA */}
+      <section className="max-w-3xl mx-auto px-4 pt-5">
+        <button
+          onClick={() => setRequestOpen(true)}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gold/15 via-gold/5 to-transparent border border-gold/40 hover:border-gold/70 transition-colors text-left"
+        >
+          <div className="size-11 rounded-full bg-gold-gradient grid place-items-center shrink-0 shadow-gold">
+            <PackageSearch className="size-5 text-gold-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-sm sm:text-base tracking-wide">Parça Bulunamadı mı? Talep Oluştur</p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+              Talebiniz satıcı havuzuna düşsün, onaylı teklifler size gelsin.
+            </p>
+          </div>
+          <span className="text-gold font-semibold text-sm shrink-0">→</span>
+        </button>
+      </section>
+
       <div className="max-w-3xl mx-auto px-4 pt-5">
+
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
