@@ -423,6 +423,26 @@ function AdminPage() {
           )}
         </div>
         )}
+
+        {tab === "requests" && (
+          <div className="max-w-2xl mx-auto px-4 pb-3">
+            <div className="relative">
+              <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input value={reqSearch} onChange={(e) => setReqSearch(e.target.value)}
+                placeholder="Talep ara: parça, OEM, marka, telefon..." className="pl-9 h-9 text-sm" />
+            </div>
+          </div>
+        )}
+
+        {tab === "users" && (
+          <div className="max-w-2xl mx-auto px-4 py-3">
+            <div className="relative">
+              <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
+                placeholder="Kullanıcı ara: isim, telefon, şehir..." className="pl-9 h-9 text-sm" />
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
