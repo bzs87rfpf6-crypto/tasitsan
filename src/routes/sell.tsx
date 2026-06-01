@@ -215,7 +215,7 @@ function SellPage() {
 
 
         <Button type="submit" disabled={submitting} className="w-full h-13 bg-gold-gradient text-gold-foreground font-semibold text-base shadow-gold py-4">
-          {submitting ? "Yayınlanıyor..." : "İlanı Yayınla"}
+          {submitting ? "Gönderiliyor..." : "Onaya Gönder"}
         </Button>
       </form>
       <BottomNav />
