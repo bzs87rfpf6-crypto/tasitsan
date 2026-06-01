@@ -588,6 +588,23 @@ function AdminPage() {
           setEditing(null);
         }}
       />
+
+      <RejectDialog
+        part={rejecting}
+        note={rejectNote}
+        onNoteChange={setRejectNote}
+        onClose={() => setRejecting(null)}
+        onConfirm={async (id, note) => {
+          const { error } = await supabase.from("parts")
+            .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null, admin_notes: note.trim() || null })
+            .eq("id", id);
+          if (error) { toast.error(error.message); return; }
+          setParts((prev) => prev.map((p) => (p.id === id ? { ...p, status: "rejected", admin_notes: note.trim() || null } : p)));
+          setRejecting(null);
+          setRejectNote("");
+          toast.success("İlan reddedildi");
+        }}
+      />
     </div>
   );
 }
