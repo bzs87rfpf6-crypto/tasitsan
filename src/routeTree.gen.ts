@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SellRouteImport } from './routes/sell'
+import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
@@ -19,6 +20,11 @@ import { Route as PartsIdRouteImport } from './routes/parts.$id'
 const SellRoute = SellRouteImport.update({
   id: '/sell',
   path: '/sell',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/requests': typeof RequestsRoute
   '/sell': typeof SellRoute
   '/parts/$id': typeof PartsIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/requests': typeof RequestsRoute
   '/sell': typeof SellRoute
   '/parts/$id': typeof PartsIdRoute
 }
@@ -69,20 +77,36 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/requests': typeof RequestsRoute
   '/sell': typeof SellRoute
   '/parts/$id': typeof PartsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/admin' | '/auth' | '/sell' | '/parts/$id'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/admin'
+    | '/auth'
+    | '/requests'
+    | '/sell'
+    | '/parts/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/admin' | '/auth' | '/sell' | '/parts/$id'
+  to:
+    | '/'
+    | '/account'
+    | '/admin'
+    | '/auth'
+    | '/requests'
+    | '/sell'
+    | '/parts/$id'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/admin'
     | '/auth'
+    | '/requests'
     | '/sell'
     | '/parts/$id'
   fileRoutesById: FileRoutesById
@@ -92,6 +116,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  RequestsRoute: typeof RequestsRoute
   SellRoute: typeof SellRoute
   PartsIdRoute: typeof PartsIdRoute
 }
@@ -103,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/sell'
       fullPath: '/sell'
       preLoaderRoute: typeof SellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -148,9 +180,20 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  RequestsRoute: RequestsRoute,
   SellRoute: SellRoute,
   PartsIdRoute: PartsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
