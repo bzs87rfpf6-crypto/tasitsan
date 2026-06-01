@@ -113,8 +113,15 @@ function SellPage() {
       <AppHeader subtitle="Yeni İlan" />
       <form onSubmit={submit} className="max-w-md mx-auto px-4 pt-4 space-y-4">
 
+        <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
+          <span className="text-gold font-semibold">Onay süreci:</span> Eklediğiniz ilanlar Taşıtsan ekibi tarafından incelendikten sonra yayınlanır.
+        </div>
+
         <section className="space-y-2">
-          <label className="text-xs uppercase tracking-wider text-gold font-semibold">Fotoğraflar (en fazla 6)</label>
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
+            <span>Fotoğraflar (en az 3, en fazla 6)</span>
+            <span className={`text-[10px] ${files.length >= 3 ? "text-emerald-400" : "text-muted-foreground"}`}>{files.length}/3</span>
+          </label>
           <div className="grid grid-cols-3 gap-2">
             {files.map((f, i) => (
               <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-card">
@@ -134,6 +141,7 @@ function SellPage() {
             )}
           </div>
         </section>
+
 
         <Input placeholder="Başlık (örn. Mercedes W211 Sağ Far)" value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })} required maxLength={120} className="h-12 bg-card" />
