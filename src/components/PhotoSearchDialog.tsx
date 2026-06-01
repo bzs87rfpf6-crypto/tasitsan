@@ -178,6 +178,28 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
                     {result.description && (
                       <p className="text-xs text-muted-foreground leading-relaxed">{result.description}</p>
                     )}
+                    {(result.oem_code_guess || result.brand_compatibility?.length || result.model_compatibility?.length) ? (
+                      <div className="grid grid-cols-1 gap-1.5 pt-2 text-xs">
+                        {result.oem_code_guess && (
+                          <div className="flex items-center justify-between gap-2 rounded-md bg-muted/40 border border-border px-2 py-1">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">OEM</span>
+                            <span className="font-mono text-gold">{result.oem_code_guess}</span>
+                          </div>
+                        )}
+                        {result.brand_compatibility?.length > 0 && (
+                          <div className="flex items-start justify-between gap-2 rounded-md bg-muted/40 border border-border px-2 py-1">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">Marka</span>
+                            <span className="text-right">{result.brand_compatibility.join(", ")}</span>
+                          </div>
+                        )}
+                        {result.model_compatibility?.length > 0 && (
+                          <div className="flex items-start justify-between gap-2 rounded-md bg-muted/40 border border-border px-2 py-1">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">Model</span>
+                            <span className="text-right">{result.model_compatibility.join(", ")}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                     {result.keywords?.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {result.keywords.map((k) => (
@@ -188,6 +210,7 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
                       </div>
                     )}
                   </div>
+
 
                   {lowConfidence ? (
                     <div className="bg-destructive/5 border border-destructive/30 rounded-2xl p-4 text-center space-y-3">
