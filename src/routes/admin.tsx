@@ -707,6 +707,54 @@ function EditPartDialog({
   );
 }
 
+function RejectDialog({
+  part, note, onNoteChange, onClose, onConfirm,
+}: {
+  part: PartItem | null;
+  note: string;
+  onNoteChange: (v: string) => void;
+  onClose: () => void;
+  onConfirm: (id: string, note: string) => void;
+}) {
+  if (!part) return null;
+  return (
+    <Dialog open={!!part} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display tracking-wide text-destructive flex items-center gap-2">
+            <XIcon className="size-5" /> İlanı Reddet
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="bg-background/50 rounded-lg p-3 space-y-1">
+            <p className="text-sm font-semibold">{part.title}</p>
+            <p className="text-[11px] text-muted-foreground">{[part.brand, part.model, part.year].filter(Boolean).join(" • ")}</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground">Red nedeni (isteğe bağlı — satıcıya iletilir)</label>
+            <Textarea
+              placeholder="Örn: Fotoğraf net değil, OEM kodu eksik, uyumsuz kategori..."
+              rows={3}
+              value={note}
+              onChange={(e) => onNoteChange(e.target.value)}
+              className="resize-none text-xs"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" onClick={onClose} className="flex-1 h-9 text-xs">İptal</Button>
+            <Button
+              onClick={() => onConfirm(part.id, note)}
+              className="flex-1 h-9 text-xs bg-destructive hover:bg-destructive/90 text-white"
+            >
+              <XIcon className="size-3.5 mr-1" /> Reddet
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent?: string }) {
   return (
     <div className="bg-card rounded-xl border border-border p-4">
