@@ -26,6 +26,19 @@ interface ProfileRow {
   whatsapp: string | null;
   city: string | null;
   created_at: string;
+  is_active: boolean;
+}
+
+interface SiteSettings {
+  id: string;
+  commission_rate: number;
+  contact_email: string | null;
+  contact_phone: string | null;
+  contact_address: string | null;
+  email_from_name: string | null;
+  email_from_address: string | null;
+  email_smtp_host: string | null;
+  email_smtp_port: number | null;
 }
 
 interface Inquiry {
