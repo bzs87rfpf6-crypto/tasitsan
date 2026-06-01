@@ -920,6 +920,10 @@ function DashboardPanel({
   onJump: (t: Tab) => void;
 }) {
   const pending = parts.filter((p) => p.status === "pending").length;
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const newToday = users.filter((u) => new Date(u.created_at) >= todayStart).length;
+  const partsToday = parts.filter((p) => new Date(p.created_at) >= todayStart).length;
+
   type Activity = { id: string; type: string; title: string; when: string; tab: Tab };
   const activity: Activity[] = [
     ...parts.slice(0, 10).map((p) => ({ id: `p-${p.id}`, type: "Yeni ilan", title: p.title, when: p.created_at, tab: "products" as Tab })),
@@ -936,8 +940,17 @@ function DashboardPanel({
         <button onClick={() => onJump("products")} className="text-left">
           <StatCard icon={<Package className="size-3.5" />} label="Toplam İlan" value={parts.length} />
         </button>
+        <button onClick={() => onJump("requests")} className="text-left">
+          <StatCard icon={<Search className="size-3.5" />} label="Toplam Talep" value={requests.length} />
+        </button>
         <button onClick={() => onJump("products")} className="text-left">
           <StatCard icon={<ClipboardList className="size-3.5" />} label="Onay Bekleyen" value={pending} accent="text-gold" />
+        </button>
+        <button onClick={() => onJump("users")} className="text-left">
+          <StatCard icon={<Calendar className="size-3.5" />} label="Bugün Yeni Kullanıcı" value={newToday} accent="text-emerald-400" />
+        </button>
+        <button onClick={() => onJump("products")} className="text-left">
+          <StatCard icon={<Calendar className="size-3.5" />} label="Bugün Yeni İlan" value={partsToday} accent="text-emerald-400" />
         </button>
         <button onClick={() => onJump("inquiries")} className="text-left">
           <StatCard icon={<Mail className="size-3.5" />} label="Teklif Talebi" value={inquiries.length} />
@@ -973,29 +986,202 @@ function DashboardPanel({
   );
 }
 
-function UsersPanel({ users, parts }: { users: ProfileRow[]; parts: PartItem[] }) {
+function UsersPanel({
+  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin,
+}: {
+  users: ProfileRow[];
+  parts: PartItem[];
+  adminIds: Set<string>;
+  currentUserId: string | null;
+  onDelete: (u: ProfileRow) => void;
+  onToggleActive: (u: ProfileRow) => void;
+  onToggleAdmin: (u: ProfileRow) => void;
+}) {
   const listingsBySeller = new Map<string, number>();
   parts.forEach((p) => listingsBySeller.set(p.seller_id, (listingsBySeller.get(p.seller_id) ?? 0) + 1));
   if (users.length === 0) return <p className="text-center text-muted-foreground text-sm py-8">Kullanıcı yok.</p>;
   return (
     <div className="space-y-2">
-      {users.map((u) => (
-        <div key={u.id} className="bg-card rounded-xl border border-border p-3 flex items-center gap-3">
-          <div className="size-10 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center font-bold shrink-0">
-            {(u.display_name ?? "?").slice(0, 1).toUpperCase()}
+      {users.map((u) => {
+        const isUserAdmin = adminIds.has(u.id);
+        const isSelf = currentUserId === u.id;
+        return (
+          <div key={u.id} className={`bg-card rounded-xl border p-3 space-y-3 ${u.is_active ? "border-border" : "border-destructive/40 opacity-75"}`}>
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center font-bold shrink-0">
+                {(u.display_name ?? "?").slice(0, 1).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-semibold text-sm truncate">{u.display_name ?? "İsimsiz"}</p>
+                  {isUserAdmin && <Crown className="size-3.5 text-gold shrink-0" />}
+                  {!u.is_active && <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive/15 text-destructive border border-destructive/40">Pasif</span>}
+                </div>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {[u.city, u.whatsapp].filter(Boolean).join(" · ") || "—"}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {new Date(u.created_at).toLocaleDateString("tr-TR")} · {listingsBySeller.get(u.id) ?? 0} ilan
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              <Button size="sm" variant="outline" onClick={() => onToggleAdmin(u)} disabled={isSelf && isUserAdmin}
+                className={`h-8 text-[11px] ${isUserAdmin ? "border-gold/40 text-gold" : ""}`}>
+                <Crown className="size-3 mr-1" /> {isUserAdmin ? "Admin Kaldır" : "Admin Yap"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => onToggleActive(u)} disabled={isSelf}
+                className="h-8 text-[11px]">
+                {u.is_active ? <><UserX className="size-3 mr-1" />Pasifle</> : <><UserCheck className="size-3 mr-1" />Aktifle</>}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => onDelete(u)} disabled={isSelf}
+                className="h-8 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Trash2 className="size-3 mr-1" /> Sil
+              </Button>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm truncate">{u.display_name ?? "İsimsiz"}</p>
-            <p className="text-[11px] text-muted-foreground truncate">
-              {[u.city, u.whatsapp].filter(Boolean).join(" · ") || "—"}
-            </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; onSave: (patch: Partial<SiteSettings>) => Promise<void> }) {
+  const [form, setForm] = useState<Partial<SiteSettings>>({});
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { if (settings) setForm(settings); }, [settings]);
+
+  if (!settings) return <p className="text-center text-muted-foreground text-sm py-8">Ayarlar yükleniyor...</p>;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    await onSave({
+      commission_rate: Number(form.commission_rate ?? 0),
+      contact_email: form.contact_email?.toString().trim() || null,
+      contact_phone: form.contact_phone?.toString().trim() || null,
+      contact_address: form.contact_address?.toString().trim() || null,
+      email_from_name: form.email_from_name?.toString().trim() || null,
+      email_from_address: form.email_from_address?.toString().trim() || null,
+      email_smtp_host: form.email_smtp_host?.toString().trim() || null,
+      email_smtp_port: form.email_smtp_port ? Number(form.email_smtp_port) : null,
+    });
+    setSaving(false);
+  };
+
+  const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <section className="bg-card rounded-xl border border-border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <SettingsIcon className="size-4 text-gold" />
+          <h2 className="font-semibold text-sm">Komisyon</h2>
+        </div>
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Komisyon Oranı (%)</span>
+          <Input type="number" step="0.1" min="0" max="100" value={form.commission_rate ?? 0}
+            onChange={(e) => set("commission_rate", Number(e.target.value))} className="mt-1 h-9" />
+        </label>
+      </section>
+
+      <section className="bg-card rounded-xl border border-border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Phone className="size-4 text-gold" />
+          <h2 className="font-semibold text-sm">İletişim Bilgileri</h2>
+        </div>
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">E-posta</span>
+          <Input type="email" value={form.contact_email ?? ""} onChange={(e) => set("contact_email", e.target.value)} className="mt-1 h-9" placeholder="info@tasitsan.com.tr" />
+        </label>
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Telefon</span>
+          <Input value={form.contact_phone ?? ""} onChange={(e) => set("contact_phone", e.target.value)} className="mt-1 h-9" placeholder="+90 ..." />
+        </label>
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Adres</span>
+          <Textarea rows={2} value={form.contact_address ?? ""} onChange={(e) => set("contact_address", e.target.value)} className="mt-1 resize-none" />
+        </label>
+      </section>
+
+      <section className="bg-card rounded-xl border border-border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Mail className="size-4 text-gold" />
+          <h2 className="font-semibold text-sm">E-posta Ayarları</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Gönderen Adı</span>
+            <Input value={form.email_from_name ?? ""} onChange={(e) => set("email_from_name", e.target.value)} className="mt-1 h-9" />
+          </label>
+          <label className="block">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Gönderen Adresi</span>
+            <Input type="email" value={form.email_from_address ?? ""} onChange={(e) => set("email_from_address", e.target.value)} className="mt-1 h-9" />
+          </label>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <label className="block col-span-2">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wider">SMTP Host</span>
+            <Input value={form.email_smtp_host ?? ""} onChange={(e) => set("email_smtp_host", e.target.value)} className="mt-1 h-9" placeholder="smtp.example.com" />
+          </label>
+          <label className="block">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Port</span>
+            <Input type="number" value={form.email_smtp_port ?? ""} onChange={(e) => set("email_smtp_port", e.target.value ? Number(e.target.value) : null)} className="mt-1 h-9" placeholder="587" />
+          </label>
+        </div>
+      </section>
+
+      <Button type="submit" disabled={saving} className="w-full bg-gold-gradient text-gold-foreground font-semibold shadow-gold">
+        <Save className="size-4 mr-1.5" /> {saving ? "Kaydediliyor..." : "Ayarları Kaydet"}
+      </Button>
+    </form>
+  );
+}
+
+function RequestNoteDialog({
+  request, onClose, onSave,
+}: {
+  request: PartRequest | null;
+  onClose: () => void;
+  onSave: (id: string, note: string) => Promise<void>;
+}) {
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setNote(request?.admin_notes ?? ""); }, [request]);
+  if (!request) return null;
+  return (
+    <Dialog open={!!request} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display tracking-wide">Talep Notu</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="bg-background/50 rounded-lg p-3 space-y-1">
+            <p className="text-sm font-semibold">{request.part_name || request.search_query || "Parça talebi"}</p>
+            <p className="text-[11px] text-muted-foreground">{[request.brand, request.model, request.year].filter(Boolean).join(" • ")}</p>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-xs font-bold text-gold">{listingsBySeller.get(u.id) ?? 0}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">ilan</p>
+          <Textarea rows={4} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Bu talep hakkında dahili not..." className="resize-none text-xs" />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} className="flex-1 h-9 text-xs">İptal</Button>
+            <Button onClick={async () => { setSaving(true); await onSave(request.id, note); setSaving(false); }}
+              disabled={saving}
+              className="flex-1 h-9 text-xs bg-gold-gradient text-gold-foreground">
+              <Save className="size-3.5 mr-1" /> {saving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
           </div>
         </div>
-      ))}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent?: string }) {
+  return (
+    <div className="bg-card rounded-xl border border-border p-4">
+      <div className={`flex items-center gap-2 text-[11px] uppercase tracking-wider ${accent ?? "text-muted-foreground"}`}>
+        {icon}{label}
+      </div>
+      <div className="mt-2 font-display text-3xl text-gold">{value}</div>
     </div>
   );
 }
