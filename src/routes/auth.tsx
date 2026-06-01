@@ -26,7 +26,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -35,7 +35,12 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Hesap oluşturuldu! E-postanı kontrol et.");
+        toast.success("Hesap oluşturuldu! Hemen ilan vermeye başlayabilirsin.");
+        if (data.session) {
+          nav({ to: "/" });
+        } else {
+          setMode("login");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
