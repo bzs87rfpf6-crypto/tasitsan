@@ -20,6 +20,7 @@ interface PartFull {
   category: string | null; condition: string; price: number | null;
   city: string | null; photos: string[];
   seller_id: string; created_at: string;
+  oem_code: string | null; stock_quantity: number | null;
 }
 
 function PartDetail() {
