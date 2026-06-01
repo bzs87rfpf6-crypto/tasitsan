@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { X, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,11 @@ import { BottomNav } from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+
+// Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
+// by <img>, and DNG files balloon memory enough to crash the tab into a reload.
+const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
+const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
 
 export const Route = createFileRoute("/sell")({
   head: () => ({ meta: [{ title: "İlan Ver — Taşıtsan" }] }),
@@ -46,10 +51,38 @@ function SellPage() {
     });
   }, [user]);
 
+  // Stable blob URLs keyed by File so we don't recreate them every render
+  // (which on iOS Safari leaks memory and forces the page to reload).
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => {
+    return () => { previews.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [previews]);
+
   const addFiles = (list: FileList | null) => {
-    if (!list) return;
-    const next = [...files, ...Array.from(list)].slice(0, 6);
-    setFiles(next);
+    if (!list || list.length === 0) return;
+    const incoming = Array.from(list);
+    const accepted: File[] = [];
+    const rejected: string[] = [];
+    for (const f of incoming) {
+      const isImage = ACCEPTED_MIME.test(f.type);
+      const badExt = REJECTED_EXT.test(f.name);
+      if (!isImage || badExt) {
+        rejected.push(f.name);
+        console.warn("[sell] rejected file:", f.name, "mime:", f.type, "size:", f.size);
+        continue;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        rejected.push(`${f.name} (>10MB)`);
+        console.warn("[sell] file too large:", f.name, f.size);
+        continue;
+      }
+      accepted.push(f);
+    }
+    if (rejected.length > 0) {
+      toast.error(`Desteklenmeyen dosya: ${rejected.join(", ")}. Sadece JPG/PNG/WebP yükleyin (HEIC, DNG, RAW desteklenmez).`);
+    }
+    if (accepted.length === 0) return;
+    setFiles((prev) => [...prev, ...accepted].slice(0, 6));
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -60,13 +93,18 @@ function SellPage() {
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
-      for (const f of files) {
-        const ext = f.name.split(".").pop() ?? "jpg";
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("part-photos").upload(path, f, {
-          cacheControl: "3600", upsert: false,
-        });
-        if (upErr) throw upErr;
+        const { data: upData, error: upErr } = await supabase.storage
+          .from("part-photos")
+          .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
+        if (upErr) {
+          console.error(`[sell] upload failed for ${f.name}`, { path, error: upErr });
+          throw new Error(`Fotoğraf ${i + 1} yüklenemedi: ${upErr.message}`);
+        }
+        console.info("[sell] uploaded:", upData?.path ?? path);
         const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
         photoUrls.push(pub.publicUrl);
       }
@@ -88,7 +126,7 @@ function SellPage() {
         whatsapp: form.whatsapp,
         status: "pending",
       });
-      if (error) throw error;
+      if (error) { console.error("[sell] parts insert failed:", error); throw error; }
 
       if (form.whatsapp !== profileWa) {
         await supabase.from("profiles").update({ whatsapp: form.whatsapp, city: form.city || null }).eq("id", user.id);
@@ -97,11 +135,13 @@ function SellPage() {
       toast.success("İlanınız admin onayına gönderildi.");
       nav({ to: "/" });
     } catch (err: any) {
+      console.error("[sell] submit error:", err);
       toast.error(err.message ?? "Hata");
     } finally {
       setSubmitting(false);
     }
   };
+
 
 
   if (authLoading || !user) {
@@ -124,8 +164,8 @@ function SellPage() {
           </label>
           <div className="grid grid-cols-3 gap-2">
             {files.map((f, i) => (
-              <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
+              <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
+                <img src={previews[i]} alt="" className="w-full h-full object-cover" />
                 <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
                   className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
                   <X className="size-3.5" />
@@ -134,12 +174,13 @@ function SellPage() {
             ))}
             {files.length < 6 && (
               <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-gold grid place-items-center cursor-pointer text-muted-foreground">
-                <input type="file" accept="image/*" multiple className="hidden"
-                  onChange={(e) => addFiles(e.target.files)} />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
+                  onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
                 <Upload className="size-6" />
               </label>
             )}
           </div>
+
         </section>
 
 

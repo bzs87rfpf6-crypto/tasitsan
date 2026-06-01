@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { X, Upload } from "lucide-react";
@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
+const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
+const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
+
 
 const CATEGORIES = [
   "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
@@ -61,9 +65,29 @@ export function PartRequestDialog({
     onOpenChange(v);
   };
 
+  // Stable blob URLs to prevent iOS memory exhaustion (which can force the
+  // page to auto-reload after picking many photos).
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => { previews.forEach((u) => URL.revokeObjectURL(u)); }, [previews]);
+
   const addFiles = (list: FileList | null) => {
-    if (!list) return;
-    setFiles((prev) => [...prev, ...Array.from(list)].slice(0, 4));
+    if (!list || list.length === 0) return;
+    const accepted: File[] = [];
+    const rejected: string[] = [];
+    for (const f of Array.from(list)) {
+      if (!ACCEPTED_MIME.test(f.type) || REJECTED_EXT.test(f.name)) {
+        rejected.push(f.name);
+        console.warn("[part-request] rejected:", f.name, f.type);
+        continue;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        rejected.push(`${f.name} (>10MB)`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    if (rejected.length) toast.error(`Desteklenmeyen dosya: ${rejected.join(", ")}.`);
+    if (accepted.length) setFiles((prev) => [...prev, ...accepted].slice(0, 4));
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -76,11 +100,19 @@ export function PartRequestDialog({
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
-      for (const f of files) {
-        const ext = f.name.split(".").pop() ?? "jpg";
-        const path = `requests/${userId}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("part-photos").upload(path, f, { cacheControl: "3600", upsert: false });
-        if (upErr) throw upErr;
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
+        // IMPORTANT: storage RLS requires first folder = auth.uid(). The path
+        // MUST start with `${userId}/...` — never `requests/${userId}/...`.
+        const path = `${userId}/req-${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("part-photos")
+          .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
+        if (upErr) {
+          console.error(`[part-request] upload failed for ${f.name}`, { path, error: upErr });
+          throw new Error(`Fotoğraf ${i + 1} yüklenemedi: ${upErr.message}`);
+        }
         const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
         photoUrls.push(pub.publicUrl);
       }
@@ -101,14 +133,16 @@ export function PartRequestDialog({
         email: form.email.trim() || null,
         message: form.description.trim() || form.part_name.trim(),
       });
-      if (error) throw error;
+      if (error) { console.error("[part-request] insert failed:", error); throw error; }
       toast.success("Talebiniz alındı. Satıcılar teklif verecek, Taşıtsan onay sonrası size iletecek.");
       setForm({ part_name: "", oem_code: "", brand: "", model: "", year: "", category: "", description: "", full_name: "", phone: "", email: "" });
       setFiles([]);
       onOpenChange(false);
     } catch (err: any) {
+      console.error("[part-request] submit error:", err);
       toast.error(err.message ?? "Talep gönderilemedi");
     } finally {
+
       setSubmitting(false);
     }
   };
@@ -154,8 +188,8 @@ export function PartRequestDialog({
               <label className="text-[11px] uppercase tracking-wider text-gold font-semibold">Fotoğraflar (opsiyonel, en fazla 4)</label>
               <div className="grid grid-cols-4 gap-2">
                 {files.map((f, i) => (
-                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-card border border-border">
-                    <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
+                  <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card border border-border">
+                    <img src={previews[i]} alt="" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
                       className="absolute top-0.5 right-0.5 size-5 rounded-full bg-background/90 grid place-items-center">
                       <X className="size-3" />
@@ -165,11 +199,12 @@ export function PartRequestDialog({
                 {files.length < 4 && (
                   <label className="aspect-square rounded-lg border-2 border-dashed border-border grid place-items-center cursor-pointer hover:border-gold/50 transition-colors">
                     <Upload className="size-4 text-muted-foreground" />
-                    <input type="file" accept="image/*" multiple className="hidden"
-                      onChange={(e) => addFiles(e.target.files)} />
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
+                      onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
                   </label>
                 )}
               </div>
+
             </div>
 
             <Textarea placeholder="Açıklama (parçanın detayı, kullanım yeri, vb.)" rows={3} maxLength={600}
