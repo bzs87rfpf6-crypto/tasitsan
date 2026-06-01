@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Taşıtsan Parça Borsası — Yedek Parça Ara" },
-      { name: "description", content: "Binlerce yedek parça arasından ara, satıcıya WhatsApp ile ulaş." },
+      { name: "description", content: "Binlerce yedek parça arasından ara, Taşıtsan ile güvenli iletişime geç." },
     ],
   }),
   component: Index,

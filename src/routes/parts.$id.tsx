@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MessageCircle, MapPin, Calendar, Tag, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MessageCircle, MapPin, Calendar, Tag, ShieldCheck, Store } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -27,6 +27,7 @@ function PartDetail() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [part, setPart] = useState<PartFull | null>(null);
+  const [sellerName, setSellerName] = useState<string | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -40,6 +41,11 @@ function PartDetail() {
         .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at")
         .eq("id", id).maybeSingle();
       setPart(data as PartFull | null);
+      if (data?.seller_id) {
+        const { data: prof } = await supabase
+          .from("profiles").select("display_name").eq("id", data.seller_id).maybeSingle();
+        setSellerName(prof?.display_name ?? null);
+      }
       setLoading(false);
     })();
   }, [id]);
@@ -136,6 +142,7 @@ function PartDetail() {
           {part.year && <Info icon={<Calendar className="size-4" />} label="Yıl" value={String(part.year)} />}
           {part.category && <Info icon={<Tag className="size-4" />} label="Kategori" value={part.category} />}
           {part.city && <Info icon={<MapPin className="size-4" />} label="Bölge" value={part.city} />}
+          {sellerName && <Info icon={<Store className="size-4" />} label="Satıcı Firma" value={sellerName} />}
         </div>
 
         {part.description && (

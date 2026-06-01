@@ -61,7 +61,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0a0907" },
       { title: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
-      { name: "description", content: "Türkiye'nin yedek parça borsası. Satıcılar parça yükler, alıcılar WhatsApp ile anında ulaşır." },
+      { name: "description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
       { property: "og:title", content: "Taşıtsan Parça Borsası" },
       { property: "og:description", content: "Otomotiv yedek parça alım-satım — siyah & altın." },
       { property: "og:type", content: "website" },
