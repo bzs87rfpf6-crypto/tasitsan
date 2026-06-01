@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Plus, SlidersHorizontal, X, PackageSearch } from "lucide-react";
+import { Search, Plus, SlidersHorizontal, X, PackageSearch, Camera, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { PartCard, type Part } from "@/components/PartCard";
+import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,7 @@ function Index() {
   const [parts, setParts] = useState<Part[]>([]);
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -113,6 +115,16 @@ function Index() {
               </button>
             )}
           </div>
+
+          <button
+            onClick={() => setPhotoOpen(true)}
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 transition-colors shadow-gold/30"
+          >
+            <Camera className="size-4" />
+            Fotoğraftan Parça Bul
+            <Sparkles className="size-3.5 opacity-70" />
+          </button>
+
 
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
             <button
@@ -237,6 +249,7 @@ function Index() {
         userId={user?.id ?? null}
         initial={{ search_query: q, brand, model, year, oem, category: cat === "Tümü" ? "" : cat }}
       />
+      <PhotoSearchDialog open={photoOpen} onOpenChange={setPhotoOpen} />
     </div>
   );
 }
