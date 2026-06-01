@@ -179,15 +179,19 @@ function AdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const [iq, rq, pt, qt, us] = await Promise.all([
+    const [iq, rq, pt, qt, us, rl, st] = await Promise.all([
       supabase.from("inquiries").select("*").order("created_at", { ascending: false }),
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,whatsapp,city,created_at").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,display_name,whatsapp,city,created_at,is_active").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
+      supabase.from("site_settings").select("*").maybeSingle(),
     ]);
     if (us.error) toast.error(us.error.message);
     setUsers((us.data ?? []) as ProfileRow[]);
+    setAdminIds(new Set(((rl.data ?? []) as { user_id: string }[]).map((r) => r.user_id)));
+    if (st.data) setSettings(st.data as SiteSettings);
     if (iq.error) toast.error(iq.error.message);
     if (rq.error) toast.error(rq.error.message);
     if (pt.error) toast.error(pt.error.message);
