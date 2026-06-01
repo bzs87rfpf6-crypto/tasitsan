@@ -64,13 +64,13 @@ function PartDetail() {
         buyer_id: user.id,
         full_name: form.full_name.trim(),
         phone: form.phone.trim(),
-        company: form.company.trim() || null,
+        email: form.email.trim() || null,
         message: form.message.trim(),
       });
       if (error) throw error;
-      toast.success("Talebin alındı! Taşıtsan en kısa sürede seninle iletişime geçecek.");
+      toast.success("Teklif talebin alındı! Taşıtsan en kısa sürede seninle iletişime geçecek.");
       setOpen(false);
-      setForm({ full_name: "", phone: "", company: "", message: "" });
+      setForm({ full_name: "", phone: "", email: "", message: "" });
     } catch (err: any) {
       toast.error(err.message ?? "Talep gönderilemedi");
     } finally {
