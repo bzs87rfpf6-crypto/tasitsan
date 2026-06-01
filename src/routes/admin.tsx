@@ -41,14 +41,30 @@ interface PartRequest {
   phone: string;
   email: string | null;
   search_query: string | null;
+  part_name: string | null;
   brand: string | null;
   model: string | null;
   year: number | null;
   category: string | null;
   oem_code: string | null;
+  description: string | null;
+  photos: string[] | null;
   message: string;
   status: Status;
   created_at: string;
+}
+
+interface RequestQuote {
+  id: string;
+  request_id: string;
+  seller_id: string;
+  price: number;
+  delivery_time: string;
+  condition: "new" | "used" | "refurbished";
+  note: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  seller?: { display_name: string | null } | null;
 }
 
 interface PartItem {
