@@ -118,8 +118,10 @@ function AdminPage() {
   const [tab, setTab] = useState<Tab>("products");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [requests, setRequests] = useState<PartRequest[]>([]);
+  const [quotes, setQuotes] = useState<RequestQuote[]>([]);
   const [parts, setParts] = useState<PartItem[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PartItem | null>(null);
 
