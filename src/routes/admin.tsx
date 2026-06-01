@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, ArrowLeft, Phone, Building2, Calendar } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ interface Inquiry {
   buyer_id: string | null;
   full_name: string;
   phone: string;
+  email: string | null;
   company: string | null;
   message: string;
   status: Status;
@@ -177,7 +178,7 @@ function AdminPage() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <Field label="Talep eden" value={i.full_name} />
               <Field label="Telefon" value={i.phone} icon={<Phone className="size-3" />} />
-              {i.company && <Field label="Firma" value={i.company} icon={<Building2 className="size-3" />} />}
+              {i.email && <Field label="E-posta" value={i.email} icon={<Mail className="size-3" />} />}
               <Field label="Tarih" value={new Date(i.created_at).toLocaleString("tr-TR")} icon={<Calendar className="size-3" />} />
             </div>
 

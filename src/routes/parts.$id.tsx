@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MessageCircle, MapPin, Calendar, Tag, ShieldCheck, Store } from "lucide-react";
+import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -27,12 +27,11 @@ function PartDetail() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [part, setPart] = useState<PartFull | null>(null);
-  const [sellerName, setSellerName] = useState<string | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ full_name: "", phone: "", company: "", message: "" });
+  const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
 
   useEffect(() => {
     (async () => {
@@ -41,11 +40,6 @@ function PartDetail() {
         .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at")
         .eq("id", id).maybeSingle();
       setPart(data as PartFull | null);
-      if (data?.seller_id) {
-        const { data: prof } = await supabase
-          .from("profiles").select("display_name").eq("id", data.seller_id).maybeSingle();
-        setSellerName(prof?.display_name ?? null);
-      }
       setLoading(false);
     })();
   }, [id]);
@@ -70,13 +64,13 @@ function PartDetail() {
         buyer_id: user.id,
         full_name: form.full_name.trim(),
         phone: form.phone.trim(),
-        company: form.company.trim() || null,
+        email: form.email.trim() || null,
         message: form.message.trim(),
       });
       if (error) throw error;
-      toast.success("Talebin alındı! Taşıtsan en kısa sürede seninle iletişime geçecek.");
+      toast.success("Teklif talebin alındı! Taşıtsan en kısa sürede seninle iletişime geçecek.");
       setOpen(false);
-      setForm({ full_name: "", phone: "", company: "", message: "" });
+      setForm({ full_name: "", phone: "", email: "", message: "" });
     } catch (err: any) {
       toast.error(err.message ?? "Talep gönderilemedi");
     } finally {
@@ -142,7 +136,7 @@ function PartDetail() {
           {part.year && <Info icon={<Calendar className="size-4" />} label="Yıl" value={String(part.year)} />}
           {part.category && <Info icon={<Tag className="size-4" />} label="Kategori" value={part.category} />}
           {part.city && <Info icon={<MapPin className="size-4" />} label="Bölge" value={part.city} />}
-          {sellerName && <Info icon={<Store className="size-4" />} label="Satıcı Firma" value={sellerName} />}
+          
         </div>
 
         {part.description && (
@@ -165,8 +159,8 @@ function PartDetail() {
         <div className="max-w-md mx-auto p-3">
           <button onClick={openForm}
             className="w-full flex items-center justify-center gap-2 h-14 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold active:scale-[0.98] transition-transform">
-            <MessageCircle className="size-5" />
-            Taşıtsan ile İletişime Geç
+            <Send className="size-5" />
+            Teklif Talebi Gönder
           </button>
         </div>
       </div>
@@ -174,7 +168,7 @@ function PartDetail() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="font-display tracking-wide">Talep Formu</DialogTitle>
+            <DialogTitle className="font-display tracking-wide">Teklif Talebi</DialogTitle>
             <DialogDescription className="text-xs">
               Bilgilerin sadece Taşıtsan ekibine iletilir. Satıcıyla doğrudan paylaşılmaz.
             </DialogDescription>
@@ -184,8 +178,8 @@ function PartDetail() {
               onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="h-11" />
             <Input placeholder="Telefon Numarası" required maxLength={20} inputMode="tel" value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })} className="h-11" />
-            <Input placeholder="Firma Adı (opsiyonel)" maxLength={100} value={form.company}
-              onChange={(e) => setForm({ ...form, company: e.target.value })} className="h-11" />
+            <Input type="email" placeholder="E-posta" required maxLength={150} value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })} className="h-11" />
             <Textarea placeholder="Mesajınız" required maxLength={1000} rows={4} value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })} className="resize-none" />
             <Button type="submit" disabled={submitting}
