@@ -146,6 +146,10 @@ function SellPage() {
           <Input placeholder="Şehir" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="h-12 bg-card" />
         </div>
 
+        <Input placeholder="OEM Kodu (opsiyonel)" value={form.oem_code}
+          onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })}
+          maxLength={60} className="h-12 bg-card font-mono" />
+
         <div>
           <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">Kategori</label>
           <div className="flex flex-wrap gap-2">
