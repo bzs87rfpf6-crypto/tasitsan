@@ -174,11 +174,16 @@ function SellPage() {
           </div>
         </div>
 
-        <div className="relative">
-          <Input placeholder="Fiyat" inputMode="decimal" value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.]/g, "") })}
-            className="h-12 bg-card pl-8" />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold">₺</span>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="relative">
+            <Input placeholder="Fiyat" inputMode="decimal" value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.]/g, "") })}
+              className="h-12 bg-card pl-8" />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold">₺</span>
+          </div>
+          <Input placeholder="Stok Adedi" inputMode="numeric" value={form.stock_quantity}
+            onChange={(e) => setForm({ ...form, stock_quantity: e.target.value.replace(/\D/g, "") })}
+            className="h-12 bg-card" />
         </div>
 
         <Textarea placeholder="Açıklama, uyumlu modeller, kusurlar..." value={form.description}
