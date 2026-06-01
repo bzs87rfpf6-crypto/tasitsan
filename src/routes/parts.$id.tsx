@@ -27,12 +27,11 @@ function PartDetail() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [part, setPart] = useState<PartFull | null>(null);
-  const [sellerName, setSellerName] = useState<string | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ full_name: "", phone: "", company: "", message: "" });
+  const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
 
   useEffect(() => {
     (async () => {
