@@ -351,7 +351,11 @@ function AdminPage() {
           filteredParts.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
           ) : filteredParts.map((p) => (
-            <article key={p.id} className="bg-card rounded-xl border border-border p-3 sm:p-4 space-y-3">
+            <article key={p.id} className={`bg-card rounded-xl border p-3 sm:p-4 space-y-3 transition-shadow ${
+              p.status === "pending"
+                ? "border-gold/60 shadow-[0_0_0_1px_rgba(201,168,76,0.15)]"
+                : "border-border"
+            }`}>
               <div className="flex gap-3">
                 <div className="size-20 sm:size-24 rounded-lg overflow-hidden bg-secondary shrink-0">
                   {p.photos?.[0] ? (
@@ -388,7 +392,23 @@ function AdminPage() {
                 <div className="bg-background/50 rounded-lg p-2.5 text-[11px] leading-relaxed line-clamp-3">{p.description}</div>
               )}
 
-              <div className="grid grid-cols-4 gap-2 pt-1">
+              {p.status === "rejected" && p.admin_notes && (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-2.5 text-[11px] leading-relaxed">
+                  <div className="flex items-center gap-1.5 text-destructive font-semibold mb-1">
+                    <MessageSquare className="size-3" /> Red nedeni (satıcıya iletilir)
+                  </div>
+                  {p.admin_notes}
+                </div>
+              )}
+
+              {p.status === "pending" && (
+                <div className="flex items-center gap-2 rounded-lg bg-gold/5 border border-gold/20 p-2.5">
+                  <AlertTriangle className="size-4 text-gold shrink-0" />
+                  <span className="text-[11px] text-gold">Bu ilan onay bekliyor. Onayla veya reddet.</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                 <Button size="sm" variant="outline" onClick={() => setEditing(p)} className="h-9 text-xs">
                   <Pencil className="size-3.5 mr-1" /> Düzenle
                 </Button>
@@ -402,7 +422,7 @@ function AdminPage() {
                   className="h-9 text-xs">
                   Beklet
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => updatePartStatus(p.id, "rejected")}
+                <Button size="sm" variant="outline" onClick={() => { setRejecting(p); setRejectNote(p.admin_notes || ""); }}
                   disabled={p.status === "rejected"}
                   className="h-9 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
                   <XIcon className="size-3.5 mr-1" /> Reddet
