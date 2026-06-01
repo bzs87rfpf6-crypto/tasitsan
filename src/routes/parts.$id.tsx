@@ -148,17 +148,28 @@ function PartDetail() {
   return (
     <div className="min-h-screen pb-32">
       <div className="relative bg-secondary aspect-square">
-        {part.photos[activePhoto] ? (
-          <img src={part.photos[activePhoto]} alt={part.title} className="w-full h-full object-cover" />
+        {photos[activePhoto] ? (
+          <img
+            key={photos[activePhoto]}
+            src={photos[activePhoto]}
+            alt={part.title}
+            loading="eager"
+            decoding="async"
+            onError={() => markBroken(photos[activePhoto])}
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <div className="w-full h-full grid place-items-center text-muted-foreground">Fotoğraf yok</div>
+          <div className="w-full h-full grid place-items-center text-muted-foreground flex-col gap-2">
+            <ImageOff className="size-8" />
+            <span className="text-xs">Görüntülenebilir fotoğraf yok</span>
+          </div>
         )}
         <Link to="/" className="absolute top-4 left-4 size-10 rounded-full bg-background/70 backdrop-blur grid place-items-center">
           <ArrowLeft className="size-5" />
         </Link>
-        {part.photos.length > 1 && (
+        {photos.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {part.photos.map((_, i) => (
+            {photos.map((_, i) => (
               <button key={i} onClick={() => setActivePhoto(i)}
                 className={`h-1.5 rounded-full transition-all ${i === activePhoto ? "w-6 bg-gold" : "w-1.5 bg-white/40"}`} />
             ))}
@@ -166,16 +177,19 @@ function PartDetail() {
         )}
       </div>
 
-      {part.photos.length > 1 && (
+      {photos.length > 1 && (
         <div className="flex gap-2 px-4 pt-3 overflow-x-auto">
-          {part.photos.map((p, i) => (
-            <button key={i} onClick={() => setActivePhoto(i)}
+          {photos.map((p, i) => (
+            <button key={p} onClick={() => setActivePhoto(i)}
               className={`shrink-0 size-16 rounded-lg overflow-hidden border-2 ${i === activePhoto ? "border-gold" : "border-transparent"}`}>
-              <img src={p} alt="" className="w-full h-full object-cover" />
+              <img src={p} alt="" loading="lazy" decoding="async"
+                onError={() => markBroken(p)}
+                className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
       )}
+
 
       <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
         <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
