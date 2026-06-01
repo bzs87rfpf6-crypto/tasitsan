@@ -168,7 +168,7 @@ function PartDetail() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="font-display tracking-wide">Talep Formu</DialogTitle>
+            <DialogTitle className="font-display tracking-wide">Teklif Talebi</DialogTitle>
             <DialogDescription className="text-xs">
               Bilgilerin sadece Taşıtsan ekibine iletilir. Satıcıyla doğrudan paylaşılmaz.
             </DialogDescription>
