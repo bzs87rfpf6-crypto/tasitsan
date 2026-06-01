@@ -40,11 +40,6 @@ function PartDetail() {
         .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at")
         .eq("id", id).maybeSingle();
       setPart(data as PartFull | null);
-      if (data?.seller_id) {
-        const { data: prof } = await supabase
-          .from("profiles").select("display_name").eq("id", data.seller_id).maybeSingle();
-        setSellerName(prof?.display_name ?? null);
-      }
       setLoading(false);
     })();
   }, [id]);
