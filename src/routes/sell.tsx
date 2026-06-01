@@ -55,7 +55,8 @@ function SellPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (files.length === 0) { toast.error("En az 1 fotoğraf yükle"); return; }
+    if (files.length < 3) { toast.error("En az 3 fotoğraf yüklemelisin."); return; }
+    if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli bir fiyat girin."); return; }
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
@@ -70,7 +71,7 @@ function SellPage() {
         photoUrls.push(pub.publicUrl);
       }
 
-      const { data, error } = await supabase.from("parts").insert({
+      const { error } = await supabase.from("parts").insert({
         seller_id: user.id,
         title: form.title,
         description: form.description || null,
@@ -85,21 +86,23 @@ function SellPage() {
         city: form.city || null,
         photos: photoUrls,
         whatsapp: form.whatsapp,
-      }).select("id").single();
+        status: "pending",
+      });
       if (error) throw error;
 
       if (form.whatsapp !== profileWa) {
         await supabase.from("profiles").update({ whatsapp: form.whatsapp, city: form.city || null }).eq("id", user.id);
       }
 
-      toast.success("İlan yayınlandı!");
-      nav({ to: "/parts/$id", params: { id: data.id } });
+      toast.success("İlanınız admin onayına gönderildi.");
+      nav({ to: "/" });
     } catch (err: any) {
       toast.error(err.message ?? "Hata");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   if (authLoading || !user) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
