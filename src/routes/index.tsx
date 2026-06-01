@@ -116,6 +116,16 @@ function Index() {
             )}
           </div>
 
+          <button
+            onClick={() => setPhotoOpen(true)}
+            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 transition-colors shadow-gold/30"
+          >
+            <Camera className="size-4" />
+            Fotoğraftan Parça Bul
+            <Sparkles className="size-3.5 opacity-70" />
+          </button>
+
+
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
             <button
               onClick={() => setShowFilters((v) => !v)}
