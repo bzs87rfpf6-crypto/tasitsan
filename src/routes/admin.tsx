@@ -181,6 +181,7 @@ function AdminPage() {
       };
     }));
     setRequests((rq.data ?? []) as PartRequest[]);
+    setQuotes(quoteRows.map((q) => ({ ...q, seller: sellersMap.get(q.seller_id) ?? null })) as RequestQuote[]);
     setParts(((pt.data ?? []) as any[]).map((p) => ({ ...p, seller: sellersMap.get(p.seller_id) ?? null })) as PartItem[]);
     setLoading(false);
   };
@@ -197,6 +198,15 @@ function AdminPage() {
     if (error) { toast.error(error.message); return; }
     setRequests((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     toast.success("Durum güncellendi");
+  };
+
+  const updateQuoteStatus = async (id: string, status: "pending" | "approved" | "rejected") => {
+    const { error } = await supabase.from("request_quotes")
+      .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null })
+      .eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
+    toast.success(status === "approved" ? "Teklif onaylandı, müşteriye iletilecek" : status === "rejected" ? "Teklif reddedildi" : "Teklif beklemeye alındı");
   };
 
   const updatePartStatus = async (id: string, status: PartStatus) => {
