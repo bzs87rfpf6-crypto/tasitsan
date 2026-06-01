@@ -164,8 +164,8 @@ function SellPage() {
           </label>
           <div className="grid grid-cols-3 gap-2">
             {files.map((f, i) => (
-              <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
+              <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
+                <img src={previews[i]} alt="" className="w-full h-full object-cover" />
                 <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
                   className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
                   <X className="size-3.5" />
@@ -174,12 +174,13 @@ function SellPage() {
             ))}
             {files.length < 6 && (
               <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-gold grid place-items-center cursor-pointer text-muted-foreground">
-                <input type="file" accept="image/*" multiple className="hidden"
-                  onChange={(e) => addFiles(e.target.files)} />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
+                  onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
                 <Upload className="size-6" />
               </label>
             )}
           </div>
+
         </section>
 
 
