@@ -51,10 +51,38 @@ function SellPage() {
     });
   }, [user]);
 
+  // Stable blob URLs keyed by File so we don't recreate them every render
+  // (which on iOS Safari leaks memory and forces the page to reload).
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => {
+    return () => { previews.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [previews]);
+
   const addFiles = (list: FileList | null) => {
-    if (!list) return;
-    const next = [...files, ...Array.from(list)].slice(0, 6);
-    setFiles(next);
+    if (!list || list.length === 0) return;
+    const incoming = Array.from(list);
+    const accepted: File[] = [];
+    const rejected: string[] = [];
+    for (const f of incoming) {
+      const isImage = ACCEPTED_MIME.test(f.type);
+      const badExt = REJECTED_EXT.test(f.name);
+      if (!isImage || badExt) {
+        rejected.push(f.name);
+        console.warn("[sell] rejected file:", f.name, "mime:", f.type, "size:", f.size);
+        continue;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        rejected.push(`${f.name} (>10MB)`);
+        console.warn("[sell] file too large:", f.name, f.size);
+        continue;
+      }
+      accepted.push(f);
+    }
+    if (rejected.length > 0) {
+      toast.error(`Desteklenmeyen dosya: ${rejected.join(", ")}. Sadece JPG/PNG/WebP yükleyin (HEIC, DNG, RAW desteklenmez).`);
+    }
+    if (accepted.length === 0) return;
+    setFiles((prev) => [...prev, ...accepted].slice(0, 6));
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -65,13 +93,18 @@ function SellPage() {
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
-      for (const f of files) {
-        const ext = f.name.split(".").pop() ?? "jpg";
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("part-photos").upload(path, f, {
-          cacheControl: "3600", upsert: false,
-        });
-        if (upErr) throw upErr;
+        const { data: upData, error: upErr } = await supabase.storage
+          .from("part-photos")
+          .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
+        if (upErr) {
+          console.error(`[sell] upload failed for ${f.name}`, { path, error: upErr });
+          throw new Error(`Fotoğraf ${i + 1} yüklenemedi: ${upErr.message}`);
+        }
+        console.info("[sell] uploaded:", upData?.path ?? path);
         const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
         photoUrls.push(pub.publicUrl);
       }
@@ -93,7 +126,7 @@ function SellPage() {
         whatsapp: form.whatsapp,
         status: "pending",
       });
-      if (error) throw error;
+      if (error) { console.error("[sell] parts insert failed:", error); throw error; }
 
       if (form.whatsapp !== profileWa) {
         await supabase.from("profiles").update({ whatsapp: form.whatsapp, city: form.city || null }).eq("id", user.id);
@@ -102,11 +135,13 @@ function SellPage() {
       toast.success("İlanınız admin onayına gönderildi.");
       nav({ to: "/" });
     } catch (err: any) {
+      console.error("[sell] submit error:", err);
       toast.error(err.message ?? "Hata");
     } finally {
       setSubmitting(false);
     }
   };
+
 
 
   if (authLoading || !user) {
