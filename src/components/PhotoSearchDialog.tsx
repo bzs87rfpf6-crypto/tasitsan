@@ -18,6 +18,9 @@ type AnalysisResult = {
   confidence: number;
   keywords: string[];
   description: string;
+  oem_code_guess: string;
+  brand_compatibility: string[];
+  model_compatibility: string[];
 };
 
 const MAX_BYTES = 6 * 1024 * 1024;
@@ -81,15 +84,28 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
       if (!res.ok) { toast.error(res.error); setAnalyzing(false); return; }
       setResult(res.result);
 
-      // Fetch similar listings using keywords + category
-      const kws = res.result.keywords.filter(Boolean).slice(0, 5);
+      // Fetch similar listings using OEM, brand, model, keywords and category
+      const esc = (s: string) => s.replace(/[%,()]/g, " ").trim();
+      const ors: string[] = [];
+      const oem = esc(res.result.oem_code_guess ?? "");
+      if (oem) ors.push(`oem_code.ilike.%${oem}%`);
+      for (const k of res.result.keywords.filter(Boolean).slice(0, 5)) {
+        const v = esc(k);
+        if (!v) continue;
+        ors.push(`title.ilike.%${v}%`, `description.ilike.%${v}%`);
+      }
+      for (const b of (res.result.brand_compatibility ?? []).slice(0, 4)) {
+        const v = esc(b);
+        if (v) ors.push(`brand.ilike.%${v}%`);
+      }
+      for (const m of (res.result.model_compatibility ?? []).slice(0, 4)) {
+        const v = esc(m);
+        if (v) ors.push(`model.ilike.%${v}%`);
+      }
       let q = supabase.from("parts")
         .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code")
         .limit(12);
-      if (kws.length) {
-        const ors = kws.map((k) => `title.ilike.%${k}%,description.ilike.%${k}%`).join(",");
-        q = q.or(ors);
-      }
+      if (ors.length) q = q.or(ors.join(","));
       const { data } = await q;
       setSimilar((data ?? []) as Part[]);
     } catch (e) {
@@ -162,6 +178,28 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
                     {result.description && (
                       <p className="text-xs text-muted-foreground leading-relaxed">{result.description}</p>
                     )}
+                    {(result.oem_code_guess || result.brand_compatibility?.length || result.model_compatibility?.length) ? (
+                      <div className="grid grid-cols-1 gap-1.5 pt-2 text-xs">
+                        {result.oem_code_guess && (
+                          <div className="flex items-center justify-between gap-2 rounded-md bg-muted/40 border border-border px-2 py-1">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">OEM</span>
+                            <span className="font-mono text-gold">{result.oem_code_guess}</span>
+                          </div>
+                        )}
+                        {result.brand_compatibility?.length > 0 && (
+                          <div className="flex items-start justify-between gap-2 rounded-md bg-muted/40 border border-border px-2 py-1">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">Marka</span>
+                            <span className="text-right">{result.brand_compatibility.join(", ")}</span>
+                          </div>
+                        )}
+                        {result.model_compatibility?.length > 0 && (
+                          <div className="flex items-start justify-between gap-2 rounded-md bg-muted/40 border border-border px-2 py-1">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">Model</span>
+                            <span className="text-right">{result.model_compatibility.join(", ")}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                     {result.keywords?.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {result.keywords.map((k) => (
@@ -172,6 +210,7 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
                       </div>
                     )}
                   </div>
+
 
                   {lowConfidence ? (
                     <div className="bg-destructive/5 border border-destructive/30 rounded-2xl p-4 text-center space-y-3">
