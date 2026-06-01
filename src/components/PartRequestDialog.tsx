@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { X, Upload } from "lucide-react";
@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
+const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
+const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
+
 
 const CATEGORIES = [
   "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
