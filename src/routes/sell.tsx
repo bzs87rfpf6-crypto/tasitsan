@@ -15,7 +15,10 @@ export const Route = createFileRoute("/sell")({
   component: SellPage,
 });
 
-const CATEGORIES = ["Motor", "Şanzıman", "Kaporta", "Fren", "Elektrik", "Lastik", "İç Aksam", "Diğer"];
+const CATEGORIES = [
+  "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
+  "Süspansiyon", "Klima", "Yakıt Sistemi", "Aydınlatma", "Diğer",
+];
 
 function SellPage() {
   const { user, loading: authLoading } = useAuth();
@@ -23,8 +26,8 @@ function SellPage() {
   const [profileWa, setProfileWa] = useState("");
 
   const [form, setForm] = useState({
-    title: "", description: "", brand: "", model: "", year: "",
-    category: "Motor", condition: "used", price: "", city: "", whatsapp: "",
+    title: "", description: "", brand: "", model: "", year: "", oem_code: "",
+    category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "", whatsapp: "",
   });
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
