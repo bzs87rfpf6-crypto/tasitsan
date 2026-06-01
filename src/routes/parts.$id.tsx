@@ -178,8 +178,8 @@ function PartDetail() {
               onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="h-11" />
             <Input placeholder="Telefon Numarası" required maxLength={20} inputMode="tel" value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })} className="h-11" />
-            <Input placeholder="Firma Adı (opsiyonel)" maxLength={100} value={form.company}
-              onChange={(e) => setForm({ ...form, company: e.target.value })} className="h-11" />
+            <Input type="email" placeholder="E-posta" required maxLength={150} value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })} className="h-11" />
             <Textarea placeholder="Mesajınız" required maxLength={1000} rows={4} value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })} className="resize-none" />
             <Button type="submit" disabled={submitting}
