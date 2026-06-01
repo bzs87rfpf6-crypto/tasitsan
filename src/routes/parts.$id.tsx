@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,9 +18,23 @@ interface PartFull {
   id: string; title: string; description: string | null;
   brand: string | null; model: string | null; year: number | null;
   category: string | null; condition: string; price: number | null;
-  city: string | null; photos: string[];
+  city: string | null; photos: string[] | null;
   seller_id: string; created_at: string;
   oem_code: string | null; stock_quantity: number | null;
+}
+
+// Browsers cannot render Apple ProRAW (.dng), HEIC/HEIF, or camera RAW
+// formats. Showing them via <img> in Safari triggers repeated decode
+// attempts on multi-MB files, which exhausts the WebKit image-decoder
+// memory cap and crashes the tab ("sayfasında birçok kez sorun oluştu").
+const UNRENDERABLE_EXT = /\.(heic|heif|dng|raw|cr2|cr3|nef|arw|orf|rw2|tif|tiff)(\?|$)/i;
+
+function isDisplayableUrl(u: unknown): u is string {
+  if (typeof u !== "string") return false;
+  const trimmed = u.trim();
+  if (!trimmed) return false;
+  if (UNRENDERABLE_EXT.test(trimmed)) return false;
+  return true;
 }
 
 function PartDetail() {
@@ -33,17 +47,59 @@ function PartDetail() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
+  const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setActivePhoto(0);
+    setBrokenPhotos(new Set());
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("parts")
         .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,stock_quantity")
         .eq("id", id).maybeSingle();
-      setPart(data as PartFull | null);
+      if (cancelled) return;
+      if (error) {
+        console.error("[part-detail] fetch failed:", error);
+        toast.error("İlan yüklenemedi.");
+      }
+      setPart((data as PartFull | null) ?? null);
       setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, [id]);
+
+  // Defensive: filter null, non-string, and browser-unrenderable URLs.
+  // Also drop URLs that <img> reported as broken so we don't retry them.
+  const photos = useMemo(() => {
+    const raw = Array.isArray(part?.photos) ? part!.photos : [];
+    const filtered = raw.filter(isDisplayableUrl).filter((u) => !brokenPhotos.has(u));
+    if (raw.length !== filtered.length) {
+      console.warn("[part-detail] filtered photos", {
+        total: raw.length,
+        kept: filtered.length,
+        dropped: raw.filter((u) => !filtered.includes(u as string)),
+      });
+    }
+    return filtered;
+  }, [part, brokenPhotos]);
+
+  // Clamp active index whenever the displayable list shrinks.
+  useEffect(() => {
+    if (activePhoto >= photos.length) setActivePhoto(0);
+  }, [photos.length, activePhoto]);
+
+  const markBroken = (url: string) => {
+    console.warn("[part-detail] image failed to load:", url);
+    setBrokenPhotos((prev) => {
+      if (prev.has(url)) return prev;
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  };
+
 
   const openForm = () => {
     if (!user) {
@@ -92,17 +148,28 @@ function PartDetail() {
   return (
     <div className="min-h-screen pb-32">
       <div className="relative bg-secondary aspect-square">
-        {part.photos[activePhoto] ? (
-          <img src={part.photos[activePhoto]} alt={part.title} className="w-full h-full object-cover" />
+        {photos[activePhoto] ? (
+          <img
+            key={photos[activePhoto]}
+            src={photos[activePhoto]}
+            alt={part.title}
+            loading="eager"
+            decoding="async"
+            onError={() => markBroken(photos[activePhoto])}
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <div className="w-full h-full grid place-items-center text-muted-foreground">Fotoğraf yok</div>
+          <div className="w-full h-full grid place-items-center text-muted-foreground flex-col gap-2">
+            <ImageOff className="size-8" />
+            <span className="text-xs">Görüntülenebilir fotoğraf yok</span>
+          </div>
         )}
         <Link to="/" className="absolute top-4 left-4 size-10 rounded-full bg-background/70 backdrop-blur grid place-items-center">
           <ArrowLeft className="size-5" />
         </Link>
-        {part.photos.length > 1 && (
+        {photos.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {part.photos.map((_, i) => (
+            {photos.map((_, i) => (
               <button key={i} onClick={() => setActivePhoto(i)}
                 className={`h-1.5 rounded-full transition-all ${i === activePhoto ? "w-6 bg-gold" : "w-1.5 bg-white/40"}`} />
             ))}
@@ -110,16 +177,19 @@ function PartDetail() {
         )}
       </div>
 
-      {part.photos.length > 1 && (
+      {photos.length > 1 && (
         <div className="flex gap-2 px-4 pt-3 overflow-x-auto">
-          {part.photos.map((p, i) => (
-            <button key={i} onClick={() => setActivePhoto(i)}
+          {photos.map((p, i) => (
+            <button key={p} onClick={() => setActivePhoto(i)}
               className={`shrink-0 size-16 rounded-lg overflow-hidden border-2 ${i === activePhoto ? "border-gold" : "border-transparent"}`}>
-              <img src={p} alt="" className="w-full h-full object-cover" />
+              <img src={p} alt="" loading="lazy" decoding="async"
+                onError={() => markBroken(p)}
+                className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
       )}
+
 
       <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
         <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">

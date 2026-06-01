@@ -9,14 +9,21 @@ export interface Part {
   year: number | null;
   price: number | null;
   city: string | null;
-  photos: string[];
+  photos: string[] | null;
   condition: string;
   stock_quantity?: number | null;
   oem_code?: string | null;
 }
 
+// Match the detail page: skip browser-unrenderable formats (HEIC, DNG, RAW…)
+// that would otherwise show a broken icon and waste decode bandwidth.
+const UNRENDERABLE_EXT = /\.(heic|heif|dng|raw|cr2|cr3|nef|arw|orf|rw2|tif|tiff)(\?|$)/i;
+
 export function PartCard({ part }: { part: Part }) {
-  const photo = part.photos[0];
+  const photo = (Array.isArray(part.photos) ? part.photos : []).find(
+    (u) => typeof u === "string" && u.trim() && !UNRENDERABLE_EXT.test(u),
+  );
+
   return (
     <Link
       to="/parts/$id"
