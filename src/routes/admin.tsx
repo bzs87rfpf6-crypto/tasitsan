@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil, Trash2, Users as UsersIcon, LayoutDashboard, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,15 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "products" | "inquiries" | "requests";
+type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests";
+
+interface ProfileRow {
+  id: string;
+  display_name: string | null;
+  whatsapp: string | null;
+  city: string | null;
+  created_at: string;
+}
 
 interface Inquiry {
   id: string;
@@ -115,11 +123,12 @@ function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [tab, setTab] = useState<Tab>("products");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [requests, setRequests] = useState<PartRequest[]>([]);
   const [quotes, setQuotes] = useState<RequestQuote[]>([]);
   const [parts, setParts] = useState<PartItem[]>([]);
+  const [users, setUsers] = useState<ProfileRow[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [loading, setLoading] = useState(true);
@@ -128,21 +137,31 @@ function AdminPage() {
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setIsAdmin(null); return; }
     supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
+
+  useEffect(() => {
+    if (isAdmin === false) {
+      toast.error("Bu alana erişim yetkin yok.");
+      nav({ to: "/" });
+    }
+  }, [isAdmin, nav]);
 
   useEffect(() => { if (isAdmin) void load(); }, [isAdmin]);
 
   const load = async () => {
     setLoading(true);
-    const [iq, rq, pt, qt] = await Promise.all([
+    const [iq, rq, pt, qt, us] = await Promise.all([
       supabase.from("inquiries").select("*").order("created_at", { ascending: false }),
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,display_name,whatsapp,city,created_at").order("created_at", { ascending: false }),
     ]);
+    if (us.error) toast.error(us.error.message);
+    setUsers((us.data ?? []) as ProfileRow[]);
     if (iq.error) toast.error(iq.error.message);
     if (rq.error) toast.error(rq.error.message);
     if (pt.error) toast.error(pt.error.message);
@@ -218,19 +237,19 @@ function AdminPage() {
     toast.success(status === "approved" ? "İlan onaylandı" : status === "rejected" ? "İlan reddedildi" : "Beklemede");
   };
 
+  const deletePart = async (id: string) => {
+    if (!confirm("Bu ilanı silmek istediğine emin misin?")) return;
+    const { error } = await supabase.from("parts").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setParts((prev) => prev.filter((p) => p.id !== id));
+    toast.success("İlan silindi");
+  };
+
   if (authLoading || isAdmin === null) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
   }
   if (!isAdmin) {
-    return (
-      <div className="min-h-screen grid place-items-center p-6 text-center">
-        <div>
-          <ShieldCheck className="size-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground">Bu alana erişim yetkin yok.</p>
-          <Link to="/" className="text-gold mt-3 inline-block text-sm">← Anasayfaya dön</Link>
-        </div>
-      </div>
-    );
+    return <div className="min-h-screen grid place-items-center text-muted-foreground"><ShieldCheck className="size-6 mr-2" />Yönlendiriliyor...</div>;
   }
 
   const pendingCount = parts.filter((p) => p.status === "pending").length;
@@ -267,9 +286,11 @@ function AdminPage() {
 
         <div className="max-w-2xl mx-auto px-4 flex gap-1.5 border-b border-border overflow-x-auto">
           {([
-            ["products", `Ürün Onayları${pendingCount ? ` (${pendingCount})` : ""}`],
-            ["inquiries", `Teklif Talepleri (${inquiries.length})`],
-            ["requests", `Parça Talepleri (${requests.length})`],
+            ["dashboard", "Panel"],
+            ["products", `Ürünler${pendingCount ? ` (${pendingCount})` : ""}`],
+            ["users", `Kullanıcılar (${users.length})`],
+            ["inquiries", `Teklifler (${inquiries.length})`],
+            ["requests", `Talepler (${requests.length})`],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
               className={`shrink-0 px-3 py-2.5 text-xs sm:text-sm font-semibold border-b-2 -mb-px transition-colors ${
@@ -280,6 +301,7 @@ function AdminPage() {
           ))}
         </div>
 
+        {(tab === "products" || tab === "inquiries" || tab === "requests") && (
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
           {tab === "requests" ? (
             ([
@@ -307,11 +329,22 @@ function AdminPage() {
             ))
           )}
         </div>
+        )}
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
         {loading ? (
           <p className="text-center text-muted-foreground text-sm py-8">Yükleniyor...</p>
+        ) : tab === "dashboard" ? (
+          <DashboardPanel
+            users={users}
+            parts={parts}
+            inquiries={inquiries}
+            requests={requests}
+            onJump={(t) => { setTab(t); setFilter("all"); }}
+          />
+        ) : tab === "users" ? (
+          <UsersPanel users={users} parts={parts} />
         ) : tab === "products" ? (
           filteredParts.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
@@ -373,6 +406,10 @@ function AdminPage() {
                   <XIcon className="size-3.5 mr-1" /> Reddet
                 </Button>
               </div>
+              <Button size="sm" variant="outline" onClick={() => deletePart(p.id)}
+                className="w-full h-9 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Trash2 className="size-3.5 mr-1" /> İlanı Sil
+              </Button>
             </article>
           ))
         ) : tab === "inquiries" ? (
@@ -628,5 +665,106 @@ function EditPartDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent?: string }) {
+  return (
+    <div className="bg-card rounded-xl border border-border p-4">
+      <div className={`flex items-center gap-2 text-[11px] uppercase tracking-wider ${accent ?? "text-muted-foreground"}`}>
+        {icon}{label}
+      </div>
+      <div className="mt-2 font-display text-3xl text-gold">{value}</div>
+    </div>
+  );
+}
+
+function DashboardPanel({
+  users, parts, inquiries, requests, onJump,
+}: {
+  users: ProfileRow[];
+  parts: PartItem[];
+  inquiries: Inquiry[];
+  requests: PartRequest[];
+  onJump: (t: Tab) => void;
+}) {
+  const pending = parts.filter((p) => p.status === "pending").length;
+  type Activity = { id: string; type: string; title: string; when: string; tab: Tab };
+  const activity: Activity[] = [
+    ...parts.slice(0, 10).map((p) => ({ id: `p-${p.id}`, type: "Yeni ilan", title: p.title, when: p.created_at, tab: "products" as Tab })),
+    ...inquiries.slice(0, 10).map((i) => ({ id: `i-${i.id}`, type: "Teklif talebi", title: i.full_name, when: i.created_at, tab: "inquiries" as Tab })),
+    ...requests.slice(0, 10).map((r) => ({ id: `r-${r.id}`, type: "Parça talebi", title: r.part_name || r.search_query || r.full_name, when: r.created_at, tab: "requests" as Tab })),
+  ].sort((a, b) => +new Date(b.when) - +new Date(a.when)).slice(0, 10);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2.5">
+        <button onClick={() => onJump("users")} className="text-left">
+          <StatCard icon={<UsersIcon className="size-3.5" />} label="Toplam Kullanıcı" value={users.length} />
+        </button>
+        <button onClick={() => onJump("products")} className="text-left">
+          <StatCard icon={<Package className="size-3.5" />} label="Toplam İlan" value={parts.length} />
+        </button>
+        <button onClick={() => onJump("products")} className="text-left">
+          <StatCard icon={<ClipboardList className="size-3.5" />} label="Onay Bekleyen" value={pending} accent="text-gold" />
+        </button>
+        <button onClick={() => onJump("inquiries")} className="text-left">
+          <StatCard icon={<Mail className="size-3.5" />} label="Teklif Talebi" value={inquiries.length} />
+        </button>
+      </div>
+
+      <div className="bg-card rounded-xl border border-border p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <LayoutDashboard className="size-4 text-gold" />
+          <h2 className="font-semibold text-sm">Son Aktivite</h2>
+        </div>
+        {activity.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Henüz aktivite yok.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {activity.map((a) => (
+              <li key={a.id}>
+                <button onClick={() => onJump(a.tab)} className="w-full text-left py-2.5 flex items-start justify-between gap-3 hover:opacity-80">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider text-gold">{a.type}</p>
+                    <p className="text-xs font-medium truncate">{a.title}</p>
+                  </div>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">
+                    {new Date(a.when).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UsersPanel({ users, parts }: { users: ProfileRow[]; parts: PartItem[] }) {
+  const listingsBySeller = new Map<string, number>();
+  parts.forEach((p) => listingsBySeller.set(p.seller_id, (listingsBySeller.get(p.seller_id) ?? 0) + 1));
+  if (users.length === 0) return <p className="text-center text-muted-foreground text-sm py-8">Kullanıcı yok.</p>;
+  return (
+    <div className="space-y-2">
+      {users.map((u) => (
+        <div key={u.id} className="bg-card rounded-xl border border-border p-3 flex items-center gap-3">
+          <div className="size-10 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center font-bold shrink-0">
+            {(u.display_name ?? "?").slice(0, 1).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm truncate">{u.display_name ?? "İsimsiz"}</p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {[u.city, u.whatsapp].filter(Boolean).join(" · ") || "—"}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xs font-bold text-gold">{listingsBySeller.get(u.id) ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">ilan</p>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
