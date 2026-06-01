@@ -144,12 +144,21 @@ function AdminPage() {
   const [quotes, setQuotes] = useState<RequestQuote[]>([]);
   const [parts, setParts] = useState<PartItem[]>([]);
   const [users, setUsers] = useState<ProfileRow[]>([]);
+  const [adminIds, setAdminIds] = useState<Set<string>>(new Set());
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
+  const [reqSearch, setReqSearch] = useState("");
+  const [userSearch, setUserSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PartItem | null>(null);
   const [rejecting, setRejecting] = useState<PartItem | null>(null);
   const [rejectNote, setRejectNote] = useState("");
+  const [notingRequest, setNotingRequest] = useState<PartRequest | null>(null);
+
+  const callDeleteUser = useServerFn(adminDeleteUser);
+  const callSetRole = useServerFn(adminSetRole);
+  const callSetActive = useServerFn(adminSetActive);
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
