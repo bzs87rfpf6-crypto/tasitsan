@@ -237,7 +237,20 @@ function AdminPage() {
 
   const filteredParts = filter === "all" ? parts : parts.filter((p) => p.status === filter);
   const filteredInquiries = filter === "all" ? inquiries : inquiries.filter((i) => i.status === filter);
-  const filteredRequests = filter === "all" ? requests : requests.filter((r) => r.status === filter);
+  const quotesByRequest = new Map<string, RequestQuote[]>();
+  quotes.forEach((q) => {
+    const arr = quotesByRequest.get(q.request_id) ?? [];
+    arr.push(q);
+    quotesByRequest.set(q.request_id, arr);
+  });
+  const filteredRequests = requests.filter((r) => {
+    const qs = quotesByRequest.get(r.id) ?? [];
+    if (reqSubTab === "done") return r.status === "resolved";
+    if (reqSubTab === "open") return r.status === "new" && qs.length === 0;
+    if (reqSubTab === "awaiting") return r.status === "in_progress" && qs.length === 0;
+    if (reqSubTab === "received") return qs.length > 0 && r.status !== "resolved";
+    return true;
+  });
 
   return (
     <div className="min-h-screen pb-12">
