@@ -67,6 +67,63 @@ export type Database = {
           },
         ]
       }
+      part_requests: {
+        Row: {
+          admin_notes: string | null
+          brand: string | null
+          buyer_id: string | null
+          category: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          message: string
+          model: string | null
+          oem_code: string | null
+          phone: string
+          search_query: string | null
+          status: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          brand?: string | null
+          buyer_id?: string | null
+          category?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          message: string
+          model?: string | null
+          oem_code?: string | null
+          phone: string
+          search_query?: string | null
+          status?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          admin_notes?: string | null
+          brand?: string | null
+          buyer_id?: string | null
+          category?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          message?: string
+          model?: string | null
+          oem_code?: string | null
+          phone?: string
+          search_query?: string | null
+          status?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       parts: {
         Row: {
           brand: string | null
@@ -77,9 +134,11 @@ export type Database = {
           description: string | null
           id: string
           model: string | null
+          oem_code: string | null
           photos: string[]
           price: number | null
           seller_id: string
+          stock_quantity: number
           title: string
           updated_at: string
           whatsapp: string
@@ -94,9 +153,11 @@ export type Database = {
           description?: string | null
           id?: string
           model?: string | null
+          oem_code?: string | null
           photos?: string[]
           price?: number | null
           seller_id: string
+          stock_quantity?: number
           title: string
           updated_at?: string
           whatsapp: string
@@ -111,9 +172,11 @@ export type Database = {
           description?: string | null
           id?: string
           model?: string | null
+          oem_code?: string | null
           photos?: string[]
           price?: number | null
           seller_id?: string
+          stock_quantity?: number
           title?: string
           updated_at?: string
           whatsapp?: string
