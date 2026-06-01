@@ -342,12 +342,26 @@ function AdminPage() {
   });
   const filteredRequests = requests.filter((r) => {
     const qs = quotesByRequest.get(r.id) ?? [];
-    if (reqSubTab === "done") return r.status === "resolved";
-    if (reqSubTab === "open") return r.status === "new" && qs.length === 0;
-    if (reqSubTab === "awaiting") return r.status === "in_progress" && qs.length === 0;
-    if (reqSubTab === "received") return qs.length > 0 && r.status !== "resolved";
+    if (reqSubTab === "done" && r.status !== "resolved") return false;
+    if (reqSubTab === "open" && !(r.status === "new" && qs.length === 0)) return false;
+    if (reqSubTab === "awaiting" && !(r.status === "in_progress" && qs.length === 0)) return false;
+    if (reqSubTab === "received" && !(qs.length > 0 && r.status !== "resolved")) return false;
+    if (reqSearch.trim()) {
+      const q = reqSearch.trim().toLowerCase();
+      const hay = [r.part_name, r.oem_code, r.brand, r.model, r.full_name, r.phone, r.search_query]
+        .filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     return true;
   });
+
+  const filteredUsers = useMemo(() => {
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) =>
+      [u.display_name, u.whatsapp, u.city, u.id].filter(Boolean).join(" ").toLowerCase().includes(q),
+    );
+  }, [users, userSearch]);
 
   return (
     <div className="min-h-screen pb-12">
