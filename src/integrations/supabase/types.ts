@@ -20,6 +20,7 @@ export type Database = {
           buyer_id: string | null
           company: string | null
           created_at: string
+          email: string | null
           full_name: string
           id: string
           message: string
@@ -33,6 +34,7 @@ export type Database = {
           buyer_id?: string | null
           company?: string | null
           created_at?: string
+          email?: string | null
           full_name: string
           id?: string
           message: string
@@ -46,6 +48,7 @@ export type Database = {
           buyer_id?: string | null
           company?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string
           id?: string
           message?: string
