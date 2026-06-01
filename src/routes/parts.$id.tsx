@@ -27,6 +27,7 @@ function PartDetail() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [part, setPart] = useState<PartFull | null>(null);
+  const [sellerName, setSellerName] = useState<string | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -40,6 +41,11 @@ function PartDetail() {
         .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at")
         .eq("id", id).maybeSingle();
       setPart(data as PartFull | null);
+      if (data?.seller_id) {
+        const { data: prof } = await supabase
+          .from("profiles").select("display_name").eq("id", data.seller_id).maybeSingle();
+        setSellerName(prof?.display_name ?? null);
+      }
       setLoading(false);
     })();
   }, [id]);
