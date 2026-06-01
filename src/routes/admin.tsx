@@ -427,14 +427,16 @@ function AdminPage() {
         ) : (
           filteredRequests.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
-          ) : filteredRequests.map((r) => (
+          ) : filteredRequests.map((r) => {
+            const rqs = quotesByRequest.get(r.id) ?? [];
+            return (
             <article key={r.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <Search className="size-3.5 text-gold" />
                     <p className="font-semibold text-sm line-clamp-1">
-                      {r.search_query || r.oem_code || `${r.brand ?? ""} ${r.model ?? ""}`.trim() || "Parça talebi"}
+                      {r.part_name || r.search_query || r.oem_code || `${r.brand ?? ""} ${r.model ?? ""}`.trim() || "Parça talebi"}
                     </p>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -447,6 +449,14 @@ function AdminPage() {
                 </span>
               </div>
 
+              {r.photos && r.photos.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto">
+                  {r.photos.map((p, i) => (
+                    <img key={i} src={p} alt="" className="size-16 rounded-lg object-cover bg-secondary shrink-0" />
+                  ))}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <Field label="Talep eden" value={r.full_name} />
                 <Field label="Telefon" value={r.phone} icon={<Phone className="size-3" />} />
@@ -454,7 +464,47 @@ function AdminPage() {
                 <Field label="Tarih" value={new Date(r.created_at).toLocaleString("tr-TR")} icon={<Calendar className="size-3" />} />
               </div>
 
-              <div className="bg-background/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">{r.message}</div>
+              {(r.description || r.message) && (
+                <div className="bg-background/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">{r.description || r.message}</div>
+              )}
+
+              {rqs.length > 0 && (
+                <div className="space-y-2 pt-1 border-t border-border">
+                  <p className="text-[11px] uppercase tracking-wider text-gold font-semibold">{rqs.length} satıcı teklifi</p>
+                  {rqs.map((q) => (
+                    <div key={q.id} className="bg-background/60 rounded-lg p-2.5 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gold">₺{Number(q.price).toLocaleString("tr-TR")}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {q.seller?.display_name ?? "Satıcı"} · {q.condition === "new" ? "Sıfır" : q.condition === "used" ? "Çıkma" : "Revizyonlu"} · {q.delivery_time}
+                          </p>
+                          {q.note && <p className="text-[11px] mt-1">{q.note}</p>}
+                        </div>
+                        <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border ${
+                          q.status === "approved" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40"
+                          : q.status === "rejected" ? "bg-destructive/15 text-destructive border-destructive/40"
+                          : "bg-gold/15 text-gold border-gold/40"
+                        }`}>
+                          {q.status === "approved" ? "Onaylı" : q.status === "rejected" ? "Reddedildi" : "Beklemede"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <Button size="sm" disabled={q.status === "approved"} onClick={() => updateQuoteStatus(q.id, "approved")}
+                          className="h-8 text-[11px] bg-emerald-500/90 hover:bg-emerald-500 text-white">
+                          <Check className="size-3 mr-1" /> Onayla
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={q.status === "pending"} onClick={() => updateQuoteStatus(q.id, "pending")}
+                          className="h-8 text-[11px]">Beklet</Button>
+                        <Button size="sm" variant="outline" disabled={q.status === "rejected"} onClick={() => updateQuoteStatus(q.id, "rejected")}
+                          className="h-8 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10">
+                          <XIcon className="size-3 mr-1" /> Reddet
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex gap-2 pt-1">
                 {(["new", "in_progress", "resolved"] as Status[]).map((s) => (
@@ -466,7 +516,8 @@ function AdminPage() {
                 ))}
               </div>
             </article>
-          ))
+            );
+          })
         )}
       </main>
 
