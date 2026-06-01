@@ -1,7 +1,13 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MessageCircle, MapPin, Calendar, Tag, Phone } from "lucide-react";
+import { ArrowLeft, MessageCircle, MapPin, Calendar, Tag, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/parts/$id")({
   head: () => ({ meta: [{ title: "İlan Detayı — Taşıtsan" }] }),
@@ -12,28 +18,65 @@ interface PartFull {
   id: string; title: string; description: string | null;
   brand: string | null; model: string | null; year: number | null;
   category: string | null; condition: string; price: number | null;
-  city: string | null; photos: string[]; whatsapp: string;
+  city: string | null; photos: string[];
   seller_id: string; created_at: string;
 }
 
 function PartDetail() {
   const { id } = useParams({ from: "/parts/$id" });
+  const { user } = useAuth();
+  const nav = useNavigate();
   const [part, setPart] = useState<PartFull | null>(null);
-  const [seller, setSeller] = useState<{ display_name: string | null } | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ full_name: "", phone: "", company: "", message: "" });
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("parts").select("*").eq("id", id).maybeSingle();
+      const { data } = await supabase
+        .from("parts")
+        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at")
+        .eq("id", id).maybeSingle();
       setPart(data as PartFull | null);
-      if (data) {
-        const { data: s } = await supabase.from("profiles").select("display_name").eq("id", data.seller_id).maybeSingle();
-        setSeller(s);
-      }
       setLoading(false);
     })();
   }, [id]);
+
+  const openForm = () => {
+    if (!user) {
+      toast.info("Talep oluşturmak için giriş yapmalısın");
+      nav({ to: "/auth" });
+      return;
+    }
+    setForm((f) => ({ ...f, message: f.message || `"${part?.title}" ilanı hakkında bilgi almak istiyorum.` }));
+    setOpen(true);
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !part) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("inquiries").insert({
+        part_id: part.id,
+        buyer_id: user.id,
+        full_name: form.full_name.trim(),
+        phone: form.phone.trim(),
+        company: form.company.trim() || null,
+        message: form.message.trim(),
+      });
+      if (error) throw error;
+      toast.success("Talebin alındı! Taşıtsan en kısa sürede seninle iletişime geçecek.");
+      setOpen(false);
+      setForm({ full_name: "", phone: "", company: "", message: "" });
+    } catch (err: any) {
+      toast.error(err.message ?? "Talep gönderilemedi");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
   if (!part) return (
@@ -44,10 +87,6 @@ function PartDetail() {
       </div>
     </div>
   );
-
-  const waNumber = part.whatsapp.replace(/\D/g, "");
-  const waMsg = encodeURIComponent(`Merhaba, Taşıtsan'daki "${part.title}" ilanınız için iletişime geçiyorum.`);
-  const waUrl = `https://wa.me/${waNumber.startsWith("90") ? waNumber : `90${waNumber}`}?text=${waMsg}`;
 
   return (
     <div className="min-h-screen pb-32">
@@ -96,7 +135,7 @@ function PartDetail() {
           )}
           {part.year && <Info icon={<Calendar className="size-4" />} label="Yıl" value={String(part.year)} />}
           {part.category && <Info icon={<Tag className="size-4" />} label="Kategori" value={part.category} />}
-          {part.city && <Info icon={<MapPin className="size-4" />} label="Şehir" value={part.city} />}
+          {part.city && <Info icon={<MapPin className="size-4" />} label="Bölge" value={part.city} />}
         </div>
 
         {part.description && (
@@ -106,31 +145,49 @@ function PartDetail() {
           </div>
         )}
 
-        <div className="bg-card rounded-xl p-4 border border-border flex items-center gap-3">
-          <div className="size-11 rounded-full bg-gold-gradient grid place-items-center font-display text-lg text-gold-foreground">
-            {(seller?.display_name ?? "?")[0].toUpperCase()}
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground">Satıcı</div>
-            <div className="font-semibold">{seller?.display_name ?? "İlan sahibi"}</div>
-          </div>
+        <div className="bg-card rounded-xl p-4 border border-gold/30 flex gap-3">
+          <ShieldCheck className="size-5 text-gold shrink-0 mt-0.5" />
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Güvenli ticaret ve doğru eşleştirme için tüm talepler{" "}
+            <span className="text-gold font-semibold">Taşıtsan</span> aracılığıyla yönetilmektedir.
+          </p>
         </div>
       </div>
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border safe-bottom">
-        <div className="max-w-md mx-auto p-3 flex gap-3">
-          <a href={`tel:+${waNumber.startsWith("90") ? waNumber : `90${waNumber}`}`}
-            className="flex-1 flex items-center justify-center gap-2 h-14 rounded-xl bg-card border border-border text-foreground font-semibold text-sm active:scale-[0.98] transition-transform">
-            <Phone className="size-5 text-gold" />
-            Satıcıyı Ara
-          </a>
-          <a href={waUrl} target="_blank" rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 h-14 rounded-xl bg-whatsapp text-white font-semibold text-sm shadow-lg active:scale-[0.98] transition-transform">
+        <div className="max-w-md mx-auto p-3">
+          <button onClick={openForm}
+            className="w-full flex items-center justify-center gap-2 h-14 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold active:scale-[0.98] transition-transform">
             <MessageCircle className="size-5" />
-            WhatsApp'tan Yaz
-          </a>
+            Taşıtsan ile İletişime Geç
+          </button>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display tracking-wide">Talep Formu</DialogTitle>
+            <DialogDescription className="text-xs">
+              Bilgilerin sadece Taşıtsan ekibine iletilir. Satıcıyla doğrudan paylaşılmaz.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submit} className="space-y-3">
+            <Input placeholder="Ad Soyad" required maxLength={100} value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="h-11" />
+            <Input placeholder="Telefon Numarası" required maxLength={20} inputMode="tel" value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })} className="h-11" />
+            <Input placeholder="Firma Adı (opsiyonel)" maxLength={100} value={form.company}
+              onChange={(e) => setForm({ ...form, company: e.target.value })} className="h-11" />
+            <Textarea placeholder="Mesajınız" required maxLength={1000} rows={4} value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })} className="resize-none" />
+            <Button type="submit" disabled={submitting}
+              className="w-full h-12 bg-gold-gradient text-gold-foreground font-semibold shadow-gold hover:opacity-90">
+              {submitting ? "Gönderiliyor..." : "Talebi Gönder"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
