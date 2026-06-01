@@ -324,6 +324,14 @@ function AdminPage() {
     toast.success("Ayarlar kaydedildi");
   };
 
+  const filteredUsers = useMemo(() => {
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) =>
+      [u.display_name, u.whatsapp, u.city, u.id].filter(Boolean).join(" ").toLowerCase().includes(q),
+    );
+  }, [users, userSearch]);
+
   if (authLoading || isAdmin === null) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
   }
@@ -356,13 +364,6 @@ function AdminPage() {
     return true;
   });
 
-  const filteredUsers = useMemo(() => {
-    const q = userSearch.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) =>
-      [u.display_name, u.whatsapp, u.city, u.id].filter(Boolean).join(" ").toLowerCase().includes(q),
-    );
-  }, [users, userSearch]);
 
   return (
     <div className="min-h-screen pb-12">
