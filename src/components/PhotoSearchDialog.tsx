@@ -18,6 +18,9 @@ type AnalysisResult = {
   confidence: number;
   keywords: string[];
   description: string;
+  oem_code_guess: string;
+  brand_compatibility: string[];
+  model_compatibility: string[];
 };
 
 const MAX_BYTES = 6 * 1024 * 1024;
