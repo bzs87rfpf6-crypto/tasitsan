@@ -142,6 +142,7 @@ function PartDetail() {
           {part.year && <Info icon={<Calendar className="size-4" />} label="Yıl" value={String(part.year)} />}
           {part.category && <Info icon={<Tag className="size-4" />} label="Kategori" value={part.category} />}
           {part.city && <Info icon={<MapPin className="size-4" />} label="Bölge" value={part.city} />}
+          {sellerName && <Info icon={<Store className="size-4" />} label="Satıcı Firma" value={sellerName} />}
         </div>
 
         {part.description && (
