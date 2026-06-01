@@ -188,8 +188,8 @@ export function PartRequestDialog({
               <label className="text-[11px] uppercase tracking-wider text-gold font-semibold">Fotoğraflar (opsiyonel, en fazla 4)</label>
               <div className="grid grid-cols-4 gap-2">
                 {files.map((f, i) => (
-                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-card border border-border">
-                    <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
+                  <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card border border-border">
+                    <img src={previews[i]} alt="" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
                       className="absolute top-0.5 right-0.5 size-5 rounded-full bg-background/90 grid place-items-center">
                       <X className="size-3" />
@@ -199,11 +199,12 @@ export function PartRequestDialog({
                 {files.length < 4 && (
                   <label className="aspect-square rounded-lg border-2 border-dashed border-border grid place-items-center cursor-pointer hover:border-gold/50 transition-colors">
                     <Upload className="size-4 text-muted-foreground" />
-                    <input type="file" accept="image/*" multiple className="hidden"
-                      onChange={(e) => addFiles(e.target.files)} />
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
+                      onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
                   </label>
                 )}
               </div>
+
             </div>
 
             <Textarea placeholder="Açıklama (parçanın detayı, kullanım yeri, vb.)" rows={3} maxLength={600}
