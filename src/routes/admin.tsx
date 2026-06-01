@@ -286,9 +286,11 @@ function AdminPage() {
 
         <div className="max-w-2xl mx-auto px-4 flex gap-1.5 border-b border-border overflow-x-auto">
           {([
-            ["products", `Ürün Onayları${pendingCount ? ` (${pendingCount})` : ""}`],
-            ["inquiries", `Teklif Talepleri (${inquiries.length})`],
-            ["requests", `Parça Talepleri (${requests.length})`],
+            ["dashboard", "Panel"],
+            ["products", `Ürünler${pendingCount ? ` (${pendingCount})` : ""}`],
+            ["users", `Kullanıcılar (${users.length})`],
+            ["inquiries", `Teklifler (${inquiries.length})`],
+            ["requests", `Talepler (${requests.length})`],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
               className={`shrink-0 px-3 py-2.5 text-xs sm:text-sm font-semibold border-b-2 -mb-px transition-colors ${
@@ -299,6 +301,7 @@ function AdminPage() {
           ))}
         </div>
 
+        {(tab === "products" || tab === "inquiries" || tab === "requests") && (
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
           {tab === "requests" ? (
             ([
@@ -326,11 +329,22 @@ function AdminPage() {
             ))
           )}
         </div>
+        )}
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
         {loading ? (
           <p className="text-center text-muted-foreground text-sm py-8">Yükleniyor...</p>
+        ) : tab === "dashboard" ? (
+          <DashboardPanel
+            users={users}
+            parts={parts}
+            inquiries={inquiries}
+            requests={requests}
+            onJump={(t) => { setTab(t); setFilter("all"); }}
+          />
+        ) : tab === "users" ? (
+          <UsersPanel users={users} parts={parts} />
         ) : tab === "products" ? (
           filteredParts.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
