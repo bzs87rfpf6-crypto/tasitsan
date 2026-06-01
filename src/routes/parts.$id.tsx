@@ -4,6 +4,7 @@ import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff } from "l
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { getSafePartPhotos } from "@/lib/part-images";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,20 +22,6 @@ interface PartFull {
   city: string | null; photos: string[] | null;
   seller_id: string; created_at: string;
   oem_code: string | null; stock_quantity: number | null;
-}
-
-// Browsers cannot render Apple ProRAW (.dng), HEIC/HEIF, or camera RAW
-// formats. Showing them via <img> in Safari triggers repeated decode
-// attempts on multi-MB files, which exhausts the WebKit image-decoder
-// memory cap and crashes the tab ("sayfasında birçok kez sorun oluştu").
-const UNRENDERABLE_EXT = /\.(heic|heif|dng|raw|cr2|cr3|nef|arw|orf|rw2|tif|tiff)(\?|$)/i;
-
-function isDisplayableUrl(u: unknown): u is string {
-  if (typeof u !== "string") return false;
-  const trimmed = u.trim();
-  if (!trimmed) return false;
-  if (UNRENDERABLE_EXT.test(trimmed)) return false;
-  return true;
 }
 
 function PartDetail() {
@@ -70,16 +57,16 @@ function PartDetail() {
     return () => { cancelled = true; };
   }, [id]);
 
-  // Defensive: filter null, non-string, and browser-unrenderable URLs.
-  // Also drop URLs that <img> reported as broken so we don't retry them.
+  // Defensive: filter null, non-string, unsupported and broken URLs; use Storage
+  // render URLs so Safari decodes small optimized images instead of huge originals.
   const photos = useMemo(() => {
     const raw = Array.isArray(part?.photos) ? part!.photos : [];
-    const filtered = raw.filter(isDisplayableUrl).filter((u) => !brokenPhotos.has(u));
+    const filtered = getSafePartPhotos(raw, brokenPhotos, 960);
     if (raw.length !== filtered.length) {
       console.warn("[part-detail] filtered photos", {
         total: raw.length,
         kept: filtered.length,
-        dropped: raw.filter((u) => !filtered.includes(u as string)),
+        dropped: raw.filter((u) => !filtered.some((p) => p.original === u)),
       });
     }
     return filtered;
@@ -90,12 +77,13 @@ function PartDetail() {
     if (activePhoto >= photos.length) setActivePhoto(0);
   }, [photos.length, activePhoto]);
 
-  const markBroken = (url: string) => {
-    console.warn("[part-detail] image failed to load:", url);
+  const markBroken = (photo: { original: string; display: string }) => {
+    console.warn("[part-detail] image failed to load:", { original: photo.original, display: photo.display });
     setBrokenPhotos((prev) => {
-      if (prev.has(url)) return prev;
+      if (prev.has(photo.original) && prev.has(photo.display)) return prev;
       const next = new Set(prev);
-      next.add(url);
+      next.add(photo.original);
+      next.add(photo.display);
       return next;
     });
   };
@@ -150,8 +138,8 @@ function PartDetail() {
       <div className="relative bg-secondary aspect-square">
         {photos[activePhoto] ? (
           <img
-            key={photos[activePhoto]}
-            src={photos[activePhoto]}
+            key={photos[activePhoto].display}
+            src={photos[activePhoto].display}
             alt={part.title}
             loading="eager"
             decoding="async"
@@ -180,9 +168,9 @@ function PartDetail() {
       {photos.length > 1 && (
         <div className="flex gap-2 px-4 pt-3 overflow-x-auto">
           {photos.map((p, i) => (
-            <button key={p} onClick={() => setActivePhoto(i)}
+            <button key={p.display} onClick={() => setActivePhoto(i)}
               className={`shrink-0 size-16 rounded-lg overflow-hidden border-2 ${i === activePhoto ? "border-gold" : "border-transparent"}`}>
-              <img src={p} alt="" loading="lazy" decoding="async"
+              <img src={p.display} alt="" loading="lazy" decoding="async"
                 onError={() => markBroken(p)}
                 className="w-full h-full object-cover" />
             </button>

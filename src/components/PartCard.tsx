@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { MapPin, Package } from "lucide-react";
+import { SafePartImage } from "@/components/SafePartImage";
 
 export interface Part {
   id: string;
@@ -15,15 +16,7 @@ export interface Part {
   oem_code?: string | null;
 }
 
-// Match the detail page: skip browser-unrenderable formats (HEIC, DNG, RAW…)
-// that would otherwise show a broken icon and waste decode bandwidth.
-const UNRENDERABLE_EXT = /\.(heic|heif|dng|raw|cr2|cr3|nef|arw|orf|rw2|tif|tiff)(\?|$)/i;
-
 export function PartCard({ part }: { part: Part }) {
-  const photo = (Array.isArray(part.photos) ? part.photos : []).find(
-    (u) => typeof u === "string" && u.trim() && !UNRENDERABLE_EXT.test(u),
-  );
-
   return (
     <Link
       to="/parts/$id"
@@ -31,18 +24,12 @@ export function PartCard({ part }: { part: Part }) {
       className="group block rounded-xl overflow-hidden bg-card border border-border hover:border-gold transition-colors"
     >
       <div className="aspect-square bg-secondary relative overflow-hidden">
-        {photo ? (
-          <img
-            src={photo}
-            alt={part.title}
-            loading="lazy"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full grid place-items-center text-muted-foreground text-xs">
-            Fotoğraf yok
-          </div>
-        )}
+        <SafePartImage
+          images={part.photos}
+          alt={part.title}
+          width={420}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
         <span className="absolute top-2 left-2 text-[10px] uppercase tracking-wider bg-background/80 text-gold px-2 py-0.5 rounded-full border border-gold/30">
           {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "2.El"}
         </span>
