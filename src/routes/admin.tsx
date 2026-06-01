@@ -275,6 +275,53 @@ function AdminPage() {
     toast.success("İlan silindi");
   };
 
+  const handleDeleteUser = async (u: ProfileRow) => {
+    if (!confirm(`${u.display_name ?? "Kullanıcı"} kalıcı olarak silinsin mi?`)) return;
+    try {
+      await callDeleteUser({ data: { userId: u.id } });
+      setUsers((prev) => prev.filter((x) => x.id !== u.id));
+      toast.success("Kullanıcı silindi");
+    } catch (e: any) { toast.error(e.message ?? "Silinemedi"); }
+  };
+
+  const handleToggleActive = async (u: ProfileRow) => {
+    try {
+      await callSetActive({ data: { userId: u.id, isActive: !u.is_active } });
+      setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_active: !u.is_active } : x));
+      toast.success(!u.is_active ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasife alındı");
+    } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+  };
+
+  const handleToggleAdmin = async (u: ProfileRow) => {
+    const isAdminNow = adminIds.has(u.id);
+    try {
+      await callSetRole({ data: { userId: u.id, makeAdmin: !isAdminNow } });
+      setAdminIds((prev) => {
+        const next = new Set(prev);
+        if (isAdminNow) next.delete(u.id); else next.add(u.id);
+        return next;
+      });
+      toast.success(isAdminNow ? "Admin yetkisi kaldırıldı" : "Admin yetkisi verildi");
+    } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+  };
+
+  const saveRequestNote = async (id: string, note: string) => {
+    const { error } = await supabase.from("part_requests")
+      .update({ admin_notes: note.trim() || null }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setRequests((prev) => prev.map((r) => r.id === id ? { ...r, admin_notes: note.trim() || null } as PartRequest : r));
+    toast.success("Not kaydedildi");
+  };
+
+  const saveSettings = async (patch: Partial<SiteSettings>) => {
+    if (!settings) return;
+    const { data, error } = await supabase.from("site_settings")
+      .update({ ...patch, updated_by: user?.id ?? null }).eq("id", settings.id).select().single();
+    if (error) { toast.error(error.message); return; }
+    setSettings(data as SiteSettings);
+    toast.success("Ayarlar kaydedildi");
+  };
+
   if (authLoading || isAdmin === null) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
   }
