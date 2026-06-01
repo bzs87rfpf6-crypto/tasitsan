@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { adminDeleteUser, adminSetActive, adminSetRole } from "@/lib/admin.functions";
 import { StatCard } from "@/components/admin/StatCard";
+import { SafePartImage } from "@/components/SafePartImage";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }] }),
@@ -481,11 +482,7 @@ function AdminPage() {
             }`}>
               <div className="flex gap-3">
                 <div className="size-20 sm:size-24 rounded-lg overflow-hidden bg-secondary shrink-0">
-                  {p.photos?.[0] ? (
-                    <img src={p.photos[0]} alt={p.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full grid place-items-center"><Package className="size-6 text-muted-foreground" /></div>
-                  )}
+                  <SafePartImage images={p.photos} alt={p.title} width={320} />
                 </div>
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-start justify-between gap-2">
@@ -634,7 +631,9 @@ function AdminPage() {
               {r.photos && r.photos.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto">
                   {r.photos.map((p, i) => (
-                    <img key={i} src={p} alt="" className="size-16 rounded-lg object-cover bg-secondary shrink-0" />
+                    <div key={`${p}-${i}`} className="size-16 rounded-lg overflow-hidden bg-secondary shrink-0">
+                      <SafePartImage images={[p]} alt="" width={180} />
+                    </div>
                   ))}
                 </div>
               )}
