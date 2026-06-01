@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { SafePartImage } from "@/components/SafePartImage";
 
 export const Route = createFileRoute("/requests")({
   head: () => ({ meta: [{ title: "Talep Havuzu — Taşıtsan" }] }),
@@ -138,7 +139,7 @@ function RequestsPage() {
                 <div className="flex gap-3">
                   {r.photos?.[0] && (
                     <div className="size-20 rounded-lg overflow-hidden bg-secondary shrink-0">
-                      <img src={r.photos[0]} alt="" className="w-full h-full object-cover" />
+                      <SafePartImage images={r.photos} alt="" width={320} />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
