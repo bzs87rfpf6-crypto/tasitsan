@@ -16,7 +16,15 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "products" | "inquiries" | "requests";
+type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests";
+
+interface ProfileRow {
+  id: string;
+  display_name: string | null;
+  whatsapp: string | null;
+  city: string | null;
+  created_at: string;
+}
 
 interface Inquiry {
   id: string;
