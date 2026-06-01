@@ -686,6 +686,16 @@ function AdminPage() {
                 </div>
               )}
 
+
+              {r.admin_notes && (
+                <div className="rounded-lg border border-gold/30 bg-gold/5 p-2.5 text-[11px]">
+                  <div className="flex items-center gap-1.5 text-gold font-semibold mb-1">
+                    <MessageSquare className="size-3" /> Admin notu
+                  </div>
+                  <p className="whitespace-pre-wrap">{r.admin_notes}</p>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-1">
                 {(["new", "in_progress", "resolved"] as Status[]).map((s) => (
                   <Button key={s} type="button" variant={r.status === s ? "default" : "outline"}
@@ -695,6 +705,10 @@ function AdminPage() {
                   </Button>
                 ))}
               </div>
+              <Button size="sm" variant="outline" onClick={() => setNotingRequest(r)}
+                className="w-full h-9 text-xs">
+                <MessageSquare className="size-3.5 mr-1" /> {r.admin_notes ? "Notu Düzenle" : "Not Ekle"}
+              </Button>
             </article>
             );
           })
