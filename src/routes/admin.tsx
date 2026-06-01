@@ -237,19 +237,19 @@ function AdminPage() {
     toast.success(status === "approved" ? "İlan onaylandı" : status === "rejected" ? "İlan reddedildi" : "Beklemede");
   };
 
+  const deletePart = async (id: string) => {
+    if (!confirm("Bu ilanı silmek istediğine emin misin?")) return;
+    const { error } = await supabase.from("parts").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setParts((prev) => prev.filter((p) => p.id !== id));
+    toast.success("İlan silindi");
+  };
+
   if (authLoading || isAdmin === null) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
   }
   if (!isAdmin) {
-    return (
-      <div className="min-h-screen grid place-items-center p-6 text-center">
-        <div>
-          <ShieldCheck className="size-12 mx-auto text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground">Bu alana erişim yetkin yok.</p>
-          <Link to="/" className="text-gold mt-3 inline-block text-sm">← Anasayfaya dön</Link>
-        </div>
-      </div>
-    );
+    return <div className="min-h-screen grid place-items-center text-muted-foreground"><ShieldCheck className="size-6 mr-2" />Yönlendiriliyor...</div>;
   }
 
   const pendingCount = parts.filter((p) => p.status === "pending").length;
