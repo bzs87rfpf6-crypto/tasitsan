@@ -8,10 +8,9 @@ import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { PartCard, type Part } from "@/components/PartCard";
 import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
+import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
