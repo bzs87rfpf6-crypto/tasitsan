@@ -38,7 +38,7 @@ function PartDetail() {
     (async () => {
       const { data } = await supabase
         .from("parts")
-        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at")
+        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,stock_quantity")
         .eq("id", id).maybeSingle();
       setPart(data as PartFull | null);
       setLoading(false);
