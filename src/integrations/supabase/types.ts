@@ -211,6 +211,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_active: boolean
           updated_at: string
           whatsapp: string | null
         }
@@ -219,6 +220,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_active?: boolean
           updated_at?: string
           whatsapp?: string | null
         }
@@ -227,6 +229,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_active?: boolean
           updated_at?: string
           whatsapp?: string | null
         }
@@ -294,6 +297,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          commission_rate: number
+          contact_address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          email_from_address: string | null
+          email_from_name: string | null
+          email_smtp_host: string | null
+          email_smtp_port: number | null
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          commission_rate?: number
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          email_from_address?: string | null
+          email_from_name?: string | null
+          email_smtp_host?: string | null
+          email_smtp_port?: number | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          commission_rate?: number
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          email_from_address?: string | null
+          email_from_name?: string | null
+          email_smtp_host?: string | null
+          email_smtp_port?: number | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
