@@ -74,6 +74,7 @@ interface PartRequest {
   photos: string[] | null;
   message: string;
   status: Status;
+  admin_notes: string | null;
   created_at: string;
 }
 
