@@ -147,17 +147,17 @@ function SellPage() {
           onChange={(e) => setForm({ ...form, title: e.target.value })} required maxLength={120} className="h-12 bg-card" />
 
         <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Marka" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} className="h-12 bg-card" />
-          <Input placeholder="Model" value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} className="h-12 bg-card" />
+          <Input placeholder="Marka *" value={form.brand} required onChange={(e) => setForm({ ...form, brand: e.target.value })} className="h-12 bg-card" />
+          <Input placeholder="Model *" value={form.model} required onChange={(e) => setForm({ ...form, model: e.target.value })} className="h-12 bg-card" />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Yıl" inputMode="numeric" value={form.year}
+          <Input placeholder="Model Yılı *" inputMode="numeric" value={form.year} required
             onChange={(e) => setForm({ ...form, year: e.target.value.replace(/\D/g, "").slice(0, 4) })} className="h-12 bg-card" />
           <Input placeholder="Şehir" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="h-12 bg-card" />
         </div>
 
-        <Input placeholder="OEM Kodu (opsiyonel)" value={form.oem_code}
+        <Input placeholder="OEM Kodu *" value={form.oem_code} required
           onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })}
           maxLength={60} className="h-12 bg-card font-mono" />
 
@@ -187,12 +187,12 @@ function SellPage() {
 
         <div className="grid grid-cols-2 gap-2">
           <div className="relative">
-            <Input placeholder="Fiyat" inputMode="decimal" value={form.price}
+            <Input placeholder="Fiyat *" inputMode="decimal" value={form.price} required
               onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.]/g, "") })}
               className="h-12 bg-card pl-8" />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold">₺</span>
           </div>
-          <Input placeholder="Stok Adedi" inputMode="numeric" value={form.stock_quantity}
+          <Input placeholder="Stok Adedi *" inputMode="numeric" value={form.stock_quantity} required
             onChange={(e) => setForm({ ...form, stock_quantity: e.target.value.replace(/\D/g, "") })}
             className="h-12 bg-card" />
         </div>
@@ -200,6 +200,7 @@ function SellPage() {
         <Textarea placeholder="Açıklama, uyumlu modeller, kusurlar..." value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={4} className="bg-card resize-none" />
+
 
         <div>
           <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">
