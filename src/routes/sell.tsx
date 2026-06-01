@@ -176,8 +176,17 @@ function SellPage() {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={4} className="bg-card resize-none" />
 
-        <Input placeholder="WhatsApp (5xx xxx xx xx)" value={form.whatsapp} required
-          onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} className="h-12 bg-card" />
+        <div>
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">
+            İletişim Telefonu (yalnızca Taşıtsan ekibine iletilir)
+          </label>
+          <Input placeholder="5xx xxx xx xx" value={form.whatsapp} required
+            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} className="h-12 bg-card" />
+          <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+            Numaranız ilan sayfasında gösterilmez. Talepler önce Taşıtsan tarafından değerlendirilir.
+          </p>
+        </div>
+
 
         <Button type="submit" disabled={submitting} className="w-full h-13 bg-gold-gradient text-gold-foreground font-semibold text-base shadow-gold py-4">
           {submitting ? "Yayınlanıyor..." : "İlanı Yayınla"}
