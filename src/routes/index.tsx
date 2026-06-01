@@ -249,6 +249,7 @@ function Index() {
         userId={user?.id ?? null}
         initial={{ search_query: q, brand, model, year, oem, category: cat === "Tümü" ? "" : cat }}
       />
+      <PhotoSearchDialog open={photoOpen} onOpenChange={setPhotoOpen} />
     </div>
   );
 }
