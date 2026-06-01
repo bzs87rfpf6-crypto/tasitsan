@@ -74,13 +74,16 @@ export type Database = {
           buyer_id: string | null
           category: string | null
           created_at: string
+          description: string | null
           email: string | null
           full_name: string
           id: string
           message: string
           model: string | null
           oem_code: string | null
+          part_name: string | null
           phone: string
+          photos: string[]
           search_query: string | null
           status: string
           updated_at: string
@@ -92,13 +95,16 @@ export type Database = {
           buyer_id?: string | null
           category?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           full_name: string
           id?: string
           message: string
           model?: string | null
           oem_code?: string | null
+          part_name?: string | null
           phone: string
+          photos?: string[]
           search_query?: string | null
           status?: string
           updated_at?: string
@@ -110,13 +116,16 @@ export type Database = {
           buyer_id?: string | null
           category?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           full_name?: string
           id?: string
           message?: string
           model?: string | null
           oem_code?: string | null
+          part_name?: string | null
           phone?: string
+          photos?: string[]
           search_query?: string | null
           status?: string
           updated_at?: string
@@ -223,6 +232,69 @@ export type Database = {
         }
         Relationships: []
       }
+      request_quotes: {
+        Row: {
+          admin_notes: string | null
+          condition: string
+          created_at: string
+          delivery_time: string
+          id: string
+          note: string | null
+          price: number
+          request_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          condition: string
+          created_at?: string
+          delivery_time: string
+          id?: string
+          note?: string | null
+          price: number
+          request_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          condition?: string
+          created_at?: string
+          delivery_time?: string
+          id?: string
+          note?: string | null
+          price?: number
+          request_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_quotes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "open_part_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_quotes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "part_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -246,7 +318,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      open_part_requests: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          message: string | null
+          model: string | null
+          oem_code: string | null
+          part_name: string | null
+          photos: string[] | null
+          search_query: string | null
+          status: string | null
+          year: number | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          message?: string | null
+          model?: string | null
+          oem_code?: string | null
+          part_name?: string | null
+          photos?: string[] | null
+          search_query?: string | null
+          status?: string | null
+          year?: number | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          message?: string | null
+          model?: string | null
+          oem_code?: string | null
+          part_name?: string | null
+          photos?: string[] | null
+          search_query?: string | null
+          status?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

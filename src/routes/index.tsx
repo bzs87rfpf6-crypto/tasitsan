@@ -8,10 +8,9 @@ import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { PartCard, type Part } from "@/components/PartCard";
 import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
+import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -193,7 +192,27 @@ function Index() {
         </div>
       </section>
 
+      {/* Akıllı Talep Havuzu CTA */}
+      <section className="max-w-3xl mx-auto px-4 pt-5">
+        <button
+          onClick={() => setRequestOpen(true)}
+          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gold/15 via-gold/5 to-transparent border border-gold/40 hover:border-gold/70 transition-colors text-left"
+        >
+          <div className="size-11 rounded-full bg-gold-gradient grid place-items-center shrink-0 shadow-gold">
+            <PackageSearch className="size-5 text-gold-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-sm sm:text-base tracking-wide">Parça Bulunamadı mı? Talep Oluştur</p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+              Talebiniz satıcı havuzuna düşsün, onaylı teklifler size gelsin.
+            </p>
+          </div>
+          <span className="text-gold font-semibold text-sm shrink-0">→</span>
+        </button>
+      </section>
+
       <div className="max-w-3xl mx-auto px-4 pt-5">
+
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -254,87 +273,3 @@ function Index() {
   );
 }
 
-function PartRequestDialog({
-  open, onOpenChange, userId, initial,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  userId: string | null;
-  initial: { search_query: string; brand: string; model: string; year: string; oem: string; category: string };
-}) {
-  const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
-  const [submitting, setSubmitting] = useState(false);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userId) {
-      toast.error("Talep oluşturmak için giriş yapmalısınız.");
-      return;
-    }
-    if (!form.full_name.trim() || !form.phone.trim() || !form.message.trim()) {
-      toast.error("Ad soyad, telefon ve mesaj zorunludur.");
-      return;
-    }
-    setSubmitting(true);
-    const { error } = await supabase.from("part_requests").insert({
-      buyer_id: userId,
-      full_name: form.full_name.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim() || null,
-      search_query: initial.search_query.trim() || null,
-      brand: initial.brand.trim() || null,
-      model: initial.model.trim() || null,
-      year: initial.year ? parseInt(initial.year) : null,
-      oem_code: initial.oem.trim() || null,
-      category: initial.category || null,
-      message: form.message.trim(),
-    });
-    setSubmitting(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Talebiniz alındı. Taşıtsan ekibi en kısa sürede dönüş yapacak.");
-    setForm({ full_name: "", phone: "", email: "", message: "" });
-    onOpenChange(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-display tracking-wide">Parça Talebi</DialogTitle>
-          <DialogDescription>
-            Aradığınız parçayı sizin için bulalım. Talepleriniz yalnızca Taşıtsan ekibine iletilir.
-          </DialogDescription>
-        </DialogHeader>
-
-        {!userId ? (
-          <div className="text-sm text-muted-foreground py-2">
-            Talep oluşturmak için <Link to="/auth" className="text-gold font-semibold">giriş yapın</Link>.
-          </div>
-        ) : (
-          <form onSubmit={submit} className="space-y-3">
-            {(initial.search_query || initial.brand || initial.model || initial.oem) && (
-              <div className="text-[11px] bg-muted/40 rounded-lg p-2.5 space-y-0.5">
-                <p className="uppercase tracking-wider text-gold font-semibold">Arama bilgileri</p>
-                {initial.search_query && <p>Sorgu: <span className="text-foreground">{initial.search_query}</span></p>}
-                {initial.brand && <p>Marka: <span className="text-foreground">{initial.brand}</span></p>}
-                {initial.model && <p>Model: <span className="text-foreground">{initial.model}</span></p>}
-                {initial.year && <p>Yıl: <span className="text-foreground">{initial.year}</span></p>}
-                {initial.oem && <p>OEM: <span className="text-foreground font-mono">{initial.oem}</span></p>}
-                {initial.category && <p>Kategori: <span className="text-foreground">{initial.category}</span></p>}
-              </div>
-            )}
-            <Input placeholder="Ad Soyad *" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} maxLength={100} />
-            <Input placeholder="Telefon *" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} maxLength={20} />
-            <Input placeholder="E-posta (opsiyonel)" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={120} />
-            <Textarea placeholder="Aradığınız parçayı kısaca anlatın *" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={4} maxLength={500} className="resize-none" />
-            <DialogFooter>
-              <Button type="submit" disabled={submitting} className="w-full bg-gold-gradient text-gold-foreground font-semibold shadow-gold">
-                {submitting ? "Gönderiliyor..." : "Talebi Gönder"}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}

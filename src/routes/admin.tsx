@@ -41,14 +41,30 @@ interface PartRequest {
   phone: string;
   email: string | null;
   search_query: string | null;
+  part_name: string | null;
   brand: string | null;
   model: string | null;
   year: number | null;
   category: string | null;
   oem_code: string | null;
+  description: string | null;
+  photos: string[] | null;
   message: string;
   status: Status;
   created_at: string;
+}
+
+interface RequestQuote {
+  id: string;
+  request_id: string;
+  seller_id: string;
+  price: number;
+  delivery_time: string;
+  condition: "new" | "used" | "refurbished";
+  note: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  seller?: { display_name: string | null } | null;
 }
 
 interface PartItem {
@@ -102,8 +118,10 @@ function AdminPage() {
   const [tab, setTab] = useState<Tab>("products");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [requests, setRequests] = useState<PartRequest[]>([]);
+  const [quotes, setQuotes] = useState<RequestQuote[]>([]);
   const [parts, setParts] = useState<PartItem[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PartItem | null>(null);
 
@@ -119,19 +137,23 @@ function AdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const [iq, rq, pt] = await Promise.all([
+    const [iq, rq, pt, qt] = await Promise.all([
       supabase.from("inquiries").select("*").order("created_at", { ascending: false }),
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
+      supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
     ]);
     if (iq.error) toast.error(iq.error.message);
     if (rq.error) toast.error(rq.error.message);
     if (pt.error) toast.error(pt.error.message);
+    if (qt.error) toast.error(qt.error.message);
 
     const inqs = (iq.data ?? []) as any[];
+    const quoteRows = (qt.data ?? []) as any[];
     const partIds = Array.from(new Set(inqs.map((i) => i.part_id)));
     const buyerIds = Array.from(new Set(inqs.map((i) => i.buyer_id).filter(Boolean) as string[]));
-    const sellerIds = Array.from(new Set([...(pt.data ?? []).map((p: any) => p.seller_id)]));
+    const quoteSellerIds = Array.from(new Set(quoteRows.map((q) => q.seller_id)));
+    const sellerIds = Array.from(new Set([...(pt.data ?? []).map((p: any) => p.seller_id), ...quoteSellerIds]));
 
     const [partsRes, buyersRes, sellersRes] = await Promise.all([
       partIds.length
@@ -159,6 +181,7 @@ function AdminPage() {
       };
     }));
     setRequests((rq.data ?? []) as PartRequest[]);
+    setQuotes(quoteRows.map((q) => ({ ...q, seller: sellersMap.get(q.seller_id) ?? null })) as RequestQuote[]);
     setParts(((pt.data ?? []) as any[]).map((p) => ({ ...p, seller: sellersMap.get(p.seller_id) ?? null })) as PartItem[]);
     setLoading(false);
   };
@@ -175,6 +198,15 @@ function AdminPage() {
     if (error) { toast.error(error.message); return; }
     setRequests((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     toast.success("Durum güncellendi");
+  };
+
+  const updateQuoteStatus = async (id: string, status: "pending" | "approved" | "rejected") => {
+    const { error } = await supabase.from("request_quotes")
+      .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null })
+      .eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
+    toast.success(status === "approved" ? "Teklif onaylandı, müşteriye iletilecek" : status === "rejected" ? "Teklif reddedildi" : "Teklif beklemeye alındı");
   };
 
   const updatePartStatus = async (id: string, status: PartStatus) => {
@@ -205,7 +237,20 @@ function AdminPage() {
 
   const filteredParts = filter === "all" ? parts : parts.filter((p) => p.status === filter);
   const filteredInquiries = filter === "all" ? inquiries : inquiries.filter((i) => i.status === filter);
-  const filteredRequests = filter === "all" ? requests : requests.filter((r) => r.status === filter);
+  const quotesByRequest = new Map<string, RequestQuote[]>();
+  quotes.forEach((q) => {
+    const arr = quotesByRequest.get(q.request_id) ?? [];
+    arr.push(q);
+    quotesByRequest.set(q.request_id, arr);
+  });
+  const filteredRequests = requests.filter((r) => {
+    const qs = quotesByRequest.get(r.id) ?? [];
+    if (reqSubTab === "done") return r.status === "resolved";
+    if (reqSubTab === "open") return r.status === "new" && qs.length === 0;
+    if (reqSubTab === "awaiting") return r.status === "in_progress" && qs.length === 0;
+    if (reqSubTab === "received") return qs.length > 0 && r.status !== "resolved";
+    return true;
+  });
 
   return (
     <div className="min-h-screen pb-12">
@@ -236,17 +281,31 @@ function AdminPage() {
         </div>
 
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
-          {(tab === "products"
-            ? (["all", "pending", "approved", "rejected"] as const)
-            : (["all", "new", "in_progress", "resolved"] as const)
-          ).map((s) => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                filter === s ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
-              }`}>
-              {s === "all" ? "Tümü" : tab === "products" ? PART_STATUS_LABEL[s as PartStatus] : STATUS_LABEL[s as Status]}
-            </button>
-          ))}
+          {tab === "requests" ? (
+            ([
+              ["open", `Açık (${requests.filter((r) => r.status === "new" && !(quotesByRequest.get(r.id)?.length)).length})`],
+              ["awaiting", `Teklif Bekleyen (${requests.filter((r) => r.status === "in_progress" && !(quotesByRequest.get(r.id)?.length)).length})`],
+              ["received", `Teklif Gelen (${requests.filter((r) => (quotesByRequest.get(r.id)?.length ?? 0) > 0 && r.status !== "resolved").length})`],
+              ["done", `Tamamlanan (${requests.filter((r) => r.status === "resolved").length})`],
+            ] as ["open" | "awaiting" | "received" | "done", string][]).map(([s, label]) => (
+              <button key={s} onClick={() => setReqSubTab(s)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  reqSubTab === s ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                }`}>{label}</button>
+            ))
+          ) : (
+            (tab === "products"
+              ? (["all", "pending", "approved", "rejected"] as const)
+              : (["all", "new", "in_progress", "resolved"] as const)
+            ).map((s) => (
+              <button key={s} onClick={() => setFilter(s)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  filter === s ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                }`}>
+                {s === "all" ? "Tümü" : tab === "products" ? PART_STATUS_LABEL[s as PartStatus] : STATUS_LABEL[s as Status]}
+              </button>
+            ))
+          )}
         </div>
       </header>
 
@@ -368,14 +427,16 @@ function AdminPage() {
         ) : (
           filteredRequests.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
-          ) : filteredRequests.map((r) => (
+          ) : filteredRequests.map((r) => {
+            const rqs = quotesByRequest.get(r.id) ?? [];
+            return (
             <article key={r.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <Search className="size-3.5 text-gold" />
                     <p className="font-semibold text-sm line-clamp-1">
-                      {r.search_query || r.oem_code || `${r.brand ?? ""} ${r.model ?? ""}`.trim() || "Parça talebi"}
+                      {r.part_name || r.search_query || r.oem_code || `${r.brand ?? ""} ${r.model ?? ""}`.trim() || "Parça talebi"}
                     </p>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -388,6 +449,14 @@ function AdminPage() {
                 </span>
               </div>
 
+              {r.photos && r.photos.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto">
+                  {r.photos.map((p, i) => (
+                    <img key={i} src={p} alt="" className="size-16 rounded-lg object-cover bg-secondary shrink-0" />
+                  ))}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <Field label="Talep eden" value={r.full_name} />
                 <Field label="Telefon" value={r.phone} icon={<Phone className="size-3" />} />
@@ -395,7 +464,47 @@ function AdminPage() {
                 <Field label="Tarih" value={new Date(r.created_at).toLocaleString("tr-TR")} icon={<Calendar className="size-3" />} />
               </div>
 
-              <div className="bg-background/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">{r.message}</div>
+              {(r.description || r.message) && (
+                <div className="bg-background/50 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap">{r.description || r.message}</div>
+              )}
+
+              {rqs.length > 0 && (
+                <div className="space-y-2 pt-1 border-t border-border">
+                  <p className="text-[11px] uppercase tracking-wider text-gold font-semibold">{rqs.length} satıcı teklifi</p>
+                  {rqs.map((q) => (
+                    <div key={q.id} className="bg-background/60 rounded-lg p-2.5 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gold">₺{Number(q.price).toLocaleString("tr-TR")}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {q.seller?.display_name ?? "Satıcı"} · {q.condition === "new" ? "Sıfır" : q.condition === "used" ? "Çıkma" : "Revizyonlu"} · {q.delivery_time}
+                          </p>
+                          {q.note && <p className="text-[11px] mt-1">{q.note}</p>}
+                        </div>
+                        <span className={`shrink-0 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full border ${
+                          q.status === "approved" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40"
+                          : q.status === "rejected" ? "bg-destructive/15 text-destructive border-destructive/40"
+                          : "bg-gold/15 text-gold border-gold/40"
+                        }`}>
+                          {q.status === "approved" ? "Onaylı" : q.status === "rejected" ? "Reddedildi" : "Beklemede"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <Button size="sm" disabled={q.status === "approved"} onClick={() => updateQuoteStatus(q.id, "approved")}
+                          className="h-8 text-[11px] bg-emerald-500/90 hover:bg-emerald-500 text-white">
+                          <Check className="size-3 mr-1" /> Onayla
+                        </Button>
+                        <Button size="sm" variant="outline" disabled={q.status === "pending"} onClick={() => updateQuoteStatus(q.id, "pending")}
+                          className="h-8 text-[11px]">Beklet</Button>
+                        <Button size="sm" variant="outline" disabled={q.status === "rejected"} onClick={() => updateQuoteStatus(q.id, "rejected")}
+                          className="h-8 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10">
+                          <XIcon className="size-3 mr-1" /> Reddet
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex gap-2 pt-1">
                 {(["new", "in_progress", "resolved"] as Status[]).map((s) => (
@@ -407,7 +516,8 @@ function AdminPage() {
                 ))}
               </div>
             </article>
-          ))
+            );
+          })
         )}
       </main>
 
