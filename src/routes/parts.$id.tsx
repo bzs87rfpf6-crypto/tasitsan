@@ -138,8 +138,8 @@ function PartDetail() {
       <div className="relative bg-secondary aspect-square">
         {photos[activePhoto] ? (
           <img
-            key={photos[activePhoto]}
-            src={photos[activePhoto]}
+            key={photos[activePhoto].display}
+            src={photos[activePhoto].display}
             alt={part.title}
             loading="eager"
             decoding="async"
@@ -168,9 +168,9 @@ function PartDetail() {
       {photos.length > 1 && (
         <div className="flex gap-2 px-4 pt-3 overflow-x-auto">
           {photos.map((p, i) => (
-            <button key={p} onClick={() => setActivePhoto(i)}
+            <button key={p.display} onClick={() => setActivePhoto(i)}
               className={`shrink-0 size-16 rounded-lg overflow-hidden border-2 ${i === activePhoto ? "border-gold" : "border-transparent"}`}>
-              <img src={p} alt="" loading="lazy" decoding="async"
+              <img src={p.display} alt="" loading="lazy" decoding="async"
                 onError={() => markBroken(p)}
                 className="w-full h-full object-cover" />
             </button>
