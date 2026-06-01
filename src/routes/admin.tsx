@@ -667,3 +667,104 @@ function EditPartDialog({
     </Dialog>
   );
 }
+
+function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent?: string }) {
+  return (
+    <div className="bg-card rounded-xl border border-border p-4">
+      <div className={`flex items-center gap-2 text-[11px] uppercase tracking-wider ${accent ?? "text-muted-foreground"}`}>
+        {icon}{label}
+      </div>
+      <div className="mt-2 font-display text-3xl text-gold">{value}</div>
+    </div>
+  );
+}
+
+function DashboardPanel({
+  users, parts, inquiries, requests, onJump,
+}: {
+  users: ProfileRow[];
+  parts: PartItem[];
+  inquiries: Inquiry[];
+  requests: PartRequest[];
+  onJump: (t: Tab) => void;
+}) {
+  const pending = parts.filter((p) => p.status === "pending").length;
+  type Activity = { id: string; type: string; title: string; when: string; tab: Tab };
+  const activity: Activity[] = [
+    ...parts.slice(0, 10).map((p) => ({ id: `p-${p.id}`, type: "Yeni ilan", title: p.title, when: p.created_at, tab: "products" as Tab })),
+    ...inquiries.slice(0, 10).map((i) => ({ id: `i-${i.id}`, type: "Teklif talebi", title: i.full_name, when: i.created_at, tab: "inquiries" as Tab })),
+    ...requests.slice(0, 10).map((r) => ({ id: `r-${r.id}`, type: "Parça talebi", title: r.part_name || r.search_query || r.full_name, when: r.created_at, tab: "requests" as Tab })),
+  ].sort((a, b) => +new Date(b.when) - +new Date(a.when)).slice(0, 10);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2.5">
+        <button onClick={() => onJump("users")} className="text-left">
+          <StatCard icon={<UsersIcon className="size-3.5" />} label="Toplam Kullanıcı" value={users.length} />
+        </button>
+        <button onClick={() => onJump("products")} className="text-left">
+          <StatCard icon={<Package className="size-3.5" />} label="Toplam İlan" value={parts.length} />
+        </button>
+        <button onClick={() => onJump("products")} className="text-left">
+          <StatCard icon={<ClipboardList className="size-3.5" />} label="Onay Bekleyen" value={pending} accent="text-gold" />
+        </button>
+        <button onClick={() => onJump("inquiries")} className="text-left">
+          <StatCard icon={<Mail className="size-3.5" />} label="Teklif Talebi" value={inquiries.length} />
+        </button>
+      </div>
+
+      <div className="bg-card rounded-xl border border-border p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <LayoutDashboard className="size-4 text-gold" />
+          <h2 className="font-semibold text-sm">Son Aktivite</h2>
+        </div>
+        {activity.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Henüz aktivite yok.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {activity.map((a) => (
+              <li key={a.id}>
+                <button onClick={() => onJump(a.tab)} className="w-full text-left py-2.5 flex items-start justify-between gap-3 hover:opacity-80">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider text-gold">{a.type}</p>
+                    <p className="text-xs font-medium truncate">{a.title}</p>
+                  </div>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">
+                    {new Date(a.when).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UsersPanel({ users, parts }: { users: ProfileRow[]; parts: PartItem[] }) {
+  const listingsBySeller = new Map<string, number>();
+  parts.forEach((p) => listingsBySeller.set(p.seller_id, (listingsBySeller.get(p.seller_id) ?? 0) + 1));
+  if (users.length === 0) return <p className="text-center text-muted-foreground text-sm py-8">Kullanıcı yok.</p>;
+  return (
+    <div className="space-y-2">
+      {users.map((u) => (
+        <div key={u.id} className="bg-card rounded-xl border border-border p-3 flex items-center gap-3">
+          <div className="size-10 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center font-bold shrink-0">
+            {(u.display_name ?? "?").slice(0, 1).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm truncate">{u.display_name ?? "İsimsiz"}</p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {[u.city, u.whatsapp].filter(Boolean).join(" · ") || "—"}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xs font-bold text-gold">{listingsBySeller.get(u.id) ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">ilan</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
