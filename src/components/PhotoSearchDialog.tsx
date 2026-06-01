@@ -84,15 +84,28 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
       if (!res.ok) { toast.error(res.error); setAnalyzing(false); return; }
       setResult(res.result);
 
-      // Fetch similar listings using keywords + category
-      const kws = res.result.keywords.filter(Boolean).slice(0, 5);
+      // Fetch similar listings using OEM, brand, model, keywords and category
+      const esc = (s: string) => s.replace(/[%,()]/g, " ").trim();
+      const ors: string[] = [];
+      const oem = esc(res.result.oem_code_guess ?? "");
+      if (oem) ors.push(`oem_code.ilike.%${oem}%`);
+      for (const k of res.result.keywords.filter(Boolean).slice(0, 5)) {
+        const v = esc(k);
+        if (!v) continue;
+        ors.push(`title.ilike.%${v}%`, `description.ilike.%${v}%`);
+      }
+      for (const b of (res.result.brand_compatibility ?? []).slice(0, 4)) {
+        const v = esc(b);
+        if (v) ors.push(`brand.ilike.%${v}%`);
+      }
+      for (const m of (res.result.model_compatibility ?? []).slice(0, 4)) {
+        const v = esc(m);
+        if (v) ors.push(`model.ilike.%${v}%`);
+      }
       let q = supabase.from("parts")
         .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code")
         .limit(12);
-      if (kws.length) {
-        const ors = kws.map((k) => `title.ilike.%${k}%,description.ilike.%${k}%`).join(",");
-        q = q.or(ors);
-      }
+      if (ors.length) q = q.or(ors.join(","));
       const { data } = await q;
       setSimilar((data ?? []) as Part[]);
     } catch (e) {
