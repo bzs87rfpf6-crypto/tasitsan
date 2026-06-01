@@ -84,8 +84,25 @@ export const analyzePartImage = createServerFn({ method: "POST" })
                       type: "string",
                       description: "Parça hakkında 1-2 cümlelik kısa açıklama.",
                     },
+                    oem_code_guess: {
+                      type: "string",
+                      description: "Görselden okunan veya tahmin edilen OEM kodu. Bilinmiyorsa boş string.",
+                    },
+                    brand_compatibility: {
+                      type: "array",
+                      items: { type: "string" },
+                      description: "Parçanın muhtemelen uyumlu olduğu araç markaları.",
+                    },
+                    model_compatibility: {
+                      type: "array",
+                      items: { type: "string" },
+                      description: "Parçanın muhtemelen uyumlu olduğu araç modelleri.",
+                    },
                   },
-                  required: ["part_name", "category", "confidence", "keywords", "description"],
+                  required: [
+                    "part_name", "category", "confidence", "keywords", "description",
+                    "oem_code_guess", "brand_compatibility", "model_compatibility",
+                  ],
                   additionalProperties: false,
                 },
               },
@@ -114,6 +131,9 @@ export const analyzePartImage = createServerFn({ method: "POST" })
         confidence: number;
         keywords: string[];
         description: string;
+        oem_code_guess: string;
+        brand_compatibility: string[];
+        model_compatibility: string[];
       };
 
       return { ok: true as const, result: parsed };
