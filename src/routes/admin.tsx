@@ -153,12 +153,15 @@ function AdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const [iq, rq, pt, qt] = await Promise.all([
+    const [iq, rq, pt, qt, us] = await Promise.all([
       supabase.from("inquiries").select("*").order("created_at", { ascending: false }),
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,display_name,whatsapp,city,created_at").order("created_at", { ascending: false }),
     ]);
+    if (us.error) toast.error(us.error.message);
+    setUsers((us.data ?? []) as ProfileRow[]);
     if (iq.error) toast.error(iq.error.message);
     if (rq.error) toast.error(rq.error.message);
     if (pt.error) toast.error(pt.error.message);
