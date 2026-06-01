@@ -65,9 +65,29 @@ export function PartRequestDialog({
     onOpenChange(v);
   };
 
+  // Stable blob URLs to prevent iOS memory exhaustion (which can force the
+  // page to auto-reload after picking many photos).
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => { previews.forEach((u) => URL.revokeObjectURL(u)); }, [previews]);
+
   const addFiles = (list: FileList | null) => {
-    if (!list) return;
-    setFiles((prev) => [...prev, ...Array.from(list)].slice(0, 4));
+    if (!list || list.length === 0) return;
+    const accepted: File[] = [];
+    const rejected: string[] = [];
+    for (const f of Array.from(list)) {
+      if (!ACCEPTED_MIME.test(f.type) || REJECTED_EXT.test(f.name)) {
+        rejected.push(f.name);
+        console.warn("[part-request] rejected:", f.name, f.type);
+        continue;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        rejected.push(`${f.name} (>10MB)`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    if (rejected.length) toast.error(`Desteklenmeyen dosya: ${rejected.join(", ")}.`);
+    if (accepted.length) setFiles((prev) => [...prev, ...accepted].slice(0, 4));
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -80,11 +100,19 @@ export function PartRequestDialog({
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
-      for (const f of files) {
-        const ext = f.name.split(".").pop() ?? "jpg";
-        const path = `requests/${userId}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("part-photos").upload(path, f, { cacheControl: "3600", upsert: false });
-        if (upErr) throw upErr;
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
+        // IMPORTANT: storage RLS requires first folder = auth.uid(). The path
+        // MUST start with `${userId}/...` — never `requests/${userId}/...`.
+        const path = `${userId}/req-${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("part-photos")
+          .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
+        if (upErr) {
+          console.error(`[part-request] upload failed for ${f.name}`, { path, error: upErr });
+          throw new Error(`Fotoğraf ${i + 1} yüklenemedi: ${upErr.message}`);
+        }
         const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
         photoUrls.push(pub.publicUrl);
       }
@@ -105,14 +133,16 @@ export function PartRequestDialog({
         email: form.email.trim() || null,
         message: form.description.trim() || form.part_name.trim(),
       });
-      if (error) throw error;
+      if (error) { console.error("[part-request] insert failed:", error); throw error; }
       toast.success("Talebiniz alındı. Satıcılar teklif verecek, Taşıtsan onay sonrası size iletecek.");
       setForm({ part_name: "", oem_code: "", brand: "", model: "", year: "", category: "", description: "", full_name: "", phone: "", email: "" });
       setFiles([]);
       onOpenChange(false);
     } catch (err: any) {
+      console.error("[part-request] submit error:", err);
       toast.error(err.message ?? "Talep gönderilemedi");
     } finally {
+
       setSubmitting(false);
     }
   };
