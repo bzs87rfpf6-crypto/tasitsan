@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,9 +18,23 @@ interface PartFull {
   id: string; title: string; description: string | null;
   brand: string | null; model: string | null; year: number | null;
   category: string | null; condition: string; price: number | null;
-  city: string | null; photos: string[];
+  city: string | null; photos: string[] | null;
   seller_id: string; created_at: string;
   oem_code: string | null; stock_quantity: number | null;
+}
+
+// Browsers cannot render Apple ProRAW (.dng), HEIC/HEIF, or camera RAW
+// formats. Showing them via <img> in Safari triggers repeated decode
+// attempts on multi-MB files, which exhausts the WebKit image-decoder
+// memory cap and crashes the tab ("sayfasında birçok kez sorun oluştu").
+const UNRENDERABLE_EXT = /\.(heic|heif|dng|raw|cr2|cr3|nef|arw|orf|rw2|tif|tiff)(\?|$)/i;
+
+function isDisplayableUrl(u: unknown): u is string {
+  if (typeof u !== "string") return false;
+  const trimmed = u.trim();
+  if (!trimmed) return false;
+  if (UNRENDERABLE_EXT.test(trimmed)) return false;
+  return true;
 }
 
 function PartDetail() {
@@ -33,17 +47,59 @@ function PartDetail() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
+  const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setActivePhoto(0);
+    setBrokenPhotos(new Set());
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("parts")
         .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,stock_quantity")
         .eq("id", id).maybeSingle();
-      setPart(data as PartFull | null);
+      if (cancelled) return;
+      if (error) {
+        console.error("[part-detail] fetch failed:", error);
+        toast.error("İlan yüklenemedi.");
+      }
+      setPart((data as PartFull | null) ?? null);
       setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, [id]);
+
+  // Defensive: filter null, non-string, and browser-unrenderable URLs.
+  // Also drop URLs that <img> reported as broken so we don't retry them.
+  const photos = useMemo(() => {
+    const raw = Array.isArray(part?.photos) ? part!.photos : [];
+    const filtered = raw.filter(isDisplayableUrl).filter((u) => !brokenPhotos.has(u));
+    if (raw.length !== filtered.length) {
+      console.warn("[part-detail] filtered photos", {
+        total: raw.length,
+        kept: filtered.length,
+        dropped: raw.filter((u) => !filtered.includes(u as string)),
+      });
+    }
+    return filtered;
+  }, [part, brokenPhotos]);
+
+  // Clamp active index whenever the displayable list shrinks.
+  useEffect(() => {
+    if (activePhoto >= photos.length) setActivePhoto(0);
+  }, [photos.length, activePhoto]);
+
+  const markBroken = (url: string) => {
+    console.warn("[part-detail] image failed to load:", url);
+    setBrokenPhotos((prev) => {
+      if (prev.has(url)) return prev;
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  };
+
 
   const openForm = () => {
     if (!user) {
