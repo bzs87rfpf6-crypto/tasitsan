@@ -281,17 +281,31 @@ function AdminPage() {
         </div>
 
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
-          {(tab === "products"
-            ? (["all", "pending", "approved", "rejected"] as const)
-            : (["all", "new", "in_progress", "resolved"] as const)
-          ).map((s) => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                filter === s ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
-              }`}>
-              {s === "all" ? "Tümü" : tab === "products" ? PART_STATUS_LABEL[s as PartStatus] : STATUS_LABEL[s as Status]}
-            </button>
-          ))}
+          {tab === "requests" ? (
+            ([
+              ["open", `Açık (${requests.filter((r) => r.status === "new" && !(quotesByRequest.get(r.id)?.length)).length})`],
+              ["awaiting", `Teklif Bekleyen (${requests.filter((r) => r.status === "in_progress" && !(quotesByRequest.get(r.id)?.length)).length})`],
+              ["received", `Teklif Gelen (${requests.filter((r) => (quotesByRequest.get(r.id)?.length ?? 0) > 0 && r.status !== "resolved").length})`],
+              ["done", `Tamamlanan (${requests.filter((r) => r.status === "resolved").length})`],
+            ] as ["open" | "awaiting" | "received" | "done", string][]).map(([s, label]) => (
+              <button key={s} onClick={() => setReqSubTab(s)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  reqSubTab === s ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                }`}>{label}</button>
+            ))
+          ) : (
+            (tab === "products"
+              ? (["all", "pending", "approved", "rejected"] as const)
+              : (["all", "new", "in_progress", "resolved"] as const)
+            ).map((s) => (
+              <button key={s} onClick={() => setFilter(s)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  filter === s ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                }`}>
+                {s === "all" ? "Tümü" : tab === "products" ? PART_STATUS_LABEL[s as PartStatus] : STATUS_LABEL[s as Status]}
+              </button>
+            ))
+          )}
         </div>
       </header>
 
