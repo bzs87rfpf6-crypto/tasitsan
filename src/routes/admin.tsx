@@ -19,6 +19,7 @@ interface Inquiry {
   buyer_id: string | null;
   full_name: string;
   phone: string;
+  email: string | null;
   company: string | null;
   message: string;
   status: Status;
