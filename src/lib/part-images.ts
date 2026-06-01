@@ -38,10 +38,8 @@ export function getSafePartPhotos(values: unknown, broken = new Set<string>(), w
   const raw = Array.isArray(values) ? values : [];
   return raw
     .map((original) => ({ original, display: getPartImageDisplayUrl(original, width) }))
-    .filter((photo): photo is { original: string; display: string } => (
-      typeof photo.original === "string" &&
-      Boolean(photo.display) &&
-      !broken.has(photo.original) &&
-      !broken.has(photo.display)
-    ));
+    .filter((photo): photo is { original: string; display: string } => {
+      if (typeof photo.original !== "string" || !photo.display) return false;
+      return !broken.has(photo.original) && !broken.has(photo.display);
+    });
 }
