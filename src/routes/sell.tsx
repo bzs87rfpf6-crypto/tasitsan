@@ -55,7 +55,8 @@ function SellPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (files.length === 0) { toast.error("En az 1 fotoğraf yükle"); return; }
+    if (files.length < 3) { toast.error("En az 3 fotoğraf yüklemelisin."); return; }
+    if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli bir fiyat girin."); return; }
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
@@ -70,7 +71,7 @@ function SellPage() {
         photoUrls.push(pub.publicUrl);
       }
 
-      const { data, error } = await supabase.from("parts").insert({
+      const { error } = await supabase.from("parts").insert({
         seller_id: user.id,
         title: form.title,
         description: form.description || null,
@@ -85,21 +86,23 @@ function SellPage() {
         city: form.city || null,
         photos: photoUrls,
         whatsapp: form.whatsapp,
-      }).select("id").single();
+        status: "pending",
+      });
       if (error) throw error;
 
       if (form.whatsapp !== profileWa) {
         await supabase.from("profiles").update({ whatsapp: form.whatsapp, city: form.city || null }).eq("id", user.id);
       }
 
-      toast.success("İlan yayınlandı!");
-      nav({ to: "/parts/$id", params: { id: data.id } });
+      toast.success("İlanınız admin onayına gönderildi.");
+      nav({ to: "/" });
     } catch (err: any) {
       toast.error(err.message ?? "Hata");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   if (authLoading || !user) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -110,8 +113,15 @@ function SellPage() {
       <AppHeader subtitle="Yeni İlan" />
       <form onSubmit={submit} className="max-w-md mx-auto px-4 pt-4 space-y-4">
 
+        <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
+          <span className="text-gold font-semibold">Onay süreci:</span> Eklediğiniz ilanlar Taşıtsan ekibi tarafından incelendikten sonra yayınlanır.
+        </div>
+
         <section className="space-y-2">
-          <label className="text-xs uppercase tracking-wider text-gold font-semibold">Fotoğraflar (en fazla 6)</label>
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
+            <span>Fotoğraflar (en az 3, en fazla 6)</span>
+            <span className={`text-[10px] ${files.length >= 3 ? "text-emerald-400" : "text-muted-foreground"}`}>{files.length}/3</span>
+          </label>
           <div className="grid grid-cols-3 gap-2">
             {files.map((f, i) => (
               <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-card">
@@ -132,21 +142,22 @@ function SellPage() {
           </div>
         </section>
 
+
         <Input placeholder="Başlık (örn. Mercedes W211 Sağ Far)" value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })} required maxLength={120} className="h-12 bg-card" />
 
         <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Marka" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} className="h-12 bg-card" />
-          <Input placeholder="Model" value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} className="h-12 bg-card" />
+          <Input placeholder="Marka *" value={form.brand} required onChange={(e) => setForm({ ...form, brand: e.target.value })} className="h-12 bg-card" />
+          <Input placeholder="Model *" value={form.model} required onChange={(e) => setForm({ ...form, model: e.target.value })} className="h-12 bg-card" />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Yıl" inputMode="numeric" value={form.year}
+          <Input placeholder="Model Yılı *" inputMode="numeric" value={form.year} required
             onChange={(e) => setForm({ ...form, year: e.target.value.replace(/\D/g, "").slice(0, 4) })} className="h-12 bg-card" />
           <Input placeholder="Şehir" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="h-12 bg-card" />
         </div>
 
-        <Input placeholder="OEM Kodu (opsiyonel)" value={form.oem_code}
+        <Input placeholder="OEM Kodu *" value={form.oem_code} required
           onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })}
           maxLength={60} className="h-12 bg-card font-mono" />
 
@@ -176,12 +187,12 @@ function SellPage() {
 
         <div className="grid grid-cols-2 gap-2">
           <div className="relative">
-            <Input placeholder="Fiyat" inputMode="decimal" value={form.price}
+            <Input placeholder="Fiyat *" inputMode="decimal" value={form.price} required
               onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.]/g, "") })}
               className="h-12 bg-card pl-8" />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold">₺</span>
           </div>
-          <Input placeholder="Stok Adedi" inputMode="numeric" value={form.stock_quantity}
+          <Input placeholder="Stok Adedi *" inputMode="numeric" value={form.stock_quantity} required
             onChange={(e) => setForm({ ...form, stock_quantity: e.target.value.replace(/\D/g, "") })}
             className="h-12 bg-card" />
         </div>
@@ -189,6 +200,7 @@ function SellPage() {
         <Textarea placeholder="Açıklama, uyumlu modeller, kusurlar..." value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={4} className="bg-card resize-none" />
+
 
         <div>
           <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">
@@ -203,7 +215,7 @@ function SellPage() {
 
 
         <Button type="submit" disabled={submitting} className="w-full h-13 bg-gold-gradient text-gold-foreground font-semibold text-base shadow-gold py-4">
-          {submitting ? "Yayınlanıyor..." : "İlanı Yayınla"}
+          {submitting ? "Gönderiliyor..." : "Onaya Gönder"}
         </Button>
       </form>
       <BottomNav />

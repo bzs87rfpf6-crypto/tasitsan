@@ -126,6 +126,7 @@ export type Database = {
       }
       parts: {
         Row: {
+          admin_notes: string | null
           brand: string | null
           category: string | null
           city: string | null
@@ -137,7 +138,10 @@ export type Database = {
           oem_code: string | null
           photos: string[]
           price: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           seller_id: string
+          status: string
           stock_quantity: number
           title: string
           updated_at: string
@@ -145,6 +149,7 @@ export type Database = {
           year: number | null
         }
         Insert: {
+          admin_notes?: string | null
           brand?: string | null
           category?: string | null
           city?: string | null
@@ -156,7 +161,10 @@ export type Database = {
           oem_code?: string | null
           photos?: string[]
           price?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           seller_id: string
+          status?: string
           stock_quantity?: number
           title: string
           updated_at?: string
@@ -164,6 +172,7 @@ export type Database = {
           year?: number | null
         }
         Update: {
+          admin_notes?: string | null
           brand?: string | null
           category?: string | null
           city?: string | null
@@ -175,7 +184,10 @@ export type Database = {
           oem_code?: string | null
           photos?: string[]
           price?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           seller_id?: string
+          status?: string
           stock_quantity?: number
           title?: string
           updated_at?: string
