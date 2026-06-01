@@ -159,8 +159,8 @@ function PartDetail() {
         <div className="max-w-md mx-auto p-3">
           <button onClick={openForm}
             className="w-full flex items-center justify-center gap-2 h-14 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold active:scale-[0.98] transition-transform">
-            <MessageCircle className="size-5" />
-            Taşıtsan ile İletişime Geç
+            <Send className="size-5" />
+            Teklif Talebi Gönder
           </button>
         </div>
       </div>
