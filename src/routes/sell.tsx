@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { X, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,11 @@ import { BottomNav } from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+
+// Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
+// by <img>, and DNG files balloon memory enough to crash the tab into a reload.
+const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
+const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
 
 export const Route = createFileRoute("/sell")({
   head: () => ({ meta: [{ title: "İlan Ver — Taşıtsan" }] }),
