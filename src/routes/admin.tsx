@@ -457,7 +457,17 @@ function AdminPage() {
             onJump={(t) => { setTab(t); setFilter("all"); }}
           />
         ) : tab === "users" ? (
-          <UsersPanel users={users} parts={parts} />
+          <UsersPanel
+            users={filteredUsers}
+            parts={parts}
+            adminIds={adminIds}
+            currentUserId={user?.id ?? null}
+            onDelete={handleDeleteUser}
+            onToggleActive={handleToggleActive}
+            onToggleAdmin={handleToggleAdmin}
+          />
+        ) : tab === "settings" ? (
+          <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
           filteredParts.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
