@@ -123,11 +123,12 @@ function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [tab, setTab] = useState<Tab>("products");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [requests, setRequests] = useState<PartRequest[]>([]);
   const [quotes, setQuotes] = useState<RequestQuote[]>([]);
   const [parts, setParts] = useState<PartItem[]>([]);
+  const [users, setUsers] = useState<ProfileRow[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [loading, setLoading] = useState(true);
@@ -136,10 +137,17 @@ function AdminPage() {
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setIsAdmin(null); return; }
     supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
+
+  useEffect(() => {
+    if (isAdmin === false) {
+      toast.error("Bu alana erişim yetkin yok.");
+      nav({ to: "/" });
+    }
+  }, [isAdmin, nav]);
 
   useEffect(() => { if (isAdmin) void load(); }, [isAdmin]);
 
