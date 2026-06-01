@@ -740,6 +740,15 @@ function AdminPage() {
           toast.success("İlan reddedildi");
         }}
       />
+
+      <RequestNoteDialog
+        request={notingRequest}
+        onClose={() => setNotingRequest(null)}
+        onSave={async (id, note) => {
+          await saveRequestNote(id, note);
+          setNotingRequest(null);
+        }}
+      />
     </div>
   );
 }
