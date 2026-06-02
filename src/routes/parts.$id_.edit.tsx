@@ -33,9 +33,10 @@ function EditPartPage() {
   const [loading, setLoading] = useState(true);
   const [notOwner, setNotOwner] = useState(false);
   const [form, setForm] = useState({
-    title: "", description: "", brand: "", model: "", year: "", oem_code: "",
+    title: "", description: "", brand: "", model: "", year: "", engine_code: "",
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "",
   });
+  const [oemCodes, setOemCodes] = useState<string[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
