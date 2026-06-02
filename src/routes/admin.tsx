@@ -1184,9 +1184,7 @@ function UsersPanel({
               : u.is_active ? "border-border" : "border-destructive/40 opacity-75"
           }`}>
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center font-bold shrink-0">
-                {(u.display_name ?? "?").slice(0, 1).toUpperCase()}
-              </div>
+              <UserAvatar url={u.avatar_url} name={u.display_name} size={40} className="shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="font-semibold text-sm truncate">{u.display_name ?? "İsimsiz"}</p>
