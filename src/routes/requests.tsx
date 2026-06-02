@@ -26,10 +26,12 @@ interface OpenRequest {
   part_name: string | null;
   search_query: string | null;
   oem_code: string | null;
+  engine_code: string | null;
   brand: string | null;
   model: string | null;
   year: number | null;
   category: string | null;
+  city: string | null;
   description: string | null;
   message: string;
   photos: string[];
