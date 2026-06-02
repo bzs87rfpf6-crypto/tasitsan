@@ -174,7 +174,6 @@ function EditPartPage() {
             <span>Fotoğraflar (3-6)</span>
             <span className={`text-[10px] ${totalPhotos >= 3 ? "text-emerald-400" : "text-muted-foreground"}`}>{totalPhotos}/3</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
           {totalPhotos > 0 && (
             <div className="grid grid-cols-3 gap-2">
               {existingPhotos.map((url, i) => (
@@ -200,7 +199,6 @@ function EditPartPage() {
           {totalPhotos < 6 && (
             <PhotoPicker onFiles={(fl) => addFiles(fl)} />
           )}
-          </div>
         </section>
 
         <Input placeholder="Başlık" value={form.title} required maxLength={120}
