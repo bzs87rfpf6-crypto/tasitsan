@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
 
@@ -72,6 +73,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RequestsIdRoute = RequestsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => RequestsRoute,
+} as any)
 const PartsIdRoute = PartsIdRouteImport.update({
   id: '/parts/$id',
   path: '/parts/$id',
@@ -90,11 +96,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
   '/my-requests': typeof MyRequestsRoute
-  '/requests': typeof RequestsRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
+  '/requests/$id': typeof RequestsIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -104,11 +111,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
   '/my-requests': typeof MyRequestsRoute
-  '/requests': typeof RequestsRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
+  '/requests/$id': typeof RequestsIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesById {
@@ -119,11 +127,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
   '/my-requests': typeof MyRequestsRoute
-  '/requests': typeof RequestsRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
+  '/requests/$id': typeof RequestsIdRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
+    | '/requests/$id'
     | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
+    | '/requests/$id'
     | '/parts/$id/edit'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
+    | '/requests/$id'
     | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -178,7 +190,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FavoritesRoute: typeof FavoritesRoute
   MyRequestsRoute: typeof MyRequestsRoute
-  RequestsRoute: typeof RequestsRoute
+  RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellRoute: typeof SellRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -258,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/requests/$id': {
+      id: '/requests/$id'
+      path: '/$id'
+      fullPath: '/requests/$id'
+      preLoaderRoute: typeof RequestsIdRouteImport
+      parentRoute: typeof RequestsRoute
+    }
     '/parts/$id': {
       id: '/parts/$id'
       path: '/parts/$id'
@@ -275,6 +294,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface RequestsRouteChildren {
+  RequestsIdRoute: typeof RequestsIdRoute
+}
+
+const RequestsRouteChildren: RequestsRouteChildren = {
+  RequestsIdRoute: RequestsIdRoute,
+}
+
+const RequestsRouteWithChildren = RequestsRoute._addFileChildren(
+  RequestsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
@@ -282,7 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FavoritesRoute: FavoritesRoute,
   MyRequestsRoute: MyRequestsRoute,
-  RequestsRoute: RequestsRoute,
+  RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SellRoute: SellRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
