@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateDisplayName } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 
@@ -161,13 +161,13 @@ function AdminPage() {
   const [rejectNote, setRejectNote] = useState("");
   const [notingRequest, setNotingRequest] = useState<PartRequest | null>(null);
   const [editingUser, setEditingUser] = useState<ProfileRow | null>(null);
-  const [editingName, setEditingName] = useState("");
-  const [savingName, setSavingName] = useState(false);
+  const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", is_approved: false });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const callDeleteUser = useServerFn(adminDeleteUser);
   const callSetRole = useServerFn(adminSetRole);
   const callSetActive = useServerFn(adminSetActive);
-  const callUpdateDisplayName = useServerFn(adminUpdateDisplayName);
+  const callUpdateProfile = useServerFn(adminUpdateProfile);
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
@@ -324,23 +324,49 @@ function AdminPage() {
 
   const openEditUser = (u: ProfileRow) => {
     setEditingUser(u);
-    setEditingName(u.display_name ?? "");
+    setEditForm({
+      display_name: u.display_name ?? "",
+      whatsapp: u.whatsapp ?? "",
+      is_approved: u.is_approved,
+    });
   };
 
-  const saveUserName = async () => {
+  const saveUserEdit = async () => {
     if (!editingUser) return;
-    const name = editingName.trim();
-    if (!name) { toast.error("Ad boş olamaz"); return; }
-    setSavingName(true);
+    const name = editForm.display_name.trim();
+    if (!name) { toast.error("Ad / firma adı boş olamaz"); return; }
+    setSavingEdit(true);
     try {
-      await callUpdateDisplayName({ data: { userId: editingUser.id, displayName: name } });
-      setUsers((prev) => prev.map((x) => x.id === editingUser.id ? { ...x, display_name: name } : x));
-      toast.success("Kullanıcı adı güncellendi");
+      await callUpdateProfile({
+        data: {
+          userId: editingUser.id,
+          displayName: name,
+          whatsapp: editForm.whatsapp.trim() || null,
+          isApproved: editForm.is_approved,
+        },
+      });
+      setUsers((prev) => prev.map((x) => x.id === editingUser.id
+        ? { ...x, display_name: name, whatsapp: editForm.whatsapp.trim() || null, is_approved: editForm.is_approved }
+        : x));
+      toast.success("Kullanıcı güncellendi");
       setEditingUser(null);
     } catch (e: any) {
       toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
     } finally {
-      setSavingName(false);
+      setSavingEdit(false);
+    }
+  };
+
+  const toggleEditActive = async () => {
+    if (!editingUser) return;
+    const next = !editingUser.is_active;
+    try {
+      await callSetActive({ data: { userId: editingUser.id, isActive: next } });
+      setUsers((prev) => prev.map((x) => x.id === editingUser.id ? { ...x, is_active: next } : x));
+      setEditingUser({ ...editingUser, is_active: next });
+      toast.success(next ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasife alındı");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
     }
   };
 
@@ -792,26 +818,68 @@ function AdminPage() {
       <Dialog open={!!editingUser} onOpenChange={(v) => { if (!v) setEditingUser(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Kullanıcı Adını Düzenle</DialogTitle>
+            <DialogTitle>Kullanıcıyı Düzenle</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-[11px] text-muted-foreground">
-              Bu değişiklik tüm sistemde anında görünür ve işlem kaydı tutulur.
+              Değişiklikler tüm sistemde anında görünür ve işlem kaydı tutulur.
             </p>
-            <Input
-              autoFocus
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              placeholder="Kullanıcı adı / firma adı"
-              maxLength={100}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingName}>
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Ad / Firma Adı</label>
+              <Input
+                autoFocus
+                value={editForm.display_name}
+                onChange={(e) => setEditForm((f) => ({ ...f, display_name: e.target.value }))}
+                placeholder="Ad Soyad veya firma adı"
+                maxLength={100}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Telefon (WhatsApp)</label>
+              <Input
+                type="tel"
+                value={editForm.whatsapp}
+                onChange={(e) => setEditForm((f) => ({ ...f, whatsapp: e.target.value }))}
+                placeholder="5xx xxx xx xx"
+                maxLength={32}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Üyelik Durumu</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                <Button type="button" size="sm"
+                  variant={editForm.is_approved ? "default" : "outline"}
+                  onClick={() => setEditForm((f) => ({ ...f, is_approved: true }))}
+                  className={`h-8 text-[11px] ${editForm.is_approved ? "bg-gold-gradient text-gold-foreground" : ""}`}>
+                  <Check className="size-3 mr-1" /> Onaylı
+                </Button>
+                <Button type="button" size="sm"
+                  variant={!editForm.is_approved ? "default" : "outline"}
+                  onClick={() => setEditForm((f) => ({ ...f, is_approved: false }))}
+                  className={`h-8 text-[11px] ${!editForm.is_approved ? "bg-gold-gradient text-gold-foreground" : ""}`}>
+                  <XIcon className="size-3 mr-1" /> Onay Bekliyor
+                </Button>
+              </div>
+            </div>
+            {editingUser && (
+              <div className="space-y-1.5 pt-1 border-t border-border">
+                <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Hesap Erişimi</label>
+                <Button type="button" size="sm" variant="outline" onClick={toggleEditActive}
+                  disabled={user?.id === editingUser.id}
+                  className={`w-full h-8 text-[11px] ${!editingUser.is_active ? "border-destructive/40 text-destructive" : ""}`}>
+                  {editingUser.is_active
+                    ? <><UserX className="size-3 mr-1" /> Pasife Al</>
+                    : <><UserCheck className="size-3 mr-1" /> Tekrar Aktif Et</>}
+                </Button>
+              </div>
+            )}
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingEdit}>
                 İptal
               </Button>
-              <Button size="sm" onClick={saveUserName} disabled={savingName}
+              <Button size="sm" onClick={saveUserEdit} disabled={savingEdit}
                 className="bg-gold-gradient text-gold-foreground font-semibold">
-                <Save className="size-3.5 mr-1" /> {savingName ? "Kaydediliyor..." : "Kaydet"}
+                <Save className="size-3.5 mr-1" /> {savingEdit ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </div>
           </div>
