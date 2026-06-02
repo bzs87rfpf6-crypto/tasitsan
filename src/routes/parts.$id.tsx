@@ -101,7 +101,9 @@ interface PartFull {
   city: string | null; photos: string[] | null;
   seller_id: string; created_at: string;
   oem_code: string | null; stock_quantity: number | null;
+  oem_codes: string[] | null; engine_code: string | null;
 }
+
 
 function PartDetail() {
   const { id } = useParams({ from: "/parts/$id" });
