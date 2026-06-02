@@ -81,7 +81,7 @@ export const updateBotRule = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const patch: Record<string, unknown> = {};
+    const patch: { pattern?: string; label?: string | null; enabled?: boolean } = {};
     if (data.pattern !== undefined) patch.pattern = data.pattern.trim();
     if (data.label !== undefined) patch.label = data.label;
     if (data.enabled !== undefined) patch.enabled = data.enabled;
