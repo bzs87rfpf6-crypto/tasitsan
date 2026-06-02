@@ -1075,6 +1075,10 @@ function UsersPanel({
                 <Check className="size-3.5 mr-1" /> Hesabı Onayla
               </Button>
             )}
+            <Button size="sm" variant="outline" onClick={() => onEditName(u)}
+              className="w-full h-8 text-[11px]">
+              <Pencil className="size-3 mr-1" /> Kullanıcı Düzenle
+            </Button>
             <div className="grid grid-cols-4 gap-1.5">
               {approved && !isUserAdmin && (
                 <Button size="sm" variant="outline" onClick={() => onToggleApproved(u)} disabled={isSelf}
