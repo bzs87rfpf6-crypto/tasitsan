@@ -26,10 +26,12 @@ interface OpenRequest {
   part_name: string | null;
   search_query: string | null;
   oem_code: string | null;
+  engine_code: string | null;
   brand: string | null;
   model: string | null;
   year: number | null;
   category: string | null;
+  city: string | null;
   description: string | null;
   message: string;
   photos: string[];
@@ -62,6 +64,8 @@ function RequestsPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [cat, setCat] = useState("Tümü");
+  const [search, setSearch] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
   const [requests, setRequests] = useState<OpenRequest[]>([]);
   const [myQuotes, setMyQuotes] = useState<MyQuote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,9 +94,20 @@ function RequestsPage() {
     return m;
   }, [myQuotes]);
 
-  const filtered = useMemo(() =>
-    cat === "Tümü" ? requests : requests.filter((r) => r.category === cat),
-    [cat, requests]);
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const c = cityFilter.trim().toLowerCase();
+    return requests.filter((r) => {
+      if (cat !== "Tümü" && r.category !== cat) return false;
+      if (c && !(r.city || "").toLowerCase().includes(c)) return false;
+      if (s) {
+        const hay = [r.part_name, r.brand, r.model, r.oem_code, r.engine_code, r.search_query]
+          .filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(s)) return false;
+      }
+      return true;
+    });
+  }, [cat, requests, search, cityFilter]);
 
   if (authLoading || !user) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -109,6 +124,12 @@ function RequestsPage() {
               Müşterilerin aradığı parçalara teklif verin · {filtered.length} açık talep
             </p>
           </div>
+        </div>
+        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-2 gap-2">
+          <Input placeholder="Marka, model, OEM..." value={search}
+            onChange={(e) => setSearch(e.target.value)} className="h-9 text-xs" />
+          <Input placeholder="Şehir" value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)} className="h-9 text-xs" />
         </div>
         <div className="max-w-2xl mx-auto px-4 pb-2.5 flex gap-1.5 overflow-x-auto scrollbar-none">
           {CATEGORIES.map((c) => (
@@ -143,17 +164,21 @@ function RequestsPage() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-sm leading-tight line-clamp-2">
+                    <Link to="/requests/$id" params={{ id: r.id }} className="font-semibold text-sm leading-tight line-clamp-2 hover:text-gold transition-colors">
                       {r.part_name || r.search_query || "Parça talebi"}
-                    </h3>
+                    </Link>
                     <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
                       {[r.brand, r.model, r.year, r.category].filter(Boolean).join(" • ") || "—"}
                     </p>
-                    {r.oem_code && (
-                      <p className="text-[10px] font-mono text-muted-foreground/80 mt-0.5">OEM: {r.oem_code}</p>
+                    {(r.oem_code || r.engine_code) && (
+                      <p className="text-[10px] font-mono text-muted-foreground/80 mt-0.5 line-clamp-1">
+                        {r.oem_code && <>OEM: {r.oem_code}</>}
+                        {r.oem_code && r.engine_code && " · "}
+                        {r.engine_code && <>Motor: {r.engine_code}</>}
+                      </p>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      {new Date(r.created_at).toLocaleDateString("tr-TR")}
+                      {r.city ? `${r.city} · ` : ""}{new Date(r.created_at).toLocaleDateString("tr-TR")}
                     </p>
                   </div>
                 </div>

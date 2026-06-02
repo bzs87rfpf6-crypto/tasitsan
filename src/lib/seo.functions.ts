@@ -43,3 +43,13 @@ export const getSitemapParts = createServerFn({ method: "GET" }).handler(async (
     .limit(5000);
   return (data ?? []) as { id: string; updated_at: string }[];
 });
+
+export const getSitemapRequests = createServerFn({ method: "GET" }).handler(async () => {
+  const { data } = await supabaseAdmin
+    .from("part_requests")
+    .select("id,updated_at")
+    .in("status", ["new", "in_progress"])
+    .order("updated_at", { ascending: false })
+    .limit(5000);
+  return (data ?? []) as { id: string; updated_at: string }[];
+});

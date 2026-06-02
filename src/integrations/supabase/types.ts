@@ -177,9 +177,11 @@ export type Database = {
           brand: string | null
           buyer_id: string | null
           category: string | null
+          city: string | null
           created_at: string
           description: string | null
           email: string | null
+          engine_code: string | null
           full_name: string
           id: string
           message: string
@@ -198,9 +200,11 @@ export type Database = {
           brand?: string | null
           buyer_id?: string | null
           category?: string | null
+          city?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
+          engine_code?: string | null
           full_name: string
           id?: string
           message: string
@@ -219,9 +223,11 @@ export type Database = {
           brand?: string | null
           buyer_id?: string | null
           category?: string | null
+          city?: string | null
           created_at?: string
           description?: string | null
           email?: string | null
+          engine_code?: string | null
           full_name?: string
           id?: string
           message?: string
@@ -521,8 +527,10 @@ export type Database = {
         Row: {
           brand: string | null
           category: string | null
+          city: string | null
           created_at: string | null
           description: string | null
+          engine_code: string | null
           id: string | null
           message: string | null
           model: string | null
@@ -536,8 +544,10 @@ export type Database = {
         Insert: {
           brand?: string | null
           category?: string | null
+          city?: string | null
           created_at?: string | null
           description?: string | null
+          engine_code?: string | null
           id?: string | null
           message?: string | null
           model?: string | null
@@ -551,8 +561,10 @@ export type Database = {
         Update: {
           brand?: string | null
           category?: string | null
+          city?: string | null
           created_at?: string | null
           description?: string | null
+          engine_code?: string | null
           id?: string | null
           message?: string | null
           model?: string | null

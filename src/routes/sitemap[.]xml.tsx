@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SITE_URL, getSitemapParts } from "@/lib/seo.functions";
+import { SITE_URL, getSitemapParts, getSitemapRequests } from "@/lib/seo.functions";
 
 const STATIC_PATHS = ["/", "/auth", "/requests", "/sell"];
 
@@ -7,7 +7,7 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const parts = await getSitemapParts();
+        const [parts, reqs] = await Promise.all([getSitemapParts(), getSitemapRequests()]);
         const today = new Date().toISOString().slice(0, 10);
         const staticUrls = STATIC_PATHS.map((p) => [
           "  <url>",
@@ -25,12 +25,21 @@ export const Route = createFileRoute("/sitemap.xml")({
           "    <priority>0.8</priority>",
           "  </url>",
         ].join("\n"));
+        const reqUrls = reqs.map((r) => [
+          "  <url>",
+          `    <loc>${SITE_URL}/requests/${r.id}</loc>`,
+          `    <lastmod>${new Date(r.updated_at).toISOString().slice(0, 10)}</lastmod>`,
+          "    <changefreq>daily</changefreq>",
+          "    <priority>0.6</priority>",
+          "  </url>",
+        ].join("\n"));
 
         const xml = [
           `<?xml version="1.0" encoding="UTF-8"?>`,
           `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
           ...staticUrls,
           ...partUrls,
+          ...reqUrls,
           `</urlset>`,
         ].join("\n");
 

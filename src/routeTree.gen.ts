@@ -13,11 +13,13 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SellRouteImport } from './routes/sell'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
+import { Route as MyRequestsRouteImport } from './routes/my-requests'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
 
@@ -39,6 +41,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RequestsRoute = RequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyRequestsRoute = MyRequestsRouteImport.update({
+  id: '/my-requests',
+  path: '/my-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FavoritesRoute = FavoritesRouteImport.update({
@@ -66,6 +73,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RequestsIdRoute = RequestsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => RequestsRoute,
+} as any)
 const PartsIdRoute = PartsIdRouteImport.update({
   id: '/parts/$id',
   path: '/parts/$id',
@@ -83,11 +95,13 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
-  '/requests': typeof RequestsRoute
+  '/my-requests': typeof MyRequestsRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
+  '/requests/$id': typeof RequestsIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -96,11 +110,13 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
-  '/requests': typeof RequestsRoute
+  '/my-requests': typeof MyRequestsRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
+  '/requests/$id': typeof RequestsIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesById {
@@ -110,11 +126,13 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
-  '/requests': typeof RequestsRoute
+  '/my-requests': typeof MyRequestsRoute
+  '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
+  '/requests/$id': typeof RequestsIdRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -125,11 +143,13 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/favorites'
+    | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
+    | '/requests/$id'
     | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -138,11 +158,13 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/favorites'
+    | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
+    | '/requests/$id'
     | '/parts/$id/edit'
   id:
     | '__root__'
@@ -151,11 +173,13 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/favorites'
+    | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
+    | '/requests/$id'
     | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -165,7 +189,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   FavoritesRoute: typeof FavoritesRoute
-  RequestsRoute: typeof RequestsRoute
+  MyRequestsRoute: typeof MyRequestsRoute
+  RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellRoute: typeof SellRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -203,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-requests': {
+      id: '/my-requests'
+      path: '/my-requests'
+      fullPath: '/my-requests'
+      preLoaderRoute: typeof MyRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/favorites': {
       id: '/favorites'
       path: '/favorites'
@@ -238,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/requests/$id': {
+      id: '/requests/$id'
+      path: '/$id'
+      fullPath: '/requests/$id'
+      preLoaderRoute: typeof RequestsIdRouteImport
+      parentRoute: typeof RequestsRoute
+    }
     '/parts/$id': {
       id: '/parts/$id'
       path: '/parts/$id'
@@ -255,13 +294,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface RequestsRouteChildren {
+  RequestsIdRoute: typeof RequestsIdRoute
+}
+
+const RequestsRouteChildren: RequestsRouteChildren = {
+  RequestsIdRoute: RequestsIdRoute,
+}
+
+const RequestsRouteWithChildren = RequestsRoute._addFileChildren(
+  RequestsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   FavoritesRoute: FavoritesRoute,
-  RequestsRoute: RequestsRoute,
+  MyRequestsRoute: MyRequestsRoute,
+  RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SellRoute: SellRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
