@@ -300,6 +300,22 @@ function AdminPage() {
     } catch (e: any) { toast.error(e.message ?? "Silinemedi"); }
   };
 
+  const handleRemoveAvatar = async (u: ProfileRow) => {
+    if (!u.avatar_url) { toast.info("Bu kullanıcının profil fotoğrafı yok."); return; }
+    if (!confirm(`${u.display_name ?? "Kullanıcı"} profil fotoğrafı kaldırılsın mı?`)) return;
+    try {
+      // Best-effort storage cleanup (admin RLS allows delete from avatars bucket)
+      const match = u.avatar_url.match(/\/avatars\/([^?]+)/);
+      if (match) {
+        await supabase.storage.from("avatars").remove([match[1]]).catch(() => {});
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", u.id);
+      if (error) throw error;
+      setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, avatar_url: null } : x));
+      toast.success("Profil fotoğrafı kaldırıldı");
+    } catch (e: any) { toast.error(e.message ?? "Kaldırılamadı"); }
+  };
+
   const handleToggleActive = async (u: ProfileRow) => {
     try {
       await callSetActive({ data: { userId: u.id, isActive: !u.is_active } });
