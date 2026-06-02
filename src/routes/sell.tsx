@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { X, Upload } from "lucide-react";
+import { X } from "lucide-react";
+import { PhotoPicker } from "@/components/PhotoPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
@@ -194,24 +195,22 @@ function SellPage() {
             <span>Fotoğraflar (en az 3, en fazla 6)</span>
             <span className={`text-[10px] ${files.length >= 3 ? "text-emerald-400" : "text-muted-foreground"}`}>{files.length}/3</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            {files.map((f, i) => (
-              <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                <img src={previews[i]} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                  className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
-                  <X className="size-3.5" />
-                </button>
-              </div>
-            ))}
-            {files.length < 6 && (
-              <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-gold grid place-items-center cursor-pointer text-muted-foreground">
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
-                  onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
-                <Upload className="size-6" />
-              </label>
-            )}
-          </div>
+          {files.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {files.map((f, i) => (
+                <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
+                  <img src={previews[i]} alt="" className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                    className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {files.length < 6 && (
+            <PhotoPicker onFiles={(fl) => addFiles(fl)} />
+          )}
 
         </section>
 
