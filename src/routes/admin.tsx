@@ -16,6 +16,7 @@ import { SafePartImage } from "@/components/SafePartImage";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
 import { AdminVerificationsPanel } from "@/components/admin/AdminVerificationsPanel";
+import { BotFilterPanel } from "@/components/admin/BotFilterPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
