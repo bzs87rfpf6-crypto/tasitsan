@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UIdRouteImport } from './routes/u.$id'
 import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
@@ -73,6 +74,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UIdRoute = UIdRouteImport.update({
+  id: '/u/$id',
+  path: '/u/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RequestsIdRoute = RequestsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
+  '/u/$id': typeof UIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
+  '/u/$id': typeof UIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesById {
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
+  '/u/$id': typeof UIdRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
+    | '/u/$id'
     | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
+    | '/u/$id'
     | '/parts/$id/edit'
   id:
     | '__root__'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
+    | '/u/$id'
     | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   SellRoute: typeof SellRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PartsIdRoute: typeof PartsIdRoute
+  UIdRoute: typeof UIdRoute
   PartsIdEditRoute: typeof PartsIdEditRoute
 }
 
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$id': {
+      id: '/u/$id'
+      path: '/u/$id'
+      fullPath: '/u/$id'
+      preLoaderRoute: typeof UIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/requests/$id': {
       id: '/requests/$id'
       path: '/$id'
@@ -318,8 +338,19 @@ const rootRouteChildren: RootRouteChildren = {
   SellRoute: SellRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   PartsIdRoute: PartsIdRoute,
+  UIdRoute: UIdRoute,
   PartsIdEditRoute: PartsIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
