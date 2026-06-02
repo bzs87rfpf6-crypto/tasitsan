@@ -70,36 +70,43 @@ export const adminSetActive = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const adminUpdateDisplayName = createServerFn({ method: "POST" })
+export const adminUpdateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
     z.object({
       userId: z.string().uuid(),
       displayName: z.string().trim().min(1, "Ad boş olamaz").max(100),
+      whatsapp: z.string().trim().max(32).nullable().optional(),
+      isApproved: z.boolean(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { data: prev, error: readErr } = await supabaseAdmin
       .from("profiles")
-      .select("display_name")
+      .select("display_name,whatsapp,is_approved")
       .eq("id", data.userId)
       .maybeSingle();
     if (readErr) throw new Error(readErr.message);
 
+    const patch = {
+      display_name: data.displayName,
+      whatsapp: data.whatsapp?.trim() || null,
+      is_approved: data.isApproved,
+    };
     const { error } = await supabaseAdmin
       .from("profiles")
-      .update({ display_name: data.displayName })
+      .update(patch)
       .eq("id", data.userId);
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("admin_audit_log").insert({
       actor_id: context.userId,
       target_user_id: data.userId,
-      action: "update_display_name",
-      old_value: { display_name: prev?.display_name ?? null },
-      new_value: { display_name: data.displayName },
+      action: "update_profile",
+      old_value: prev ?? null,
+      new_value: patch,
     });
 
-    return { ok: true };
+    return { ok: true, profile: patch };
   });
