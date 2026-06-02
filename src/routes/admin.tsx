@@ -324,23 +324,49 @@ function AdminPage() {
 
   const openEditUser = (u: ProfileRow) => {
     setEditingUser(u);
-    setEditingName(u.display_name ?? "");
+    setEditForm({
+      display_name: u.display_name ?? "",
+      whatsapp: u.whatsapp ?? "",
+      is_approved: u.is_approved,
+    });
   };
 
-  const saveUserName = async () => {
+  const saveUserEdit = async () => {
     if (!editingUser) return;
-    const name = editingName.trim();
-    if (!name) { toast.error("Ad boş olamaz"); return; }
-    setSavingName(true);
+    const name = editForm.display_name.trim();
+    if (!name) { toast.error("Ad / firma adı boş olamaz"); return; }
+    setSavingEdit(true);
     try {
-      await callUpdateDisplayName({ data: { userId: editingUser.id, displayName: name } });
-      setUsers((prev) => prev.map((x) => x.id === editingUser.id ? { ...x, display_name: name } : x));
-      toast.success("Kullanıcı adı güncellendi");
+      await callUpdateProfile({
+        data: {
+          userId: editingUser.id,
+          displayName: name,
+          whatsapp: editForm.whatsapp.trim() || null,
+          isApproved: editForm.is_approved,
+        },
+      });
+      setUsers((prev) => prev.map((x) => x.id === editingUser.id
+        ? { ...x, display_name: name, whatsapp: editForm.whatsapp.trim() || null, is_approved: editForm.is_approved }
+        : x));
+      toast.success("Kullanıcı güncellendi");
       setEditingUser(null);
     } catch (e: any) {
       toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
     } finally {
-      setSavingName(false);
+      setSavingEdit(false);
+    }
+  };
+
+  const toggleEditActive = async () => {
+    if (!editingUser) return;
+    const next = !editingUser.is_active;
+    try {
+      await callSetActive({ data: { userId: editingUser.id, isActive: next } });
+      setUsers((prev) => prev.map((x) => x.id === editingUser.id ? { ...x, is_active: next } : x));
+      setEditingUser({ ...editingUser, is_active: next });
+      toast.success(next ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasife alındı");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
     }
   };
 
