@@ -38,7 +38,7 @@ function SellPage() {
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "", whatsapp: "",
   });
   const [oemCodes, setOemCodes] = useState<string[]>([]);
-  const [_unused] = useState(null);
+  
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
