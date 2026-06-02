@@ -71,7 +71,7 @@ function EditPartPage() {
         brand: data.brand ?? "",
         model: data.model ?? "",
         year: data.year?.toString() ?? "",
-        oem_code: data.oem_code ?? "",
+        engine_code: data.engine_code ?? "",
         category: data.category ?? "Motor",
         condition: data.condition ?? "used",
         price: data.price?.toString() ?? "",
