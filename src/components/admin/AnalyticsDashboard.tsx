@@ -9,6 +9,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from "recharts";
 import { getAnalyticsOverview } from "@/lib/analytics-admin.functions";
+import { getTopOemSearches } from "@/lib/oem-analytics.functions";
 import { StatCard } from "@/components/admin/StatCard";
 
 type Overview = Awaited<ReturnType<typeof getAnalyticsOverview>>;
@@ -18,9 +19,14 @@ const PALETTE = ["#D4AF37", "#E8C870", "#8b6f1f", "#3b3b3b", "#5c5c5c", "#a07f29
 
 export function AnalyticsDashboard() {
   const fetchOverview = useServerFn(getAnalyticsOverview);
+  const fetchTopOem = useServerFn(getTopOemSearches);
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [oemRange, setOemRange] = useState<"30d" | "all">("30d");
+  const [oemRows, setOemRows] = useState<{ oem: string; search_count: number }[]>([]);
+  const [oemLoading, setOemLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -30,6 +36,15 @@ export function AnalyticsDashboard() {
       .catch((e: Error) => { if (active) { setError(e.message); setLoading(false); } });
     return () => { active = false; };
   }, [fetchOverview]);
+
+  useEffect(() => {
+    let active = true;
+    setOemLoading(true);
+    fetchTopOem({ data: { range: oemRange, limit: 25 } })
+      .then((rows) => { if (active) { setOemRows(rows); setOemLoading(false); } })
+      .catch(() => { if (active) { setOemRows([]); setOemLoading(false); } });
+    return () => { active = false; };
+  }, [fetchTopOem, oemRange]);
 
   if (loading) return <p className="text-center text-muted-foreground text-sm py-8">İstatistikler yükleniyor...</p>;
   if (error) return <p className="text-center text-destructive text-sm py-8">{error}</p>;
@@ -132,8 +147,31 @@ export function AnalyticsDashboard() {
           items={data.topParts.map((p) => ({ label: p.title || p.part_id, value: p.views }))} />
         <RankList title="En Çok Aranan Parça İsimleri" icon={<Search className="size-4" />}
           items={data.topSearches.map((s) => ({ label: s.query, value: s.count }))} />
-        <RankList title="En Çok Aranan OEM Kodları" icon={<Hash className="size-4" />}
-          items={data.topOem.map((s) => ({ label: s.oem, value: s.count }))} />
+        <div className="bg-card rounded-xl border border-border p-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-gold"><Hash className="size-4" /></span>
+              <h3 className="text-xs font-semibold truncate">En Çok Aranan OEM Kodları</h3>
+            </div>
+            <div className="flex rounded-md border border-border overflow-hidden text-[10px] font-semibold uppercase tracking-wider shrink-0">
+              <button
+                onClick={() => setOemRange("30d")}
+                className={`px-2 py-1 ${oemRange === "30d" ? "bg-gold-gradient text-gold-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >Son 30 Gün</button>
+              <button
+                onClick={() => setOemRange("all")}
+                className={`px-2 py-1 border-l border-border ${oemRange === "all" ? "bg-gold-gradient text-gold-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >Tüm Zamanlar</button>
+            </div>
+          </div>
+          {oemLoading ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Yükleniyor...</p>
+          ) : oemRows.length === 0 ? (
+            <Empty />
+          ) : (
+            <RankListItems items={oemRows.map((r) => ({ label: r.oem, value: Number(r.search_count) }))} />
+          )}
+        </div>
         <RankList title="Satıcı Bazlı İlan Sayıları" icon={<Building2 className="size-4" />}
           items={data.topSellers.map((s) => ({ label: s.name, value: s.count }))} />
       </div>
@@ -165,28 +203,32 @@ function Empty() {
 }
 
 function RankList({ title, icon, items }: { title: string; icon: React.ReactNode; items: { label: string; value: number }[] }) {
-  const max = items[0]?.value ?? 1;
   return (
     <div className="bg-card rounded-xl border border-border p-3">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-gold">{icon}</span>
         <h3 className="text-xs font-semibold">{title}</h3>
       </div>
-      {items.length === 0 ? <Empty /> : (
-        <ul className="space-y-1.5">
-          {items.map((it, i) => (
-            <li key={i} className="text-xs">
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate flex-1 font-medium">{i + 1}. {it.label}</span>
-                <span className="text-gold font-mono tabular-nums">{it.value}</span>
-              </div>
-              <div className="h-1 mt-1 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full bg-gold-gradient" style={{ width: `${Math.max(6, (it.value / max) * 100)}%` }} />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      {items.length === 0 ? <Empty /> : <RankListItems items={items} />}
     </div>
+  );
+}
+
+function RankListItems({ items }: { items: { label: string; value: number }[] }) {
+  const max = items[0]?.value ?? 1;
+  return (
+    <ul className="space-y-1.5">
+      {items.map((it, i) => (
+        <li key={i} className="text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate flex-1 font-medium">{i + 1}. {it.label}</span>
+            <span className="text-gold font-mono tabular-nums">{it.value}</span>
+          </div>
+          <div className="h-1 mt-1 rounded-full bg-secondary overflow-hidden">
+            <div className="h-full bg-gold-gradient" style={{ width: `${Math.max(6, (it.value / max) * 100)}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
