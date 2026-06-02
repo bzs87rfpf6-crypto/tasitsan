@@ -1020,7 +1020,7 @@ function DashboardPanel({
 }
 
 function UsersPanel({
-  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved,
+  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved, onEditName,
 }: {
   users: ProfileRow[];
   parts: PartItem[];
@@ -1030,6 +1030,7 @@ function UsersPanel({
   onToggleActive: (u: ProfileRow) => void;
   onToggleAdmin: (u: ProfileRow) => void;
   onToggleApproved: (u: ProfileRow) => void;
+  onEditName: (u: ProfileRow) => void;
 }) {
   const listingsBySeller = new Map<string, number>();
   parts.forEach((p) => listingsBySeller.set(p.seller_id, (listingsBySeller.get(p.seller_id) ?? 0) + 1));
