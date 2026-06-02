@@ -170,11 +170,15 @@ function RequestsPage() {
                     <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
                       {[r.brand, r.model, r.year, r.category].filter(Boolean).join(" • ") || "—"}
                     </p>
-                    {r.oem_code && (
-                      <p className="text-[10px] font-mono text-muted-foreground/80 mt-0.5">OEM: {r.oem_code}</p>
+                    {(r.oem_code || r.engine_code) && (
+                      <p className="text-[10px] font-mono text-muted-foreground/80 mt-0.5 line-clamp-1">
+                        {r.oem_code && <>OEM: {r.oem_code}</>}
+                        {r.oem_code && r.engine_code && " · "}
+                        {r.engine_code && <>Motor: {r.engine_code}</>}
+                      </p>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      {new Date(r.created_at).toLocaleDateString("tr-TR")}
+                      {r.city ? `${r.city} · ` : ""}{new Date(r.created_at).toLocaleDateString("tr-TR")}
                     </p>
                   </div>
                 </div>
