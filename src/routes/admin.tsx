@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }] }),
