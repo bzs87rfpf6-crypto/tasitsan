@@ -47,6 +47,51 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          device: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          path: string | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       inquiries: {
         Row: {
           admin_notes: string | null
@@ -347,6 +392,7 @@ export type Database = {
           email_from_name: string | null
           email_smtp_host: string | null
           email_smtp_port: number | null
+          ga4_measurement_id: string | null
           id: string
           updated_at: string
           updated_by: string | null
@@ -360,6 +406,7 @@ export type Database = {
           email_from_name?: string | null
           email_smtp_host?: string | null
           email_smtp_port?: number | null
+          ga4_measurement_id?: string | null
           id?: string
           updated_at?: string
           updated_by?: string | null
@@ -373,6 +420,7 @@ export type Database = {
           email_from_name?: string | null
           email_smtp_host?: string | null
           email_smtp_port?: number | null
+          ga4_measurement_id?: string | null
           id?: string
           updated_at?: string
           updated_by?: string | null
