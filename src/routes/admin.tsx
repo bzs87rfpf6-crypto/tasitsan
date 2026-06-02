@@ -15,6 +15,7 @@ import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }] }),
@@ -34,6 +35,7 @@ interface ProfileRow {
   created_at: string;
   is_active: boolean;
   is_approved: boolean;
+  avatar_url: string | null;
 }
 
 interface SiteSettings {
@@ -198,7 +200,7 @@ function AdminPage() {
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved,avatar_url").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       supabase.from("site_settings").select("*").maybeSingle(),
     ]);
@@ -296,6 +298,22 @@ function AdminPage() {
       setUsers((prev) => prev.filter((x) => x.id !== u.id));
       toast.success("Kullanıcı silindi");
     } catch (e: any) { toast.error(e.message ?? "Silinemedi"); }
+  };
+
+  const handleRemoveAvatar = async (u: ProfileRow) => {
+    if (!u.avatar_url) { toast.info("Bu kullanıcının profil fotoğrafı yok."); return; }
+    if (!confirm(`${u.display_name ?? "Kullanıcı"} profil fotoğrafı kaldırılsın mı?`)) return;
+    try {
+      // Best-effort storage cleanup (admin RLS allows delete from avatars bucket)
+      const match = u.avatar_url.match(/\/avatars\/([^?]+)/);
+      if (match) {
+        await supabase.storage.from("avatars").remove([match[1]]).catch(() => {});
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", u.id);
+      if (error) throw error;
+      setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, avatar_url: null } : x));
+      toast.success("Profil fotoğrafı kaldırıldı");
+    } catch (e: any) { toast.error(e.message ?? "Kaldırılamadı"); }
   };
 
   const handleToggleActive = async (u: ProfileRow) => {
@@ -548,6 +566,7 @@ function AdminPage() {
             onToggleAdmin={handleToggleAdmin}
             onToggleApproved={handleToggleApproved}
             onEditName={openEditUser}
+            onRemoveAvatar={handleRemoveAvatar}
           />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
@@ -1133,7 +1152,7 @@ function DashboardPanel({
 }
 
 function UsersPanel({
-  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved, onEditName,
+  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved, onEditName, onRemoveAvatar,
 }: {
   users: ProfileRow[];
   parts: PartItem[];
@@ -1144,6 +1163,7 @@ function UsersPanel({
   onToggleAdmin: (u: ProfileRow) => void;
   onToggleApproved: (u: ProfileRow) => void;
   onEditName: (u: ProfileRow) => void;
+  onRemoveAvatar: (u: ProfileRow) => void;
 }) {
   const listingsBySeller = new Map<string, number>();
   parts.forEach((p) => listingsBySeller.set(p.seller_id, (listingsBySeller.get(p.seller_id) ?? 0) + 1));
@@ -1164,9 +1184,7 @@ function UsersPanel({
               : u.is_active ? "border-border" : "border-destructive/40 opacity-75"
           }`}>
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center font-bold shrink-0">
-                {(u.display_name ?? "?").slice(0, 1).toUpperCase()}
-              </div>
+              <UserAvatar url={u.avatar_url} name={u.display_name} size={40} className="shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="font-semibold text-sm truncate">{u.display_name ?? "İsimsiz"}</p>
@@ -1192,6 +1210,12 @@ function UsersPanel({
               className="w-full h-8 text-[11px]">
               <Pencil className="size-3 mr-1" /> Kullanıcı Düzenle
             </Button>
+            {u.avatar_url && (
+              <Button size="sm" variant="outline" onClick={() => onRemoveAvatar(u)}
+                className="w-full h-8 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Trash2 className="size-3 mr-1" /> Profil Fotoğrafını Kaldır
+              </Button>
+            )}
             <div className="grid grid-cols-4 gap-1.5">
               {approved && !isUserAdmin && (
                 <Button size="sm" variant="outline" onClick={() => onToggleApproved(u)} disabled={isSelf}

@@ -15,6 +15,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { recordPartView } from "@/lib/views";
 import { EquivalentParts } from "@/components/EquivalentParts";
 import { AiOemSuggester } from "@/components/AiOemSuggester";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/parts/$id")({
   loader: async ({ params }) => {
@@ -127,6 +128,17 @@ function PartDetail() {
   const [contactPhone, setContactPhone] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewCount, setViewCount] = useState<number | null>(null);
+  const [seller, setSeller] = useState<{ id: string; display_name: string | null; avatar_url: string | null; city: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!part?.seller_id) { setSeller(null); return; }
+    let cancelled = false;
+    supabase.from("profiles")
+      .select("id,display_name,avatar_url,city")
+      .eq("id", part.seller_id).maybeSingle()
+      .then(({ data }) => { if (!cancelled) setSeller(data ?? null); });
+    return () => { cancelled = true; };
+  }, [part?.seller_id]);
 
   useEffect(() => {
     supabase.from("site_settings").select("contact_phone").maybeSingle()
@@ -358,6 +370,22 @@ function PartDetail() {
         )}
 
         <EquivalentParts partId={part.id} />
+
+        {seller && (
+          <Link
+            to="/u/$id"
+            params={{ id: seller.id }}
+            className="flex items-center gap-3 bg-card rounded-xl p-4 border border-border hover:border-gold transition"
+          >
+            <UserAvatar url={seller.avatar_url} name={seller.display_name} size={48} />
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Satıcı</div>
+              <div className="text-sm font-semibold truncate">{seller.display_name ?? "Satıcı"}</div>
+              {seller.city && <div className="text-[11px] text-muted-foreground truncate">{seller.city}</div>}
+            </div>
+            <span className="text-xs text-gold font-semibold">Profili gör →</span>
+          </Link>
+        )}
 
         {part.oem_code && (
           <AiOemSuggester

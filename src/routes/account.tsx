@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { SafePartImage } from "@/components/SafePartImage";
+import { AvatarUploader } from "@/components/AvatarUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -36,7 +37,7 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 function AccountPage() {
   const { user, loading, signOut } = useAuth();
   const nav = useNavigate();
-  const [profile, setProfile] = useState({ display_name: "", whatsapp: "", city: "" });
+  const [profile, setProfile] = useState({ display_name: "", whatsapp: "", city: "", avatar_url: null as string | null });
   const [myParts, setMyParts] = useState<MyPart[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -55,8 +56,13 @@ function AccountPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("display_name,whatsapp,city").eq("id", user.id).maybeSingle().then(({ data }) => {
-      if (data) setProfile({ display_name: data.display_name ?? "", whatsapp: data.whatsapp ?? "", city: data.city ?? "" });
+    supabase.from("profiles").select("display_name,whatsapp,city,avatar_url").eq("id", user.id).maybeSingle().then(({ data }) => {
+      if (data) setProfile({
+        display_name: data.display_name ?? "",
+        whatsapp: data.whatsapp ?? "",
+        city: data.city ?? "",
+        avatar_url: data.avatar_url ?? null,
+      });
     });
     loadParts(user.id);
   }, [user, loadParts]);
@@ -64,7 +70,8 @@ function AccountPage() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update(profile).eq("id", user.id);
+    const { avatar_url: _ignored, ...patch } = profile;
+    const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
     setSaving(false);
     if (error) toast.error(error.message);
     else toast.success("Profil güncellendi");
@@ -110,6 +117,23 @@ function AccountPage() {
           </Link>
         </div>
 
+
+        <section className="bg-card border border-border rounded-xl p-4 space-y-4">
+          <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">Profil Fotoğrafı</h2>
+          {user && (
+            <AvatarUploader
+              userId={user.id}
+              displayName={profile.display_name}
+              avatarUrl={profile.avatar_url}
+              onChange={(url) => setProfile((p) => ({ ...p, avatar_url: url }))}
+            />
+          )}
+          {user && (
+            <Link to="/u/$id" params={{ id: user.id }} className="block text-[11px] text-gold font-semibold">
+              Herkese açık profilimi görüntüle →
+            </Link>
+          )}
+        </section>
 
         <section className="bg-card border border-border rounded-xl p-4 space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">Profil Bilgileri</h2>
