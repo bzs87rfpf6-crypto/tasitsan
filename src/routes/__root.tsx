@@ -162,6 +162,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <InstallPrompt />
+        <SplashScreen />
         <Toaster theme="dark" position="top-center" />
       </AuthProvider>
     </QueryClientProvider>
