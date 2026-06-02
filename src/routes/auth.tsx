@@ -31,6 +31,7 @@ function AuthPage() {
   const nav = useNavigate();
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [phone, setPhone] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -59,11 +60,6 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const digits = normalizePhone(phone);
-    if (digits.length < 10) {
-      toast.error("Geçerli bir telefon numarası gir (10 hane).");
-      return;
-    }
     if (password.length < 6) {
       toast.error("Şifre en az 6 karakter olmalı.");
       return;
@@ -72,6 +68,12 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const digits = normalizePhone(phone);
+        if (digits.length < 10) {
+          toast.error("Geçerli bir telefon numarası gir (10 hane).");
+          setLoading(false);
+          return;
+        }
         if (!name.trim()) {
           toast.error("Ad-Soyad veya firma adı zorunlu.");
           setLoading(false);
@@ -97,7 +99,26 @@ function AuthPage() {
         if (data.session) nav({ to: "/" });
         else setMode("login");
       } else {
-        const authEmail = phoneToAuthEmail(digits);
+        // Login: accept either an email or a phone number.
+        const raw = loginId.trim();
+        if (!raw) {
+          toast.error("Telefon veya e-posta adresi gir.");
+          setLoading(false);
+          return;
+        }
+        const isEmail = raw.includes("@");
+        let authEmail: string;
+        if (isEmail) {
+          authEmail = raw.toLowerCase();
+        } else {
+          const digits = normalizePhone(raw);
+          if (digits.length < 10) {
+            toast.error("Geçerli bir telefon numarası veya e-posta gir.");
+            setLoading(false);
+            return;
+          }
+          authEmail = phoneToAuthEmail(digits);
+        }
         const { error } = await supabase.auth.signInWithPassword({
           email: authEmail,
           password,
@@ -109,7 +130,7 @@ function AuthPage() {
     } catch (err: any) {
       const msg = err?.message ?? "Bir hata oluştu";
       if (mode === "login" && /invalid/i.test(msg)) {
-        toast.error("Telefon veya şifre hatalı.");
+        toast.error("Telefon/e-posta veya şifre hatalı.");
       } else {
         toast.error(msg);
       }
@@ -130,7 +151,7 @@ function AuthPage() {
             {mode === "signup"
               ? "Telefon numaranla saniyeler içinde kayıt ol. Hesabın onaylandığında ilan verebilirsin."
               : mode === "login"
-              ? "Telefon numaran ve şifrenle giriş yap."
+              ? "Telefon numaran veya e-postan ile giriş yap."
               : "E-postan varsa sıfırlama bağlantısı gönderelim."}
           </p>
         </div>
@@ -170,15 +191,27 @@ function AuthPage() {
                 className="h-12 bg-card"
               />
             )}
-            <Input
-              type="tel"
-              inputMode="numeric"
-              placeholder="Telefon (5xx xxx xx xx)"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              className="h-12 bg-card"
-            />
+            {mode === "signup" ? (
+              <Input
+                type="tel"
+                inputMode="numeric"
+                placeholder="Telefon (5xx xxx xx xx)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="h-12 bg-card"
+              />
+            ) : (
+              <Input
+                type="text"
+                placeholder="Telefon veya e-posta"
+                value={loginId}
+                onChange={(e) => setLoginId(e.target.value)}
+                required
+                autoComplete="username"
+                className="h-12 bg-card"
+              />
+            )}
             {mode === "signup" && (
               <Input
                 type="email"
