@@ -59,10 +59,12 @@ function Index() {
   const phoneDigits = contactPhone.replace(/\D/g, "");
   const handleCall = () => {
     if (!phoneDigits) { toast.error("Müşteri hizmetleri numarası henüz tanımlanmadı."); return; }
+    trackEvent("click_call", { from: "home_fab" });
     window.location.href = `tel:${phoneDigits}`;
   };
   const handleWhatsapp = () => {
     if (!phoneDigits) { toast.error("WhatsApp hattı henüz tanımlanmadı."); return; }
+    trackEvent("click_whatsapp", { from: "home_fab" });
     window.open(`https://wa.me/${phoneDigits}`, "_blank", "noopener");
   };
 
