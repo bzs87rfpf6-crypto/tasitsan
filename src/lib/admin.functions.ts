@@ -69,3 +69,37 @@ export const adminSetActive = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const adminUpdateDisplayName = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      userId: z.string().uuid(),
+      displayName: z.string().trim().min(1, "Ad boş olamaz").max(100),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { data: prev, error: readErr } = await supabaseAdmin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", data.userId)
+      .maybeSingle();
+    if (readErr) throw new Error(readErr.message);
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ display_name: data.displayName })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("admin_audit_log").insert({
+      actor_id: context.userId,
+      target_user_id: data.userId,
+      action: "update_display_name",
+      old_value: { display_name: prev?.display_name ?? null },
+      new_value: { display_name: data.displayName },
+    });
+
+    return { ok: true };
+  });

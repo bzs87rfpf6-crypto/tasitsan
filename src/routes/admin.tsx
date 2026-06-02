@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { adminDeleteUser, adminSetActive, adminSetRole } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateDisplayName } from "@/lib/admin.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 
@@ -160,10 +160,14 @@ function AdminPage() {
   const [rejecting, setRejecting] = useState<PartItem | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [notingRequest, setNotingRequest] = useState<PartRequest | null>(null);
+  const [editingUser, setEditingUser] = useState<ProfileRow | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   const callDeleteUser = useServerFn(adminDeleteUser);
   const callSetRole = useServerFn(adminSetRole);
   const callSetActive = useServerFn(adminSetActive);
+  const callUpdateDisplayName = useServerFn(adminUpdateDisplayName);
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
@@ -316,6 +320,28 @@ function AdminPage() {
       });
       toast.success(isAdminNow ? "Admin yetkisi kaldırıldı" : "Admin yetkisi verildi");
     } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+  };
+
+  const openEditUser = (u: ProfileRow) => {
+    setEditingUser(u);
+    setEditingName(u.display_name ?? "");
+  };
+
+  const saveUserName = async () => {
+    if (!editingUser) return;
+    const name = editingName.trim();
+    if (!name) { toast.error("Ad boş olamaz"); return; }
+    setSavingName(true);
+    try {
+      await callUpdateDisplayName({ data: { userId: editingUser.id, displayName: name } });
+      setUsers((prev) => prev.map((x) => x.id === editingUser.id ? { ...x, display_name: name } : x));
+      toast.success("Kullanıcı adı güncellendi");
+      setEditingUser(null);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
+    } finally {
+      setSavingName(false);
+    }
   };
 
   const saveRequestNote = async (id: string, note: string) => {
@@ -479,6 +505,7 @@ function AdminPage() {
             onToggleActive={handleToggleActive}
             onToggleAdmin={handleToggleAdmin}
             onToggleApproved={handleToggleApproved}
+            onEditName={openEditUser}
           />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
@@ -761,6 +788,35 @@ function AdminPage() {
           setNotingRequest(null);
         }}
       />
+
+      <Dialog open={!!editingUser} onOpenChange={(v) => { if (!v) setEditingUser(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Kullanıcı Adını Düzenle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Bu değişiklik tüm sistemde anında görünür ve işlem kaydı tutulur.
+            </p>
+            <Input
+              autoFocus
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+              placeholder="Kullanıcı adı / firma adı"
+              maxLength={100}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingName}>
+                İptal
+              </Button>
+              <Button size="sm" onClick={saveUserName} disabled={savingName}
+                className="bg-gold-gradient text-gold-foreground font-semibold">
+                <Save className="size-3.5 mr-1" /> {savingName ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -993,7 +1049,7 @@ function DashboardPanel({
 }
 
 function UsersPanel({
-  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved,
+  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved, onEditName,
 }: {
   users: ProfileRow[];
   parts: PartItem[];
@@ -1003,6 +1059,7 @@ function UsersPanel({
   onToggleActive: (u: ProfileRow) => void;
   onToggleAdmin: (u: ProfileRow) => void;
   onToggleApproved: (u: ProfileRow) => void;
+  onEditName: (u: ProfileRow) => void;
 }) {
   const listingsBySeller = new Map<string, number>();
   parts.forEach((p) => listingsBySeller.set(p.seller_id, (listingsBySeller.get(p.seller_id) ?? 0) + 1));
@@ -1047,6 +1104,10 @@ function UsersPanel({
                 <Check className="size-3.5 mr-1" /> Hesabı Onayla
               </Button>
             )}
+            <Button size="sm" variant="outline" onClick={() => onEditName(u)}
+              className="w-full h-8 text-[11px]">
+              <Pencil className="size-3 mr-1" /> Kullanıcı Düzenle
+            </Button>
             <div className="grid grid-cols-4 gap-1.5">
               {approved && !isUserAdmin && (
                 <Button size="sm" variant="outline" onClick={() => onToggleApproved(u)} disabled={isSelf}
