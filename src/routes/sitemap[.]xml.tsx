@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SITE_URL, getSitemapParts } from "@/lib/seo.functions";
+import { SITE_URL, getSitemapParts, getSitemapRequests } from "@/lib/seo.functions";
 
 const STATIC_PATHS = ["/", "/auth", "/requests", "/sell"];
 
