@@ -1210,6 +1210,12 @@ function UsersPanel({
               className="w-full h-8 text-[11px]">
               <Pencil className="size-3 mr-1" /> Kullanıcı Düzenle
             </Button>
+            {u.avatar_url && (
+              <Button size="sm" variant="outline" onClick={() => onRemoveAvatar(u)}
+                className="w-full h-8 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Trash2 className="size-3 mr-1" /> Profil Fotoğrafını Kaldır
+              </Button>
+            )}
             <div className="grid grid-cols-4 gap-1.5">
               {approved && !isUserAdmin && (
                 <Button size="sm" variant="outline" onClick={() => onToggleApproved(u)} disabled={isSelf}
