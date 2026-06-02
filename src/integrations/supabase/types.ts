@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_filter_rules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          is_default: boolean
+          label: string | null
+          pattern: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          pattern: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          pattern?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
