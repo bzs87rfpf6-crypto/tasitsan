@@ -210,6 +210,7 @@ export type Database = {
           city: string | null
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
           is_active: boolean
           is_approved: boolean
@@ -220,6 +221,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id: string
           is_active?: boolean
           is_approved?: boolean
@@ -230,6 +232,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
           is_active?: boolean
           is_approved?: boolean
