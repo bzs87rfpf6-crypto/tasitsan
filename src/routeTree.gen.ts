@@ -17,6 +17,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
+import { Route as PartsIdEditRouteImport } from './routes/parts.$id.edit'
 
 const SellRoute = SellRouteImport.update({
   id: '/sell',
@@ -58,6 +59,11 @@ const PartsIdRoute = PartsIdRouteImport.update({
   path: '/parts/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartsIdEditRoute = PartsIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => PartsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,7 +73,8 @@ export interface FileRoutesByFullPath {
   '/requests': typeof RequestsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
-  '/parts/$id': typeof PartsIdRoute
+  '/parts/$id': typeof PartsIdRouteWithChildren
+  '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,7 +84,8 @@ export interface FileRoutesByTo {
   '/requests': typeof RequestsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
-  '/parts/$id': typeof PartsIdRoute
+  '/parts/$id': typeof PartsIdRouteWithChildren
+  '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,7 +96,8 @@ export interface FileRoutesById {
   '/requests': typeof RequestsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
-  '/parts/$id': typeof PartsIdRoute
+  '/parts/$id': typeof PartsIdRouteWithChildren
+  '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sell'
     | '/parts/$id'
+    | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sell'
     | '/parts/$id'
+    | '/parts/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sell'
     | '/parts/$id'
+    | '/parts/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -131,7 +143,7 @@ export interface RootRouteChildren {
   RequestsRoute: typeof RequestsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellRoute: typeof SellRoute
-  PartsIdRoute: typeof PartsIdRoute
+  PartsIdRoute: typeof PartsIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -192,8 +204,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parts/$id/edit': {
+      id: '/parts/$id/edit'
+      path: '/edit'
+      fullPath: '/parts/$id/edit'
+      preLoaderRoute: typeof PartsIdEditRouteImport
+      parentRoute: typeof PartsIdRoute
+    }
   }
 }
+
+interface PartsIdRouteChildren {
+  PartsIdEditRoute: typeof PartsIdEditRoute
+}
+
+const PartsIdRouteChildren: PartsIdRouteChildren = {
+  PartsIdEditRoute: PartsIdEditRoute,
+}
+
+const PartsIdRouteWithChildren =
+  PartsIdRoute._addFileChildren(PartsIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -203,7 +233,7 @@ const rootRouteChildren: RootRouteChildren = {
   RequestsRoute: RequestsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SellRoute: SellRoute,
-  PartsIdRoute: PartsIdRoute,
+  PartsIdRoute: PartsIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

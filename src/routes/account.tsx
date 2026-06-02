@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { LogOut, Package } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { LogOut, Package, Pencil, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
-import { PartCard, type Part } from "@/components/PartCard";
+import { SafePartImage } from "@/components/SafePartImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -15,26 +15,51 @@ export const Route = createFileRoute("/account")({
   component: AccountPage,
 });
 
+interface MyPart {
+  id: string;
+  title: string;
+  brand: string | null;
+  model: string | null;
+  price: number | null;
+  photos: string[] | null;
+  status: string;
+  stock_quantity: number | null;
+}
+
+const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+  pending: { label: "Onay Bekliyor", cls: "text-amber-400 border-amber-400/40 bg-amber-400/10" },
+  approved: { label: "Yayında", cls: "text-emerald-400 border-emerald-400/40 bg-emerald-400/10" },
+  inactive: { label: "Pasif", cls: "text-muted-foreground border-border bg-muted/30" },
+  rejected: { label: "Reddedildi", cls: "text-destructive border-destructive/40 bg-destructive/10" },
+};
+
 function AccountPage() {
   const { user, loading, signOut } = useAuth();
   const nav = useNavigate();
   const [profile, setProfile] = useState({ display_name: "", whatsapp: "", city: "" });
-  const [myParts, setMyParts] = useState<Part[]>([]);
+  const [myParts, setMyParts] = useState<MyPart[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
   }, [loading, user, nav]);
 
+  const loadParts = useCallback(async (uid: string) => {
+    const { data } = await supabase
+      .from("parts")
+      .select("id,title,brand,model,price,photos,status,stock_quantity")
+      .eq("seller_id", uid)
+      .order("created_at", { ascending: false });
+    setMyParts((data ?? []) as MyPart[]);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("display_name,whatsapp,city").eq("id", user.id).maybeSingle().then(({ data }) => {
       if (data) setProfile({ display_name: data.display_name ?? "", whatsapp: data.whatsapp ?? "", city: data.city ?? "" });
     });
-    supabase.from("parts").select("id,title,brand,model,year,price,city,photos,condition")
-      .eq("seller_id", user.id).order("created_at", { ascending: false })
-      .then(({ data }) => setMyParts((data ?? []) as Part[]));
-  }, [user]);
+    loadParts(user.id);
+  }, [user, loadParts]);
 
   const save = async () => {
     if (!user) return;
@@ -43,6 +68,24 @@ function AccountPage() {
     setSaving(false);
     if (error) toast.error(error.message);
     else toast.success("Profil güncellendi");
+  };
+
+  const togglePassive = async (p: MyPart) => {
+    if (!user) return;
+    const next = p.status === "inactive" ? "pending" : "inactive";
+    const { error } = await supabase.from("parts").update({ status: next }).eq("id", p.id).eq("seller_id", user.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(next === "inactive" ? "İlan pasife alındı" : "İlan tekrar onaya gönderildi");
+    loadParts(user.id);
+  };
+
+  const deletePart = async (p: MyPart) => {
+    if (!user) return;
+    if (!confirm(`"${p.title}" ilanını silmek istediğine emin misin?`)) return;
+    const { error } = await supabase.from("parts").delete().eq("id", p.id).eq("seller_id", user.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("İlan silindi");
+    loadParts(user.id);
   };
 
   if (loading || !user) return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -75,9 +118,48 @@ function AccountPage() {
           {myParts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Henüz ilanın yok.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {myParts.map((p) => <PartCard key={p.id} part={p} />)}
-            </div>
+            <ul className="space-y-3">
+              {myParts.map((p) => {
+                const status = STATUS_LABEL[p.status] ?? { label: p.status, cls: "text-muted-foreground border-border" };
+                return (
+                  <li key={p.id} className="bg-card border border-border rounded-xl p-3 flex gap-3">
+                    <Link to="/parts/$id" params={{ id: p.id }} className="size-20 shrink-0 rounded-lg overflow-hidden bg-secondary block">
+                      <SafePartImage images={p.photos} alt={p.title} width={160} className="w-full h-full object-cover" />
+                    </Link>
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-sm font-semibold leading-tight line-clamp-2">{p.title}</h3>
+                        <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border whitespace-nowrap ${status.cls}`}>
+                          {status.label}
+                        </span>
+                      </div>
+                      {(p.brand || p.model) && (
+                        <p className="text-[11px] text-muted-foreground line-clamp-1">
+                          {[p.brand, p.model].filter(Boolean).join(" • ")}
+                        </p>
+                      )}
+                      <div className="text-gold font-bold text-sm font-display tracking-wider">
+                        {p.price != null ? `₺${Number(p.price).toLocaleString("tr-TR")}` : "Fiyat sor"}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        <Link to="/parts/$id/edit" params={{ id: p.id }}
+                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[11px] font-semibold bg-gold-gradient text-gold-foreground">
+                          <Pencil className="size-3" /> Düzenle
+                        </Link>
+                        <button type="button" onClick={() => togglePassive(p)}
+                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[11px] font-semibold border border-border text-foreground hover:border-gold">
+                          <Power className="size-3" /> {p.status === "inactive" ? "Aktifleştir" : "Pasife Al"}
+                        </button>
+                        <button type="button" onClick={() => deletePart(p)}
+                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[11px] font-semibold border border-destructive/40 text-destructive hover:bg-destructive/10">
+                          <Trash2 className="size-3" /> Sil
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </section>
 
