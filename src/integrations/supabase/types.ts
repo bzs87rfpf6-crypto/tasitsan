@@ -212,6 +212,7 @@ export type Database = {
           display_name: string | null
           id: string
           is_active: boolean
+          is_approved: boolean
           updated_at: string
           whatsapp: string | null
         }
@@ -221,6 +222,7 @@ export type Database = {
           display_name?: string | null
           id: string
           is_active?: boolean
+          is_approved?: boolean
           updated_at?: string
           whatsapp?: string | null
         }
@@ -230,6 +232,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           is_active?: boolean
+          is_approved?: boolean
           updated_at?: string
           whatsapp?: string | null
         }
