@@ -15,6 +15,7 @@ import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }] }),
