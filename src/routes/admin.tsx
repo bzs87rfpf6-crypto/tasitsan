@@ -27,8 +27,10 @@ interface ProfileRow {
   display_name: string | null;
   whatsapp: string | null;
   city: string | null;
+  email: string | null;
   created_at: string;
   is_active: boolean;
+  is_approved: boolean;
 }
 
 interface SiteSettings {
@@ -187,7 +189,7 @@ function AdminPage() {
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,whatsapp,city,created_at,is_active").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       supabase.from("site_settings").select("*").maybeSingle(),
     ]);
@@ -293,6 +295,14 @@ function AdminPage() {
       setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_active: !u.is_active } : x));
       toast.success(!u.is_active ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasife alındı");
     } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+  };
+
+  const handleToggleApproved = async (u: ProfileRow) => {
+    const next = !u.is_approved;
+    const { error } = await supabase.from("profiles").update({ is_approved: next }).eq("id", u.id);
+    if (error) { toast.error(error.message); return; }
+    setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_approved: next } : x));
+    toast.success(next ? "Kullanıcı onaylandı" : "Onay geri alındı");
   };
 
   const handleToggleAdmin = async (u: ProfileRow) => {
@@ -468,6 +478,7 @@ function AdminPage() {
             onDelete={handleDeleteUser}
             onToggleActive={handleToggleActive}
             onToggleAdmin={handleToggleAdmin}
+            onToggleApproved={handleToggleApproved}
           />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
