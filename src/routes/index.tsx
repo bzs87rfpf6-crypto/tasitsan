@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Plus, SlidersHorizontal, X, PackageSearch, Camera, Sparkles } from "lucide-react";
+import { Search, Plus, SlidersHorizontal, X, PackageSearch, Camera, Sparkles, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -45,6 +45,25 @@ function Index() {
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [contactPhone, setContactPhone] = useState("");
+
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("contact_phone")
+      .maybeSingle()
+      .then(({ data }) => setContactPhone((data?.contact_phone as string) ?? ""));
+  }, []);
+
+  const phoneDigits = contactPhone.replace(/\D/g, "");
+  const handleCall = () => {
+    if (!phoneDigits) { toast.error("Müşteri hizmetleri numarası henüz tanımlanmadı."); return; }
+    window.location.href = `tel:${phoneDigits}`;
+  };
+  const handleWhatsapp = () => {
+    if (!phoneDigits) { toast.error("WhatsApp hattı henüz tanımlanmadı."); return; }
+    window.open(`https://wa.me/${phoneDigits}`, "_blank", "noopener");
+  };
 
   useEffect(() => {
     let active = true;
@@ -101,15 +120,15 @@ function Index() {
           </div>
 
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gold pointer-events-none" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-6 text-gold pointer-events-none" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Örn. far, fren balatası, OEM A2118200561..."
-              className="pl-12 pr-12 h-14 sm:h-16 text-base sm:text-lg bg-card border-2 border-border focus-visible:border-gold rounded-2xl shadow-gold"
+              className="pl-12 pr-12 h-16 sm:h-[4.5rem] text-base sm:text-lg bg-card border-2 border-gold/60 focus-visible:border-gold rounded-2xl animate-search-glow"
             />
             {q && (
-              <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 size-8 rounded-full hover:bg-muted grid place-items-center">
+              <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 size-9 rounded-full hover:bg-gold/15 grid place-items-center tap-gold">
                 <X className="size-4" />
               </button>
             )}
@@ -117,7 +136,7 @@ function Index() {
 
           <button
             onClick={() => setPhotoOpen(true)}
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 transition-colors shadow-gold/30"
+            className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 shadow-gold/30"
           >
             <Camera className="size-4" />
             Fotoğraftan Parça Bul
@@ -128,7 +147,7 @@ function Index() {
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
             <button
               onClick={() => setShowFilters((v) => !v)}
-              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+              className={`tap-gold shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border flex items-center gap-1.5 ${
                 showFilters || activeFilterCount
                   ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
                   : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
@@ -141,7 +160,7 @@ function Index() {
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all ${
+                className={`tap-gold shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border ${
                   cat === c
                     ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
                     : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
@@ -192,22 +211,27 @@ function Index() {
         </div>
       </section>
 
-      {/* Akıllı Talep Havuzu CTA */}
-      <section className="max-w-3xl mx-auto px-4 pt-5">
+      {/* Akıllı Talep Havuzu CTA — vurgulu */}
+      <section className="max-w-3xl mx-auto px-4 pt-6">
         <button
           onClick={() => setRequestOpen(true)}
-          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gold/15 via-gold/5 to-transparent border border-gold/40 hover:border-gold/70 transition-colors text-left"
+          className="tap-gold relative w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-gold/25 via-gold/10 to-background border-2 animate-gold-pulse-border text-left shadow-gold overflow-hidden"
         >
-          <div className="size-11 rounded-full bg-gold-gradient grid place-items-center shrink-0 shadow-gold">
-            <PackageSearch className="size-5 text-gold-foreground" />
+          <div className="size-14 rounded-2xl bg-gold-gradient grid place-items-center shrink-0 shadow-gold">
+            <PackageSearch className="size-7 text-gold-foreground" strokeWidth={2.4} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-sm sm:text-base tracking-wide">Parça Bulunamadı mı? Talep Oluştur</p>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-              Talebiniz satıcı havuzuna düşsün, onaylı teklifler size gelsin.
+            <p className="font-display text-lg sm:text-xl tracking-wide text-gold">
+              Parça Bulunamadı mı?
+            </p>
+            <p className="font-semibold text-sm sm:text-base text-foreground -mt-0.5">
+              Talep Oluştur — Taşıtsan senin için bulsun
+            </p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
+              Talebin satıcı havuzuna düşer, onaylı teklifler doğrudan sana gelir.
             </p>
           </div>
-          <span className="text-gold font-semibold text-sm shrink-0">→</span>
+          <span className="text-gold font-bold text-xl shrink-0 animate-pulse">→</span>
         </button>
       </section>
 
@@ -252,13 +276,34 @@ function Index() {
         )}
       </div>
 
-      <Link
-        to="/sell"
-        className="fixed bottom-20 right-4 z-30 size-14 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center shadow-gold active:scale-95 transition-transform"
-        aria-label="İlan ver"
-      >
-        <Plus className="size-7" strokeWidth={2.5} />
-      </Link>
+      {/* Sabit sağ-alt aksiyon kümesi */}
+      <div className="fixed right-4 bottom-20 z-30 flex flex-col items-end gap-3">
+        <button
+          type="button"
+          onClick={handleCall}
+          aria-label="Bizi Ara"
+          className="tap-gold group flex items-center gap-2 h-12 pl-3 pr-4 rounded-full bg-card border-2 border-gold/70 text-gold font-semibold text-sm shadow-gold"
+        >
+          <Phone className="size-5" strokeWidth={2.4} />
+          <span className="hidden sm:inline">Bizi Ara</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleWhatsapp}
+          aria-label="WhatsApp"
+          className="tap-gold flex items-center gap-2 h-12 pl-3 pr-4 rounded-full bg-whatsapp text-white font-semibold text-sm shadow-gold"
+        >
+          <MessageCircle className="size-5" strokeWidth={2.4} />
+          <span className="hidden sm:inline">WhatsApp</span>
+        </button>
+        <Link
+          to="/sell"
+          className="tap-gold size-14 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center shadow-gold"
+          aria-label="İlan ver"
+        >
+          <Plus className="size-7" strokeWidth={2.5} />
+        </Link>
+      </div>
 
       <BottomNav />
 
