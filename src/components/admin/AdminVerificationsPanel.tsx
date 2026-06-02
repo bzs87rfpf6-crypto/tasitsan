@@ -75,7 +75,10 @@ export function AdminVerificationsPanel({ currentUserId }: { currentUserId: stri
 
   useEffect(() => { void load(); }, []);
 
-  const update = async (id: string, patch: Partial<Row>) => {
+  const update = async (
+    id: string,
+    patch: { status?: Row["status"]; admin_notes?: string | null },
+  ) => {
     const { error } = await supabase
       .from("seller_verifications")
       .update({ ...patch, reviewed_by: currentUserId, reviewed_at: new Date().toISOString() })
