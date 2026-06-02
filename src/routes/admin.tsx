@@ -15,6 +15,7 @@ import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
+import { AdminVerificationsPanel } from "@/components/admin/AdminVerificationsPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "settings";
+type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "verifications" | "settings";
 
 interface ProfileRow {
   id: string;
@@ -478,6 +479,7 @@ function AdminPage() {
             ["users", `Kullanıcılar (${users.length})`],
             ["inquiries", `Teklifler (${inquiries.length})`],
             ["requests", `Talepler (${requests.length})`],
+            ["verifications", "Doğrulama"],
             ["settings", "Ayarlar"],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
@@ -568,6 +570,8 @@ function AdminPage() {
             onEditName={openEditUser}
             onRemoveAvatar={handleRemoveAvatar}
           />
+        ) : tab === "verifications" ? (
+          <AdminVerificationsPanel currentUserId={user?.id ?? null} />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
