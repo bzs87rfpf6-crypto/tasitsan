@@ -42,13 +42,74 @@ function detectDevice(): string {
   return "desktop";
 }
 
-const BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|chrome-lighthouse|phantom|puppeteer|selenium/i;
+// Fallback regex used until the DB-managed rules load (and if the fetch fails).
+const FALLBACK_BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|chrome-lighthouse|phantom|puppeteer|selenium/i;
 
-function isLikelyBot(): boolean {
+const BOT_RULES_KEY = "ts_bot_rules_v1";
+const BOT_RULES_TTL_MS = 10 * 60 * 1000; // refresh every 10 min
+let botRuleRegex: RegExp | null = null;
+let botRulesLoadedAt = 0;
+let botRulesInflight: Promise<RegExp> | null = null;
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function compilePatterns(patterns: string[]): RegExp {
+  const cleaned = patterns.map((p) => p.trim()).filter(Boolean).map(escapeRegex);
+  if (!cleaned.length) return FALLBACK_BOT_UA_RE;
+  return new RegExp(cleaned.join("|"), "i");
+}
+
+async function loadBotRules(): Promise<RegExp> {
+  // Cached in-memory
+  if (botRuleRegex && Date.now() - botRulesLoadedAt < BOT_RULES_TTL_MS) return botRuleRegex;
+  if (botRulesInflight) return botRulesInflight;
+
+  // Cached in sessionStorage
+  try {
+    const raw = sessionStorage.getItem(BOT_RULES_KEY);
+    if (raw) {
+      const { patterns, t } = JSON.parse(raw) as { patterns: string[]; t: number };
+      if (Date.now() - t < BOT_RULES_TTL_MS) {
+        botRuleRegex = compilePatterns(patterns);
+        botRulesLoadedAt = t;
+        return botRuleRegex;
+      }
+    }
+  } catch { /* ignore */ }
+
+  botRulesInflight = (async () => {
+    try {
+      const { data } = await supabase
+        .from("bot_filter_rules")
+        .select("pattern")
+        .eq("enabled", true);
+      const patterns = (data ?? []).map((r) => r.pattern).filter(Boolean);
+      botRuleRegex = compilePatterns(patterns);
+      botRulesLoadedAt = Date.now();
+      try { sessionStorage.setItem(BOT_RULES_KEY, JSON.stringify({ patterns, t: botRulesLoadedAt })); } catch {}
+      return botRuleRegex;
+    } catch {
+      botRuleRegex = FALLBACK_BOT_UA_RE;
+      botRulesLoadedAt = Date.now();
+      return botRuleRegex;
+    } finally {
+      botRulesInflight = null;
+    }
+  })();
+  return botRulesInflight;
+}
+
+async function isLikelyBot(): Promise<boolean> {
   if (typeof navigator === "undefined") return true;
-  // Headless browsers expose webdriver=true
   if ((navigator as Navigator & { webdriver?: boolean }).webdriver) return true;
-  return BOT_UA_RE.test(navigator.userAgent || "");
+  const ua = navigator.userAgent || "";
+  // Use cached rules if already loaded; otherwise check fallback synchronously
+  // and refresh async for next time.
+  const re = botRuleRegex ?? FALLBACK_BOT_UA_RE;
+  if (!botRuleRegex) { void loadBotRules(); }
+  return re.test(ua);
 }
 
 async function loadGeo(): Promise<Geo> {
