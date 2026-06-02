@@ -393,6 +393,7 @@ export type Database = {
           email_smtp_host: string | null
           email_smtp_port: number | null
           ga4_measurement_id: string | null
+          gsc_verification_code: string | null
           id: string
           updated_at: string
           updated_by: string | null
@@ -407,6 +408,7 @@ export type Database = {
           email_smtp_host?: string | null
           email_smtp_port?: number | null
           ga4_measurement_id?: string | null
+          gsc_verification_code?: string | null
           id?: string
           updated_at?: string
           updated_by?: string | null
@@ -421,6 +423,7 @@ export type Database = {
           email_smtp_host?: string | null
           email_smtp_port?: number | null
           ga4_measurement_id?: string | null
+          gsc_verification_code?: string | null
           id?: string
           updated_at?: string
           updated_by?: string | null

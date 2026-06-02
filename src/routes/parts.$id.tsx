@@ -12,7 +12,82 @@ import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/parts/$id")({
-  head: () => ({ meta: [{ title: "İlan Detayı — Taşıtsan" }] }),
+  loader: async ({ params }) => {
+    try {
+      const { getPartSeo } = await import("@/lib/seo.functions");
+      return await getPartSeo({ data: { id: params.id } });
+    } catch {
+      return null;
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const url = `https://tasitsan.com.tr/parts/${params.id}`;
+    const p = loaderData;
+    if (!p) {
+      return {
+        meta: [
+          { title: "İlan — Taşıtsan Parça Borsası" },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const titleParts = [p.title, p.oem_code, p.city].filter(Boolean).join(" • ");
+    const seoTitle = `${titleParts} | Taşıtsan Parça Borsası`;
+    const brandModel = [p.brand, p.model, p.year].filter(Boolean).join(" ");
+    const priceTxt = p.price != null ? `${Number(p.price).toLocaleString("tr-TR")} ₺` : "Fiyat sorunuz";
+    const desc = (p.description?.slice(0, 140) ??
+      `${p.title}${brandModel ? ` — ${brandModel}` : ""}${p.oem_code ? `, OEM: ${p.oem_code}` : ""}${p.city ? `, ${p.city}` : ""}. ${priceTxt}. Taşıtsan Parça Borsası üzerinden güvenle teklif alın.`)
+      .replace(/\s+/g, " ").trim();
+    const image = (p.photos ?? []).find((u) => typeof u === "string" && u.startsWith("http")) ?? null;
+    const availability = (p.stock_quantity ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
+    const condition =
+      p.condition === "new" ? "https://schema.org/NewCondition" :
+      p.condition === "refurbished" ? "https://schema.org/RefurbishedCondition" :
+      "https://schema.org/UsedCondition";
+
+    const ld: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: p.title,
+      description: desc,
+      sku: p.oem_code ?? p.id,
+      mpn: p.oem_code ?? undefined,
+      brand: p.brand ? { "@type": "Brand", name: p.brand } : undefined,
+      image: image ? [image] : undefined,
+      itemCondition: condition,
+      offers: {
+        "@type": "Offer",
+        url,
+        priceCurrency: "TRY",
+        price: p.price != null ? Number(p.price) : undefined,
+        availability,
+        seller: { "@type": "Organization", name: "Taşıtsan Parça Borsası" },
+        areaServed: p.city ?? "TR",
+      },
+    };
+
+    const meta: Array<Record<string, string>> = [
+      { title: seoTitle },
+      { name: "description", content: desc },
+      { property: "og:title", content: seoTitle },
+      { property: "og:description", content: desc },
+      { property: "og:type", content: "product" },
+      { property: "og:url", content: url },
+      { name: "twitter:title", content: seoTitle },
+      { name: "twitter:description", content: desc },
+      { name: "twitter:card", content: "summary_large_image" },
+    ];
+    if (image) {
+      meta.push({ property: "og:image", content: image });
+      meta.push({ name: "twitter:image", content: image });
+    }
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }],
+    };
+  },
   component: PartDetail,
 });
 

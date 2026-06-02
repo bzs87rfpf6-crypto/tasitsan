@@ -55,31 +55,57 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
+  loader: async () => {
+    try {
+      const { getPublicSiteSeo } = await import("@/lib/seo.functions");
+      return await getPublicSiteSeo();
+    } catch {
+      return { ga4: null, gsc: null };
+    }
+  },
+  head: ({ loaderData }) => {
+    const gsc = loaderData?.gsc ?? null;
+    const meta: Array<Record<string, string>> = [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0a0907" },
       { title: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
       { name: "description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
+      { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1" },
       { property: "og:title", content: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
       { property: "og:description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Taşıtsan Parça Borsası" },
+      { property: "og:locale", content: "tr_TR" },
       { name: "twitter:title", content: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
       { name: "twitter:description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/44ed9bac-18cd-4f59-96f0-2ce039764958/id-preview-2e3dda71--d82a33fa-37e5-48d9-b071-c90c30694bf1.lovable.app-1780327626703.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/44ed9bac-18cd-4f59-96f0-2ce039764958/id-preview-2e3dda71--d82a33fa-37e5-48d9-b071-c90c30694bf1.lovable.app-1780327626703.png" },
       { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/manifest.json" },
-      { rel: "icon", href: "/favicon.ico", sizes: "any" },
-      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
-      { rel: "icon", href: "/icon-512.png", type: "image/png", sizes: "512x512" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
-    ],
-  }),
+    ];
+    if (gsc) meta.push({ name: "google-site-verification", content: gsc });
+    return {
+      meta,
+      links: [
+        { rel: "stylesheet", href: appCss },
+        { rel: "manifest", href: "/manifest.json" },
+        { rel: "icon", href: "/favicon.ico", sizes: "any" },
+        { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+        { rel: "icon", href: "/icon-512.png", type: "image/png", sizes: "512x512" },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      ],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Taşıtsan Parça Borsası",
+            url: "https://tasitsan.com.tr",
+            logo: "https://tasitsan.com.tr/icon-512.png",
+          }),
+        },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
