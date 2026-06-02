@@ -125,6 +125,12 @@ function RequestsPage() {
             </p>
           </div>
         </div>
+        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-2 gap-2">
+          <Input placeholder="Marka, model, OEM..." value={search}
+            onChange={(e) => setSearch(e.target.value)} className="h-9 text-xs" />
+          <Input placeholder="Şehir" value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)} className="h-9 text-xs" />
+        </div>
         <div className="max-w-2xl mx-auto px-4 pb-2.5 flex gap-1.5 overflow-x-auto scrollbar-none">
           {CATEGORIES.map((c) => (
             <button key={c} onClick={() => setCat(c)}
