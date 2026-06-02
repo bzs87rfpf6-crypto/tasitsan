@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { MapPin, Package } from "lucide-react";
 import { SafePartImage } from "@/components/SafePartImage";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 export interface Part {
   id: string;
@@ -15,6 +16,7 @@ export interface Part {
   condition: string;
   stock_quantity?: number | null;
   oem_code?: string | null;
+  seller_verified?: boolean;
 }
 
 export function PartCard({ part }: { part: Part }) {
@@ -44,7 +46,10 @@ export function PartCard({ part }: { part: Part }) {
         </div>
       </div>
       <div className="p-3 space-y-1.5">
-        <h3 className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">{part.title}</h3>
+        <div className="flex items-start gap-1.5">
+          <h3 className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] flex-1">{part.title}</h3>
+          {part.seller_verified && <VerifiedBadge size={14} className="mt-0.5" />}
+        </div>
         {(part.brand || part.model) && (
           <p className="text-xs text-muted-foreground line-clamp-1">
             {[part.brand, part.model, part.year].filter(Boolean).join(" • ")}
