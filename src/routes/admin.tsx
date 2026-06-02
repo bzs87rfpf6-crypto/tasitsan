@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil, Trash2, Users as UsersIcon, LayoutDashboard, ClipboardList, AlertTriangle, MessageSquare, Settings as SettingsIcon, Crown, UserX, UserCheck, Save } from "lucide-react";
+import tasitsanLogo from "@/assets/tasitsan-emblem.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -433,6 +434,13 @@ function AdminPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link to="/" className="size-9 rounded-full bg-card grid place-items-center"><ArrowLeft className="size-4" /></Link>
+          <img
+            src={tasitsanLogo.url}
+            alt="Taşıtsan"
+            className="h-9 w-9 object-contain"
+            width={36}
+            height={36}
+          />
           <div>
             <h1 className="font-display text-lg tracking-wide">Yönetici Paneli</h1>
             <p className="text-[11px] text-muted-foreground">
