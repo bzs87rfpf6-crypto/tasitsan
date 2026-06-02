@@ -147,7 +147,7 @@ function Index() {
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
             <button
               onClick={() => setShowFilters((v) => !v)}
-              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+              className={`tap-gold shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border flex items-center gap-1.5 ${
                 showFilters || activeFilterCount
                   ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
                   : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
@@ -160,7 +160,7 @@ function Index() {
               <button
                 key={c}
                 onClick={() => setCat(c)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all ${
+                className={`tap-gold shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border ${
                   cat === c
                     ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
                     : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
