@@ -16,6 +16,7 @@ import { recordPartView } from "@/lib/views";
 import { EquivalentParts } from "@/components/EquivalentParts";
 import { AiOemSuggester } from "@/components/AiOemSuggester";
 import { UserAvatar } from "@/components/UserAvatar";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 export const Route = createFileRoute("/parts/$id")({
   loader: async ({ params }) => {
@@ -128,15 +129,23 @@ function PartDetail() {
   const [contactPhone, setContactPhone] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewCount, setViewCount] = useState<number | null>(null);
-  const [seller, setSeller] = useState<{ id: string; display_name: string | null; avatar_url: string | null; city: string | null } | null>(null);
+  const [seller, setSeller] = useState<{ id: string; display_name: string | null; avatar_url: string | null; city: string | null; is_verified: boolean; created_at: string } | null>(null);
+  const [sellerPartsCount, setSellerPartsCount] = useState<number>(0);
 
   useEffect(() => {
-    if (!part?.seller_id) { setSeller(null); return; }
+    if (!part?.seller_id) { setSeller(null); setSellerPartsCount(0); return; }
     let cancelled = false;
-    supabase.from("profiles")
-      .select("id,display_name,avatar_url,city")
-      .eq("id", part.seller_id).maybeSingle()
-      .then(({ data }) => { if (!cancelled) setSeller(data ?? null); });
+    Promise.all([
+      supabase.from("profiles")
+        .select("id,display_name,avatar_url,city,is_verified,created_at")
+        .eq("id", part.seller_id).maybeSingle(),
+      supabase.from("parts").select("id", { count: "exact", head: true })
+        .eq("seller_id", part.seller_id).eq("status", "approved"),
+    ]).then(([{ data }, { count }]) => {
+      if (cancelled) return;
+      setSeller((data as any) ?? null);
+      setSellerPartsCount(count ?? 0);
+    });
     return () => { cancelled = true; };
   }, [part?.seller_id]);
 
@@ -380,8 +389,13 @@ function PartDetail() {
             <UserAvatar url={seller.avatar_url} name={seller.display_name} size={48} />
             <div className="flex-1 min-w-0">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Satıcı</div>
-              <div className="text-sm font-semibold truncate">{seller.display_name ?? "Satıcı"}</div>
-              {seller.city && <div className="text-[11px] text-muted-foreground truncate">{seller.city}</div>}
+              <div className="text-sm font-semibold truncate flex items-center gap-1.5">
+                <span className="truncate">{seller.display_name ?? "Satıcı"}</span>
+                {seller.is_verified && <VerifiedBadge size={14} />}
+              </div>
+              <div className="text-[11px] text-muted-foreground truncate">
+                {[seller.city, `${sellerPartsCount} ilan`, `Üyelik: ${new Date(seller.created_at).toLocaleDateString("tr-TR", { year: "numeric", month: "short" })}`].filter(Boolean).join(" • ")}
+              </div>
             </div>
             <span className="text-xs text-gold font-semibold">Profili gör →</span>
           </Link>
