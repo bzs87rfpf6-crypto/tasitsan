@@ -97,6 +97,34 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  useEffect(() => {
+    // Lazy import to avoid SSR issues
+    import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
+      let ga4Id: string | null = null;
+      // Load GA4 id from site settings (public read).
+      import("@/integrations/supabase/client").then(({ supabase }) => {
+        supabase
+          .from("site_settings")
+          .select("ga4_measurement_id")
+          .maybeSingle()
+          .then(({ data }) => {
+            ga4Id = (data?.ga4_measurement_id as string | null) ?? null;
+            if (ga4Id) loadGa4(ga4Id);
+            // initial page view
+            trackEvent("page_view");
+            gaPageView(ga4Id, window.location.pathname);
+          });
+      });
+
+      const unsub = router.subscribe("onResolved", () => {
+        trackEvent("page_view");
+        gaPageView(ga4Id, window.location.pathname);
+      });
+      return () => unsub();
+    });
+  }, [router]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
