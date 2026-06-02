@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { X, Upload, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
+import { PhotoPicker } from "@/components/PhotoPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
