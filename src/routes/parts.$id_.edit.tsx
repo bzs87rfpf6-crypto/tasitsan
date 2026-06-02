@@ -79,6 +79,8 @@ function EditPartPage() {
         city: data.city ?? "",
       });
       setExistingPhotos((data.photos as string[]) ?? []);
+      const arr = (data.oem_codes as string[] | null) ?? (data.oem_code ? [data.oem_code] : []);
+      setOemCodes(arr);
       setLoading(false);
     })();
     return () => { cancelled = true; };
