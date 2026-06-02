@@ -147,8 +147,31 @@ export function AnalyticsDashboard() {
           items={data.topParts.map((p) => ({ label: p.title || p.part_id, value: p.views }))} />
         <RankList title="En Çok Aranan Parça İsimleri" icon={<Search className="size-4" />}
           items={data.topSearches.map((s) => ({ label: s.query, value: s.count }))} />
-        <RankList title="En Çok Aranan OEM Kodları" icon={<Hash className="size-4" />}
-          items={data.topOem.map((s) => ({ label: s.oem, value: s.count }))} />
+        <div className="bg-card rounded-xl border border-border p-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-gold"><Hash className="size-4" /></span>
+              <h3 className="text-xs font-semibold truncate">En Çok Aranan OEM Kodları</h3>
+            </div>
+            <div className="flex rounded-md border border-border overflow-hidden text-[10px] font-semibold uppercase tracking-wider shrink-0">
+              <button
+                onClick={() => setOemRange("30d")}
+                className={`px-2 py-1 ${oemRange === "30d" ? "bg-gold-gradient text-gold-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >Son 30 Gün</button>
+              <button
+                onClick={() => setOemRange("all")}
+                className={`px-2 py-1 border-l border-border ${oemRange === "all" ? "bg-gold-gradient text-gold-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >Tüm Zamanlar</button>
+            </div>
+          </div>
+          {oemLoading ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Yükleniyor...</p>
+          ) : oemRows.length === 0 ? (
+            <Empty />
+          ) : (
+            <RankListItems items={oemRows.map((r) => ({ label: r.oem, value: Number(r.search_count) }))} />
+          )}
+        </div>
         <RankList title="Satıcı Bazlı İlan Sayıları" icon={<Building2 className="size-4" />}
           items={data.topSellers.map((s) => ({ label: s.name, value: s.count }))} />
       </div>
