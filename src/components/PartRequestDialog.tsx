@@ -38,10 +38,12 @@ export function PartRequestDialog({
   const [form, setForm] = useState({
     part_name: "",
     oem_code: "",
+    engine_code: "",
     brand: "",
     model: "",
     year: "",
     category: "",
+    city: "",
     description: "",
     full_name: "",
     phone: "",
