@@ -164,9 +164,9 @@ function RequestsPage() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-sm leading-tight line-clamp-2">
+                    <Link to="/requests/$id" params={{ id: r.id }} className="font-semibold text-sm leading-tight line-clamp-2 hover:text-gold transition-colors">
                       {r.part_name || r.search_query || "Parça talebi"}
-                    </h3>
+                    </Link>
                     <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
                       {[r.brand, r.model, r.year, r.category].filter(Boolean).join(" • ") || "—"}
                     </p>
