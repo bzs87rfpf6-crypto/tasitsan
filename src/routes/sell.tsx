@@ -155,8 +155,29 @@ function SellPage() {
 
 
 
-  if (authLoading || !user) {
+  if (authLoading || !user || approvalState === "loading") {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
+  }
+
+  if (approvalState === "pending") {
+    return (
+      <div className="min-h-screen pb-28">
+        <AppHeader subtitle="Yeni İlan" />
+        <div className="max-w-md mx-auto px-4 pt-10 text-center space-y-4">
+          <div className="rounded-2xl border border-gold/30 bg-gold/5 px-5 py-6 space-y-3">
+            <h2 className="font-display text-xl text-gold">Hesabın onay bekliyor</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Hesabın Taşıtsan ekibi tarafından inceleniyor. Onay verildikten sonra ilan
+              yükleyebilirsin. Onay genellikle kısa sürede tamamlanır.
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Acil bir durum varsa WhatsApp üzerinden bizimle iletişime geçebilirsin.
+            </p>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    );
   }
 
   return (
