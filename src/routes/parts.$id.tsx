@@ -326,14 +326,38 @@ function PartDetail() {
           {part.year && <Info icon={<Calendar className="size-4" />} label="Yıl" value={String(part.year)} />}
           {part.category && <Info icon={<Tag className="size-4" />} label="Kategori" value={part.category} />}
           {part.city && <Info icon={<MapPin className="size-4" />} label="Bölge" value={part.city} />}
-          {part.oem_code && <Info icon={<Tag className="size-4" />} label="OEM Kodu" value={part.oem_code} />}
+          {part.engine_code && <Info icon={<Tag className="size-4" />} label="Motor Kodu" value={part.engine_code} />}
         </div>
+
+        {((part.oem_codes && part.oem_codes.length > 0) || part.oem_code) && (
+          <div className="bg-card rounded-xl p-4 border border-border space-y-2">
+            <h2 className="text-xs uppercase tracking-wider text-gold">OEM Numaraları</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {(part.oem_codes && part.oem_codes.length > 0 ? part.oem_codes : [part.oem_code!]).map((code) => (
+                <span key={code} className="font-mono text-xs px-2.5 py-1 rounded-md bg-background border border-gold/30 text-gold">
+                  {code}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {part.description && (
           <div className="bg-card rounded-xl p-4 border border-border">
             <h2 className="text-xs uppercase tracking-wider text-gold mb-2">Açıklama</h2>
             <p className="text-sm whitespace-pre-wrap leading-relaxed">{part.description}</p>
           </div>
+        )}
+
+        <EquivalentParts partId={part.id} />
+
+        {part.oem_code && (
+          <AiOemSuggester
+            oem={part.oem_code}
+            brand={part.brand}
+            model={part.model}
+            title={part.title}
+          />
         )}
 
         <div className="bg-card rounded-xl p-4 border border-gold/30 flex gap-3">
@@ -344,6 +368,7 @@ function PartDetail() {
           </p>
         </div>
       </div>
+
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border safe-bottom">
         <div className="max-w-md mx-auto p-3 space-y-2">
