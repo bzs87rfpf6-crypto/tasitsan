@@ -142,7 +142,7 @@ function AccountPage() {
                         {p.price != null ? `₺${Number(p.price).toLocaleString("tr-TR")}` : "Fiyat sor"}
                       </div>
                       <div className="flex flex-wrap gap-1.5 pt-1">
-                        <Link to="/parts/$id_/edit" params={{ id: p.id }}
+                        <Link to="/parts/$id/edit" params={{ id: p.id }}
                           className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md text-[11px] font-semibold bg-gold-gradient text-gold-foreground">
                           <Pencil className="size-3" /> Düzenle
                         </Link>
