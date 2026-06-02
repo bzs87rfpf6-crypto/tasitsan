@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff } from "lucide-react";
+import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -35,6 +35,12 @@ function PartDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
   const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
+  const [contactPhone, setContactPhone] = useState<string>("");
+
+  useEffect(() => {
+    supabase.from("site_settings").select("contact_phone").maybeSingle()
+      .then(({ data }) => setContactPhone(data?.contact_phone ?? ""));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,7 +231,22 @@ function PartDetail() {
       </div>
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border safe-bottom">
-        <div className="max-w-md mx-auto p-3">
+        <div className="max-w-md mx-auto p-3 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <a href={contactPhone ? `tel:${contactPhone.replace(/\s/g, "")}` : undefined}
+              onClick={(e) => { if (!contactPhone) { e.preventDefault(); toast.info("İletişim numarası yakında"); } }}
+              className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
+              <Phone className="size-4 text-gold" />
+              Bizi Ara
+            </a>
+            <a href={contactPhone ? `https://wa.me/${contactPhone.replace(/\D/g, "")}` : undefined}
+              target="_blank" rel="noopener noreferrer"
+              onClick={(e) => { if (!contactPhone) { e.preventDefault(); toast.info("WhatsApp hattı yakında"); } }}
+              className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
+              <MessageCircle className="size-4 text-gold" />
+              WhatsApp
+            </a>
+          </div>
           <button onClick={openForm}
             className="w-full flex items-center justify-center gap-2 h-14 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold active:scale-[0.98] transition-transform">
             <Send className="size-5" />
