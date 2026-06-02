@@ -278,9 +278,11 @@ export type Database = {
           condition: string
           created_at: string
           description: string | null
+          engine_code: string | null
           id: string
           model: string | null
           oem_code: string | null
+          oem_codes: string[]
           photos: string[]
           price: number | null
           reviewed_at: string | null
@@ -301,9 +303,11 @@ export type Database = {
           condition?: string
           created_at?: string
           description?: string | null
+          engine_code?: string | null
           id?: string
           model?: string | null
           oem_code?: string | null
+          oem_codes?: string[]
           photos?: string[]
           price?: number | null
           reviewed_at?: string | null
@@ -324,9 +328,11 @@ export type Database = {
           condition?: string
           created_at?: string
           description?: string | null
+          engine_code?: string | null
           id?: string
           model?: string | null
           oem_code?: string | null
+          oem_codes?: string[]
           photos?: string[]
           price?: number | null
           reviewed_at?: string | null
@@ -561,6 +567,23 @@ export type Database = {
       }
     }
     Functions: {
+      find_equivalent_parts: {
+        Args: { _limit?: number; _part_id: string }
+        Returns: {
+          brand: string
+          city: string
+          condition: string
+          id: string
+          model: string
+          oem_code: string
+          oem_codes: string[]
+          photos: string[]
+          price: number
+          stock_quantity: number
+          title: string
+          year: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -571,6 +594,24 @@ export type Database = {
       record_part_view: {
         Args: { _part_id: string; _viewer_key: string }
         Returns: number
+      }
+      search_parts_by_oem: {
+        Args: { _limit?: number; _oem: string }
+        Returns: {
+          brand: string
+          city: string
+          condition: string
+          id: string
+          match_kind: string
+          model: string
+          oem_code: string
+          oem_codes: string[]
+          photos: string[]
+          price: number
+          stock_quantity: number
+          title: string
+          year: number
+        }[]
       }
     }
     Enums: {
