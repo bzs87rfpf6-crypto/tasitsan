@@ -42,6 +42,15 @@ function detectDevice(): string {
   return "desktop";
 }
 
+const BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|chrome-lighthouse|phantom|puppeteer|selenium/i;
+
+function isLikelyBot(): boolean {
+  if (typeof navigator === "undefined") return true;
+  // Headless browsers expose webdriver=true
+  if ((navigator as Navigator & { webdriver?: boolean }).webdriver) return true;
+  return BOT_UA_RE.test(navigator.userAgent || "");
+}
+
 async function loadGeo(): Promise<Geo> {
   if (typeof window === "undefined") return { city: null, country: null };
   try {
