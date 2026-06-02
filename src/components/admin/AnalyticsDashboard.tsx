@@ -19,9 +19,14 @@ const PALETTE = ["#D4AF37", "#E8C870", "#8b6f1f", "#3b3b3b", "#5c5c5c", "#a07f29
 
 export function AnalyticsDashboard() {
   const fetchOverview = useServerFn(getAnalyticsOverview);
+  const fetchTopOem = useServerFn(getTopOemSearches);
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [oemRange, setOemRange] = useState<"30d" | "all">("30d");
+  const [oemRows, setOemRows] = useState<{ oem: string; search_count: number }[]>([]);
+  const [oemLoading, setOemLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -31,6 +36,15 @@ export function AnalyticsDashboard() {
       .catch((e: Error) => { if (active) { setError(e.message); setLoading(false); } });
     return () => { active = false; };
   }, [fetchOverview]);
+
+  useEffect(() => {
+    let active = true;
+    setOemLoading(true);
+    fetchTopOem({ data: { range: oemRange, limit: 25 } })
+      .then((rows) => { if (active) { setOemRows(rows); setOemLoading(false); } })
+      .catch(() => { if (active) { setOemRows([]); setOemLoading(false); } });
+    return () => { active = false; };
+  }, [fetchTopOem, oemRange]);
 
   if (loading) return <p className="text-center text-muted-foreground text-sm py-8">İstatistikler yükleniyor...</p>;
   if (error) return <p className="text-center text-destructive text-sm py-8">{error}</p>;
