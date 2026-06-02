@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }] }),
@@ -44,6 +45,7 @@ interface SiteSettings {
   email_from_address: string | null;
   email_smtp_host: string | null;
   email_smtp_port: number | null;
+  ga4_measurement_id: string | null;
 }
 
 interface Inquiry {
@@ -522,13 +524,16 @@ function AdminPage() {
         {loading ? (
           <p className="text-center text-muted-foreground text-sm py-8">Yükleniyor...</p>
         ) : tab === "dashboard" ? (
-          <DashboardPanel
-            users={users}
-            parts={parts}
-            inquiries={inquiries}
-            requests={requests}
-            onJump={(t) => { setTab(t); setFilter("all"); }}
-          />
+          <div className="space-y-4">
+            <AnalyticsDashboard />
+            <DashboardPanel
+              users={users}
+              parts={parts}
+              inquiries={inquiries}
+              requests={requests}
+              onJump={(t) => { setTab(t); setFilter("all"); }}
+            />
+          </div>
         ) : tab === "users" ? (
           <UsersPanel
             users={filteredUsers}
@@ -1230,6 +1235,7 @@ function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; on
       email_from_address: form.email_from_address?.toString().trim() || null,
       email_smtp_host: form.email_smtp_host?.toString().trim() || null,
       email_smtp_port: form.email_smtp_port ? Number(form.email_smtp_port) : null,
+      ga4_measurement_id: form.ga4_measurement_id?.toString().trim() || null,
     });
     setSaving(false);
   };
@@ -1296,7 +1302,20 @@ function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; on
         </div>
       </section>
 
+      <section className="bg-card rounded-xl border border-border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <LayoutDashboard className="size-4 text-gold" />
+          <h2 className="font-semibold text-sm">Google Analytics 4</h2>
+        </div>
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Measurement ID</span>
+          <Input value={form.ga4_measurement_id ?? ""} onChange={(e) => set("ga4_measurement_id", e.target.value)} className="mt-1 h-9 font-mono" placeholder="G-XXXXXXXXXX" />
+          <span className="text-[10px] text-muted-foreground mt-1 block">GA4 ölçüm kimliğinizi girdiğinizde site etkinlikleri otomatik olarak Google'a iletilir.</span>
+        </label>
+      </section>
+
       <Button type="submit" disabled={saving} className="w-full bg-gold-gradient text-gold-foreground font-semibold shadow-gold">
+
         <Save className="size-4 mr-1.5" /> {saving ? "Kaydediliyor..." : "Ayarları Kaydet"}
       </Button>
     </form>

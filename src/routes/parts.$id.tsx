@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/parts/$id")({
   head: () => ({ meta: [{ title: "İlan Detayı — Taşıtsan" }] }),
@@ -59,6 +60,9 @@ function PartDetail() {
       }
       setPart((data as PartFull | null) ?? null);
       setLoading(false);
+      if (data) {
+        trackEvent("part_view", { part_id: data.id, title: data.title, brand: data.brand, model: data.model });
+      }
     })();
     return () => { cancelled = true; };
   }, [id]);
@@ -234,14 +238,20 @@ function PartDetail() {
         <div className="max-w-md mx-auto p-3 space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <a href={contactPhone ? `tel:${contactPhone.replace(/\s/g, "")}` : undefined}
-              onClick={(e) => { if (!contactPhone) { e.preventDefault(); toast.info("İletişim numarası yakında"); } }}
+              onClick={(e) => {
+                if (!contactPhone) { e.preventDefault(); toast.info("İletişim numarası yakında"); return; }
+                trackEvent("click_call", { from: "part_detail", part_id: part.id });
+              }}
               className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
               <Phone className="size-4 text-gold" />
               Bizi Ara
             </a>
             <a href={contactPhone ? `https://wa.me/${contactPhone.replace(/\D/g, "")}` : undefined}
               target="_blank" rel="noopener noreferrer"
-              onClick={(e) => { if (!contactPhone) { e.preventDefault(); toast.info("WhatsApp hattı yakında"); } }}
+              onClick={(e) => {
+                if (!contactPhone) { e.preventDefault(); toast.info("WhatsApp hattı yakında"); return; }
+                trackEvent("click_whatsapp", { from: "part_detail", part_id: part.id });
+              }}
               className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
               <MessageCircle className="size-4 text-gold" />
               WhatsApp

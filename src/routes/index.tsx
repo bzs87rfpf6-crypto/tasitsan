@@ -11,6 +11,7 @@ import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
 import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -58,10 +59,12 @@ function Index() {
   const phoneDigits = contactPhone.replace(/\D/g, "");
   const handleCall = () => {
     if (!phoneDigits) { toast.error("Müşteri hizmetleri numarası henüz tanımlanmadı."); return; }
+    trackEvent("click_call", { from: "home_fab" });
     window.location.href = `tel:${phoneDigits}`;
   };
   const handleWhatsapp = () => {
     if (!phoneDigits) { toast.error("WhatsApp hattı henüz tanımlanmadı."); return; }
+    trackEvent("click_whatsapp", { from: "home_fab" });
     window.open(`https://wa.me/${phoneDigits}`, "_blank", "noopener");
   };
 
@@ -92,8 +95,15 @@ function Index() {
       if (active) {
         setParts((data ?? []) as Part[]);
         setLoading(false);
+        // Track searches (text or OEM) — only when there's a meaningful query.
+        if (q.trim().length >= 2) {
+          trackEvent("search", { query: q.trim(), category: cat, results: (data ?? []).length });
+        }
+        if (oem.trim().length >= 2) {
+          trackEvent("oem_search", { oem: oem.trim(), results: (data ?? []).length });
+        }
       }
-    }, 250);
+    }, 600);
     return () => { active = false; clearTimeout(t); };
   }, [q, cat, brand, model, year, oem, minPrice, maxPrice]);
 
