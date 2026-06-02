@@ -95,6 +95,17 @@ function AccountPage() {
       <AppHeader subtitle="Hesabım" />
       <div className="max-w-md mx-auto px-4 pt-4 space-y-6">
 
+        <Link to="/favorites" className="flex items-center justify-between gap-3 bg-card border border-border hover:border-gold rounded-xl p-4 transition">
+          <span className="flex items-center gap-3 font-semibold text-sm">
+            <span className="size-9 rounded-full bg-destructive/10 grid place-items-center">
+              <Heart className="size-4 text-destructive fill-destructive" />
+            </span>
+            Favorilerim
+          </span>
+          <span className="text-gold text-lg">→</span>
+        </Link>
+
+
         <section className="bg-card border border-border rounded-xl p-4 space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">Profil Bilgileri</h2>
           <Input placeholder="Ad / İşletme" value={profile.display_name}
