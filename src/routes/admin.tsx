@@ -1231,6 +1231,7 @@ function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; on
       email_from_address: form.email_from_address?.toString().trim() || null,
       email_smtp_host: form.email_smtp_host?.toString().trim() || null,
       email_smtp_port: form.email_smtp_port ? Number(form.email_smtp_port) : null,
+      ga4_measurement_id: form.ga4_measurement_id?.toString().trim() || null,
     });
     setSaving(false);
   };
