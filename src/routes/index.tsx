@@ -74,7 +74,7 @@ function Index() {
     const t = setTimeout(async () => {
       let query = supabase
         .from("parts")
-        .select("id,title,brand,model,year,price,city,photos,condition,category,stock_quantity,oem_code")
+        .select("id,title,brand,model,year,price,city,photos,condition,category,stock_quantity,oem_code,seller_id")
         .order("created_at", { ascending: false })
         .limit(80);
 
@@ -97,7 +97,18 @@ function Index() {
       }
       const { data } = await query;
       if (active) {
-        setParts((data ?? []) as Part[]);
+        const rows = (data ?? []) as (Part & { seller_id: string })[];
+        const sellerIds = Array.from(new Set(rows.map((r) => r.seller_id).filter(Boolean)));
+        let verifiedSet = new Set<string>();
+        if (sellerIds.length) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("id,is_verified")
+            .in("id", sellerIds)
+            .eq("is_verified", true);
+          verifiedSet = new Set(((profs ?? []) as { id: string }[]).map((p) => p.id));
+        }
+        setParts(rows.map((r) => ({ ...r, seller_verified: verifiedSet.has(r.seller_id) })));
         setLoading(false);
         // Track searches (text or OEM) — only when there's a meaningful query.
         if (q.trim().length >= 2) {
