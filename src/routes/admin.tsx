@@ -788,6 +788,35 @@ function AdminPage() {
           setNotingRequest(null);
         }}
       />
+
+      <Dialog open={!!editingUser} onOpenChange={(v) => { if (!v) setEditingUser(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Kullanıcı Adını Düzenle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Bu değişiklik tüm sistemde anında görünür ve işlem kaydı tutulur.
+            </p>
+            <Input
+              autoFocus
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+              placeholder="Kullanıcı adı / firma adı"
+              maxLength={100}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingName}>
+                İptal
+              </Button>
+              <Button size="sm" onClick={saveUserName} disabled={savingName}
+                className="bg-gold-gradient text-gold-foreground font-semibold">
+                <Save className="size-3.5 mr-1" /> {savingName ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
