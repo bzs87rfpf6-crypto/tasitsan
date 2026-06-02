@@ -118,6 +118,23 @@ function AccountPage() {
         </div>
 
 
+        <section className="bg-card border border-border rounded-xl p-4 space-y-4">
+          <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">Profil Fotoğrafı</h2>
+          {user && (
+            <AvatarUploader
+              userId={user.id}
+              displayName={profile.display_name}
+              avatarUrl={profile.avatar_url}
+              onChange={(url) => setProfile((p) => ({ ...p, avatar_url: url }))}
+            />
+          )}
+          {user && (
+            <Link to="/u/$id" params={{ id: user.id }} className="block text-[11px] text-gold font-semibold">
+              Herkese açık profilimi görüntüle →
+            </Link>
+          )}
+        </section>
+
         <section className="bg-card border border-border rounded-xl p-4 space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">Profil Bilgileri</h2>
           <Input placeholder="Ad / İşletme" value={profile.display_name}
