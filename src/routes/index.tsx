@@ -82,13 +82,17 @@ function Index() {
       if (brand.trim()) query = query.ilike("brand", `%${brand.trim()}%`);
       if (model.trim()) query = query.ilike("model", `%${model.trim()}%`);
       if (year.trim()) query = query.eq("year", parseInt(year));
-      if (oem.trim()) query = query.ilike("oem_code", `%${oem.trim()}%`);
+      if (oem.trim()) {
+        const o = oem.trim().toUpperCase();
+        query = query.or(`oem_code.ilike.%${o}%,oem_codes.cs.{${o}}`);
+      }
       if (minPrice) query = query.gte("price", parseFloat(minPrice));
       if (maxPrice) query = query.lte("price", parseFloat(maxPrice));
       if (q.trim()) {
         const s = q.trim().replace(/,/g, " ");
+        const up = s.toUpperCase();
         query = query.or(
-          `title.ilike.%${s}%,brand.ilike.%${s}%,model.ilike.%${s}%,oem_code.ilike.%${s}%,description.ilike.%${s}%`,
+          `title.ilike.%${s}%,brand.ilike.%${s}%,model.ilike.%${s}%,oem_code.ilike.%${s}%,engine_code.ilike.%${up}%,description.ilike.%${s}%,oem_codes.cs.{${up}}`,
         );
       }
       const { data } = await query;
