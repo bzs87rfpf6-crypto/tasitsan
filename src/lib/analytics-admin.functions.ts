@@ -20,10 +20,18 @@ type PartRow = { id: string; title: string; seller_id: string; created_at: strin
 
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
 
-const BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|phantom|puppeteer|selenium/i;
-function isBotUA(ua: string | null): boolean {
-  if (!ua) return false;
-  return BOT_UA_RE.test(ua);
+const FALLBACK_BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|phantom|puppeteer|selenium/i;
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function compileBotRe(patterns: string[]): RegExp {
+  const cleaned = patterns.map((p) => p.trim()).filter(Boolean).map(escapeRegex);
+  if (!cleaned.length) return FALLBACK_BOT_UA_RE;
+  return new RegExp(cleaned.join("|"), "i");
+}
+function makeIsBotUA(re: RegExp) {
+  return (ua: string | null) => (!ua ? false : re.test(ua));
 }
 
 // Turkey detection: ipapi.co returns "Turkey" (sometimes "Türkiye"); be liberal.
