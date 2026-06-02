@@ -171,6 +171,30 @@ export type Database = {
           },
         ]
       }
+      oem_searches: {
+        Row: {
+          created_at: string
+          id: string
+          oem: string
+          results_count: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          oem: string
+          results_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          oem?: string
+          results_count?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       part_requests: {
         Row: {
           admin_notes: string | null
@@ -725,6 +749,14 @@ export type Database = {
           stock_quantity: number
           title: string
           year: number
+        }[]
+      }
+      top_oem_searches: {
+        Args: { _limit?: number; _range?: string }
+        Returns: {
+          last_searched_at: string
+          oem: string
+          search_count: number
         }[]
       }
     }
