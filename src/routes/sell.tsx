@@ -29,6 +29,7 @@ function SellPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [profileWa, setProfileWa] = useState("");
+  const [approvalState, setApprovalState] = useState<"loading" | "approved" | "pending">("loading");
 
   const [form, setForm] = useState({
     title: "", description: "", brand: "", model: "", year: "", oem_code: "",
@@ -43,12 +44,22 @@ function SellPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("whatsapp,city").eq("id", user.id).maybeSingle().then(({ data }) => {
+    let cancelled = false;
+    (async () => {
+      const [profileRes, roleRes] = await Promise.all([
+        supabase.from("profiles").select("whatsapp,city,is_approved").eq("id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const data = profileRes.data;
       if (data?.whatsapp) {
         setProfileWa(data.whatsapp);
         setForm((f) => ({ ...f, whatsapp: data.whatsapp ?? "", city: data.city ?? f.city }));
       }
-    });
+      const approved = !!roleRes.data || !!data?.is_approved;
+      setApprovalState(approved ? "approved" : "pending");
+    })();
+    return () => { cancelled = true; };
   }, [user]);
 
   // Stable blob URLs keyed by File so we don't recreate them every render
@@ -144,8 +155,29 @@ function SellPage() {
 
 
 
-  if (authLoading || !user) {
+  if (authLoading || !user || approvalState === "loading") {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
+  }
+
+  if (approvalState === "pending") {
+    return (
+      <div className="min-h-screen pb-28">
+        <AppHeader subtitle="Yeni İlan" />
+        <div className="max-w-md mx-auto px-4 pt-10 text-center space-y-4">
+          <div className="rounded-2xl border border-gold/30 bg-gold/5 px-5 py-6 space-y-3">
+            <h2 className="font-display text-xl text-gold">Hesabın onay bekliyor</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Hesabın Taşıtsan ekibi tarafından inceleniyor. Onay verildikten sonra ilan
+              yükleyebilirsin. Onay genellikle kısa sürede tamamlanır.
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Acil bir durum varsa WhatsApp üzerinden bizimle iletişime geçebilirsin.
+            </p>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    );
   }
 
   return (

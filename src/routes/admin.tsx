@@ -27,8 +27,10 @@ interface ProfileRow {
   display_name: string | null;
   whatsapp: string | null;
   city: string | null;
+  email: string | null;
   created_at: string;
   is_active: boolean;
+  is_approved: boolean;
 }
 
 interface SiteSettings {
@@ -187,7 +189,7 @@ function AdminPage() {
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,whatsapp,city,created_at,is_active").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       supabase.from("site_settings").select("*").maybeSingle(),
     ]);
@@ -293,6 +295,14 @@ function AdminPage() {
       setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_active: !u.is_active } : x));
       toast.success(!u.is_active ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasife alındı");
     } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+  };
+
+  const handleToggleApproved = async (u: ProfileRow) => {
+    const next = !u.is_approved;
+    const { error } = await supabase.from("profiles").update({ is_approved: next }).eq("id", u.id);
+    if (error) { toast.error(error.message); return; }
+    setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_approved: next } : x));
+    toast.success(next ? "Kullanıcı onaylandı" : "Onay geri alındı");
   };
 
   const handleToggleAdmin = async (u: ProfileRow) => {
@@ -468,6 +478,7 @@ function AdminPage() {
             onDelete={handleDeleteUser}
             onToggleActive={handleToggleActive}
             onToggleAdmin={handleToggleAdmin}
+            onToggleApproved={handleToggleApproved}
           />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
@@ -911,6 +922,7 @@ function DashboardPanel({
   onJump: (t: Tab) => void;
 }) {
   const pending = parts.filter((p) => p.status === "pending").length;
+  const pendingUsers = users.filter((u) => !u.is_approved).length;
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const newToday = users.filter((u) => new Date(u.created_at) >= todayStart).length;
   const partsToday = parts.filter((p) => new Date(p.created_at) >= todayStart).length;
@@ -927,6 +939,9 @@ function DashboardPanel({
       <div className="grid grid-cols-2 gap-2.5">
         <button onClick={() => onJump("users")} className="text-left">
           <StatCard icon={<UsersIcon className="size-3.5" />} label="Toplam Kullanıcı" value={users.length} />
+        </button>
+        <button onClick={() => onJump("users")} className="text-left">
+          <StatCard icon={<UserCheck className="size-3.5" />} label="Onay Bekleyen Kullanıcı" value={pendingUsers} accent="text-gold" />
         </button>
         <button onClick={() => onJump("products")} className="text-left">
           <StatCard icon={<Package className="size-3.5" />} label="Toplam İlan" value={parts.length} />
@@ -978,7 +993,7 @@ function DashboardPanel({
 }
 
 function UsersPanel({
-  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin,
+  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved,
 }: {
   users: ProfileRow[];
   parts: PartItem[];
@@ -987,36 +1002,58 @@ function UsersPanel({
   onDelete: (u: ProfileRow) => void;
   onToggleActive: (u: ProfileRow) => void;
   onToggleAdmin: (u: ProfileRow) => void;
+  onToggleApproved: (u: ProfileRow) => void;
 }) {
   const listingsBySeller = new Map<string, number>();
   parts.forEach((p) => listingsBySeller.set(p.seller_id, (listingsBySeller.get(p.seller_id) ?? 0) + 1));
   if (users.length === 0) return <p className="text-center text-muted-foreground text-sm py-8">Kullanıcı yok.</p>;
+
+  // Surface pending-approval accounts at the top
+  const sorted = [...users].sort((a, b) => Number(a.is_approved) - Number(b.is_approved));
+
   return (
     <div className="space-y-2">
-      {users.map((u) => {
+      {sorted.map((u) => {
         const isUserAdmin = adminIds.has(u.id);
         const isSelf = currentUserId === u.id;
+        const approved = u.is_approved || isUserAdmin;
         return (
-          <div key={u.id} className={`bg-card rounded-xl border p-3 space-y-3 ${u.is_active ? "border-border" : "border-destructive/40 opacity-75"}`}>
+          <div key={u.id} className={`bg-card rounded-xl border p-3 space-y-3 ${
+            !approved ? "border-gold/60 shadow-[0_0_0_1px_rgba(201,168,76,0.15)]"
+              : u.is_active ? "border-border" : "border-destructive/40 opacity-75"
+          }`}>
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center font-bold shrink-0">
                 {(u.display_name ?? "?").slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="font-semibold text-sm truncate">{u.display_name ?? "İsimsiz"}</p>
                   {isUserAdmin && <Crown className="size-3.5 text-gold shrink-0" />}
+                  {!approved && <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gold/15 text-gold border border-gold/40">Onay Bekliyor</span>}
                   {!u.is_active && <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive/15 text-destructive border border-destructive/40">Pasif</span>}
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate">
-                  {[u.city, u.whatsapp].filter(Boolean).join(" · ") || "—"}
+                  {[u.city, u.whatsapp, u.email].filter(Boolean).join(" · ") || "—"}
                 </p>
                 <p className="text-[10px] text-muted-foreground">
                   {new Date(u.created_at).toLocaleDateString("tr-TR")} · {listingsBySeller.get(u.id) ?? 0} ilan
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
+            {!approved && (
+              <Button size="sm" onClick={() => onToggleApproved(u)}
+                className="w-full h-9 text-xs bg-gold-gradient text-gold-foreground font-semibold shadow-gold">
+                <Check className="size-3.5 mr-1" /> Hesabı Onayla
+              </Button>
+            )}
+            <div className="grid grid-cols-4 gap-1.5">
+              {approved && !isUserAdmin && (
+                <Button size="sm" variant="outline" onClick={() => onToggleApproved(u)} disabled={isSelf}
+                  className="h-8 text-[11px]">
+                  <XIcon className="size-3 mr-1" /> Onayı Kaldır
+                </Button>
+              )}
               <Button size="sm" variant="outline" onClick={() => onToggleAdmin(u)} disabled={isSelf && isUserAdmin}
                 className={`h-8 text-[11px] ${isUserAdmin ? "border-gold/40 text-gold" : ""}`}>
                 <Crown className="size-3 mr-1" /> {isUserAdmin ? "Admin Kaldır" : "Admin Yap"}
