@@ -11,7 +11,10 @@ const items = [
 export function BottomNav() {
   const { pathname } = useLocation();
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur safe-bottom">
+    <nav
+      className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur-xl safe-bottom"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <ul className="grid grid-cols-4 max-w-md mx-auto">
         {items.map(({ to, label, icon: Icon }) => {
           const active = pathname === to;
@@ -19,12 +22,18 @@ export function BottomNav() {
             <li key={to}>
               <Link
                 to={to}
-                className={`flex flex-col items-center gap-1 py-2.5 text-xs transition-colors ${
-                  active ? "text-gold" : "text-muted-foreground"
+                className={`group relative flex flex-col items-center gap-0.5 py-2 text-[11px] transition-colors duration-150 select-none touch-manipulation active:scale-[0.94] ${
+                  active ? "text-gold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className={`size-5 ${active ? "stroke-[2.5]" : ""}`} />
-                <span className="font-medium">{label}</span>
+                <span
+                  className={`flex items-center justify-center size-9 rounded-full transition-all duration-200 ${
+                    active ? "bg-gold/15 shadow-[inset_0_0_0_1px_rgba(212,160,23,0.35)]" : ""
+                  }`}
+                >
+                  <Icon className={`size-5 transition-transform duration-200 ${active ? "scale-110 stroke-[2.5]" : ""}`} />
+                </span>
+                <span className={`font-medium leading-none ${active ? "font-semibold" : ""}`}>{label}</span>
               </Link>
             </li>
           );
