@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MapPin, Package } from "lucide-react";
 import { SafePartImage } from "@/components/SafePartImage";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 export interface Part {
   id: string;
@@ -34,10 +35,13 @@ export function PartCard({ part }: { part: Part }) {
           {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "2.El"}
         </span>
         {part.stock_quantity != null && part.stock_quantity > 0 && (
-          <span className="absolute top-2 right-2 text-[10px] font-semibold bg-background/80 text-foreground px-2 py-0.5 rounded-full border border-border flex items-center gap-1">
+          <span className="absolute top-2 right-11 text-[10px] font-semibold bg-background/80 text-foreground px-2 py-0.5 rounded-full border border-border flex items-center gap-1">
             <Package className="size-3" /> {part.stock_quantity}
           </span>
         )}
+        <div className="absolute top-2 right-2" onClick={(e) => e.preventDefault()}>
+          <FavoriteButton partId={part.id} size="sm" />
+        </div>
       </div>
       <div className="p-3 space-y-1.5">
         <h3 className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem]">{part.title}</h3>
