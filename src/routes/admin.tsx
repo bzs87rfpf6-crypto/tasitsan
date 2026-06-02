@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { adminDeleteUser, adminSetActive, adminSetRole } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateDisplayName } from "@/lib/admin.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 
@@ -160,10 +160,14 @@ function AdminPage() {
   const [rejecting, setRejecting] = useState<PartItem | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [notingRequest, setNotingRequest] = useState<PartRequest | null>(null);
+  const [editingUser, setEditingUser] = useState<ProfileRow | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   const callDeleteUser = useServerFn(adminDeleteUser);
   const callSetRole = useServerFn(adminSetRole);
   const callSetActive = useServerFn(adminSetActive);
+  const callUpdateDisplayName = useServerFn(adminUpdateDisplayName);
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
@@ -316,6 +320,28 @@ function AdminPage() {
       });
       toast.success(isAdminNow ? "Admin yetkisi kaldırıldı" : "Admin yetkisi verildi");
     } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+  };
+
+  const openEditUser = (u: ProfileRow) => {
+    setEditingUser(u);
+    setEditingName(u.display_name ?? "");
+  };
+
+  const saveUserName = async () => {
+    if (!editingUser) return;
+    const name = editingName.trim();
+    if (!name) { toast.error("Ad boş olamaz"); return; }
+    setSavingName(true);
+    try {
+      await callUpdateDisplayName({ data: { userId: editingUser.id, displayName: name } });
+      setUsers((prev) => prev.map((x) => x.id === editingUser.id ? { ...x, display_name: name } : x));
+      toast.success("Kullanıcı adı güncellendi");
+      setEditingUser(null);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
+    } finally {
+      setSavingName(false);
+    }
   };
 
   const saveRequestNote = async (id: string, note: string) => {
