@@ -115,7 +115,13 @@ function Index() {
           trackEvent("search", { query: q.trim(), category: cat, results: (data ?? []).length });
         }
         if (oem.trim().length >= 2) {
-          trackEvent("oem_search", { oem: oem.trim(), results: (data ?? []).length });
+          const oemUp = oem.trim().toUpperCase();
+          trackEvent("oem_search", { oem: oemUp, results: (data ?? []).length });
+          supabase.from("oem_searches").insert({
+            oem: oemUp,
+            user_id: user?.id ?? null,
+            results_count: (data ?? []).length,
+          }).then(() => { /* fire and forget */ });
         }
       }
     }, 600);
