@@ -922,6 +922,7 @@ function DashboardPanel({
   onJump: (t: Tab) => void;
 }) {
   const pending = parts.filter((p) => p.status === "pending").length;
+  const pendingUsers = users.filter((u) => !u.is_approved).length;
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const newToday = users.filter((u) => new Date(u.created_at) >= todayStart).length;
   const partsToday = parts.filter((p) => new Date(p.created_at) >= todayStart).length;
@@ -938,6 +939,9 @@ function DashboardPanel({
       <div className="grid grid-cols-2 gap-2.5">
         <button onClick={() => onJump("users")} className="text-left">
           <StatCard icon={<UsersIcon className="size-3.5" />} label="Toplam Kullanıcı" value={users.length} />
+        </button>
+        <button onClick={() => onJump("users")} className="text-left">
+          <StatCard icon={<UserCheck className="size-3.5" />} label="Onay Bekleyen Kullanıcı" value={pendingUsers} accent="text-gold" />
         </button>
         <button onClick={() => onJump("products")} className="text-left">
           <StatCard icon={<Package className="size-3.5" />} label="Toplam İlan" value={parts.length} />
