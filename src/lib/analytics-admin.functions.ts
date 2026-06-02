@@ -8,7 +8,9 @@ type EventRow = {
   user_id: string | null;
   path: string | null;
   city: string | null;
+  country: string | null;
   device: string | null;
+  user_agent: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
 };
@@ -17,6 +19,31 @@ type ProfileRow = { id: string; created_at: string; city: string | null };
 type PartRow = { id: string; title: string; seller_id: string; created_at: string };
 
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+
+const BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|phantom|puppeteer|selenium/i;
+function isBotUA(ua: string | null): boolean {
+  if (!ua) return false;
+  return BOT_UA_RE.test(ua);
+}
+
+// Turkey detection: ipapi.co returns "Turkey" (sometimes "Türkiye"); be liberal.
+const TR_COUNTRY_RE = /^(turkey|türkiye|turkiye|tr)$/i;
+function isTurkey(country: string | null): boolean {
+  if (!country) return false;
+  return TR_COUNTRY_RE.test(country.trim());
+}
+
+// Normalize Turkish city names (strip accents, title case-ish)
+function normalizeTrCity(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  // Capitalize first letter of each word
+  return trimmed
+    .toLocaleLowerCase("tr-TR")
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1))
+    .join(" ");
+}
 
 export const getAnalyticsOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -31,7 +58,7 @@ export const getAnalyticsOverview = createServerFn({ method: "GET" })
     const [evRes, profilesRes, partsRes] = await Promise.all([
       supabase
         .from("analytics_events")
-        .select("id,event_type,session_id,user_id,path,city,device,metadata,created_at")
+        .select("id,event_type,session_id,user_id,path,city,country,device,user_agent,metadata,created_at")
         .gte("created_at", since.toISOString())
         .order("created_at", { ascending: false })
         .limit(10000),
@@ -39,7 +66,9 @@ export const getAnalyticsOverview = createServerFn({ method: "GET" })
       supabase.from("parts").select("id,title,seller_id,created_at").limit(5000),
     ]);
 
-    const events = (evRes.data ?? []) as EventRow[];
+    // Filter out bot/crawler traffic before any aggregation
+    const allEvents = (evRes.data ?? []) as EventRow[];
+    const events = allEvents.filter((e) => !isBotUA(e.user_agent));
     const profiles = (profilesRes.data ?? []) as ProfileRow[];
     const parts = (partsRes.data ?? []) as PartRow[];
 
@@ -58,17 +87,39 @@ export const getAnalyticsOverview = createServerFn({ method: "GET" })
     const visitorsWeekly = uniqSessions(pv.filter((e) => new Date(e.created_at) >= weekStart));
     const visitorsMonthly = uniqSessions(pv.filter((e) => new Date(e.created_at) >= monthStart));
 
-    // City distribution (sessions per city)
-    const sessionCity = new Map<string, string>();
+    // City distribution (sessions per city) — TR cities reported separately,
+    // every non-TR visitor bucketed as "Yurtdışı".
+    const sessionGeo = new Map<string, { city: string | null; country: string | null }>();
     for (const e of pv) {
-      if (e.session_id && e.city && !sessionCity.has(e.session_id)) sessionCity.set(e.session_id, e.city);
+      if (e.session_id && !sessionGeo.has(e.session_id)) {
+        sessionGeo.set(e.session_id, { city: e.city, country: e.country });
+      }
     }
     const cityCounts = new Map<string, number>();
-    for (const c of sessionCity.values()) cityCounts.set(c, (cityCounts.get(c) ?? 0) + 1);
-    const cities = Array.from(cityCounts.entries())
+    let abroadCount = 0;
+    let trDistinct = 0;
+    const trSeen = new Set<string>();
+    for (const { city, country } of sessionGeo.values()) {
+      if (isTurkey(country)) {
+        if (!city) continue; // unknown TR city → skip
+        const norm = normalizeTrCity(city);
+        if (!norm) continue;
+        cityCounts.set(norm, (cityCounts.get(norm) ?? 0) + 1);
+        if (!trSeen.has(norm)) { trSeen.add(norm); trDistinct++; }
+      } else if (country) {
+        abroadCount++;
+      } else if (city) {
+        // No country info — fall back to city if present (legacy rows)
+        const norm = normalizeTrCity(city);
+        cityCounts.set(norm, (cityCounts.get(norm) ?? 0) + 1);
+        if (!trSeen.has(norm)) { trSeen.add(norm); trDistinct++; }
+      }
+    }
+    const cities: { city: string; count: number }[] = Array.from(cityCounts.entries())
       .map(([city, count]) => ({ city, count }))
       .sort((a, b) => b.count - a.count);
-    const distinctCities = cities.length;
+    if (abroadCount > 0) cities.push({ city: "Yurtdışı", count: abroadCount });
+    const distinctCities = trDistinct;
 
     // Most viewed parts (by part_view events)
     const partViewCounts = new Map<string, { count: number; title: string }>();
