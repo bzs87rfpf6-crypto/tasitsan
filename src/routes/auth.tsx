@@ -112,6 +112,18 @@ function AuthPage() {
           </Button>
         </form>
 
+        {mode === "login" && (
+          <button
+            type="button"
+            onClick={sendReset}
+            disabled={loading}
+            className="w-full mt-3 text-xs text-gold hover:underline"
+          >
+            Şifremi unuttum
+          </button>
+        )}
+
+
         <button
           onClick={() => setMode(mode === "login" ? "signup" : "login")}
           className="w-full mt-4 text-sm text-muted-foreground"
