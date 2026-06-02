@@ -63,7 +63,7 @@ export const getAnalyticsOverview = createServerFn({ method: "GET" })
     const since = new Date();
     since.setDate(since.getDate() - 30);
 
-    const [evRes, profilesRes, partsRes] = await Promise.all([
+    const [evRes, profilesRes, partsRes, botRulesRes] = await Promise.all([
       supabase
         .from("analytics_events")
         .select("id,event_type,session_id,user_id,path,city,country,device,user_agent,metadata,created_at")
@@ -72,9 +72,11 @@ export const getAnalyticsOverview = createServerFn({ method: "GET" })
         .limit(10000),
       supabase.from("profiles").select("id,created_at,city").limit(5000),
       supabase.from("parts").select("id,title,seller_id,created_at").limit(5000),
+      supabase.from("bot_filter_rules").select("pattern").eq("enabled", true),
     ]);
 
-    // Filter out bot/crawler traffic before any aggregation
+    // Filter out bot/crawler traffic using admin-managed rules (fallback baked in).
+    const isBotUA = makeIsBotUA(compileBotRe((botRulesRes.data ?? []).map((r) => r.pattern)));
     const allEvents = (evRes.data ?? []) as EventRow[];
     const events = allEvents.filter((e) => !isBotUA(e.user_agent));
     const profiles = (profilesRes.data ?? []) as ProfileRow[];
