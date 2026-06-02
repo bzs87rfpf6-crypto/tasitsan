@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { recordPartView } from "@/lib/views";
+import { EquivalentParts } from "@/components/EquivalentParts";
+import { AiOemSuggester } from "@/components/AiOemSuggester";
 
 export const Route = createFileRoute("/parts/$id")({
   loader: async ({ params }) => {
