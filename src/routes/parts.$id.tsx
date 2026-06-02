@@ -128,6 +128,17 @@ function PartDetail() {
   const [contactPhone, setContactPhone] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewCount, setViewCount] = useState<number | null>(null);
+  const [seller, setSeller] = useState<{ id: string; display_name: string | null; avatar_url: string | null; city: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!part?.seller_id) { setSeller(null); return; }
+    let cancelled = false;
+    supabase.from("profiles")
+      .select("id,display_name,avatar_url,city")
+      .eq("id", part.seller_id).maybeSingle()
+      .then(({ data }) => { if (!cancelled) setSeller(data ?? null); });
+    return () => { cancelled = true; };
+  }, [part?.seller_id]);
 
   useEffect(() => {
     supabase.from("site_settings").select("contact_phone").maybeSingle()
