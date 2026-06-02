@@ -173,6 +173,12 @@ export function PartRequestDialog({
             <Input placeholder="OEM Kodu (opsiyonel)" className="font-mono" value={form.oem_code} maxLength={60}
               onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })} />
             <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="Motor Kodu" className="font-mono" value={form.engine_code} maxLength={40}
+                onChange={(e) => setForm({ ...form, engine_code: e.target.value.toUpperCase() })} />
+              <Input placeholder="Şehir" value={form.city} maxLength={60}
+                onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
               <Input placeholder="Marka *" value={form.brand} maxLength={40}
                 onChange={(e) => setForm({ ...form, brand: e.target.value })} />
               <Input placeholder="Model *" value={form.model} maxLength={40}
