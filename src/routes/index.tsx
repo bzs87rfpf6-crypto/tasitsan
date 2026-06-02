@@ -45,6 +45,25 @@ function Index() {
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [contactPhone, setContactPhone] = useState("");
+
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("contact_phone")
+      .maybeSingle()
+      .then(({ data }) => setContactPhone((data?.contact_phone as string) ?? ""));
+  }, []);
+
+  const phoneDigits = contactPhone.replace(/\D/g, "");
+  const handleCall = () => {
+    if (!phoneDigits) { toast.error("Müşteri hizmetleri numarası henüz tanımlanmadı."); return; }
+    window.location.href = `tel:${phoneDigits}`;
+  };
+  const handleWhatsapp = () => {
+    if (!phoneDigits) { toast.error("WhatsApp hattı henüz tanımlanmadı."); return; }
+    window.open(`https://wa.me/${phoneDigits}`, "_blank", "noopener");
+  };
 
   useEffect(() => {
     let active = true;
