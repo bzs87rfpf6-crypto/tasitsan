@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getSafePartPhotos } from "@/lib/part-images";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PartImageLightbox } from "@/components/PartImageLightbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,7 @@ function PartDetail() {
   const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
   const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
   const [contactPhone, setContactPhone] = useState<string>("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     supabase.from("site_settings").select("contact_phone").maybeSingle()
@@ -222,33 +224,50 @@ function PartDetail() {
     <div className="min-h-screen pb-32">
       <div className="relative bg-secondary aspect-square">
         {photos[activePhoto] ? (
-          <img
-            key={photos[activePhoto].display}
-            src={photos[activePhoto].display}
-            alt={part.title}
-            loading="eager"
-            decoding="async"
-            onError={() => markBroken(photos[activePhoto])}
-            className="w-full h-full object-cover"
-          />
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            className="absolute inset-0 w-full h-full"
+            aria-label="Fotoğrafı büyüt"
+          >
+            <img
+              key={photos[activePhoto].display}
+              src={photos[activePhoto].display}
+              alt={part.title}
+              loading="eager"
+              decoding="async"
+              onError={() => markBroken(photos[activePhoto])}
+              className="w-full h-full object-cover"
+            />
+          </button>
         ) : (
           <div className="w-full h-full grid place-items-center text-muted-foreground flex-col gap-2">
-            <ImageOff className="size-8" />
-            <span className="text-xs">Görüntülenebilir fotoğraf yok</span>
+            <ImageOff className="size-10" />
+            <span className="text-xs">Bu ilan için görsel yok</span>
           </div>
         )}
-        <Link to="/" className="absolute top-4 left-4 size-10 rounded-full bg-background/70 backdrop-blur grid place-items-center">
+        <Link to="/" className="absolute top-4 left-4 size-10 rounded-full bg-background/70 backdrop-blur grid place-items-center z-10">
           <ArrowLeft className="size-5" />
         </Link>
         {photos.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 pointer-events-none">
             {photos.map((_, i) => (
-              <button key={i} onClick={() => setActivePhoto(i)}
+              <span key={i}
                 className={`h-1.5 rounded-full transition-all ${i === activePhoto ? "w-6 bg-gold" : "w-1.5 bg-white/40"}`} />
             ))}
           </div>
         )}
       </div>
+
+      {lightboxOpen && photos.length > 0 && (
+        <PartImageLightbox
+          photos={photos}
+          index={activePhoto}
+          onIndexChange={setActivePhoto}
+          onClose={() => setLightboxOpen(false)}
+          onError={markBroken}
+        />
+      )}
 
       {photos.length > 1 && (
         <div className="flex gap-2 px-4 pt-3 overflow-x-auto">
