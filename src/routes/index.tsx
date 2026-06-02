@@ -211,22 +211,27 @@ function Index() {
         </div>
       </section>
 
-      {/* Akıllı Talep Havuzu CTA */}
-      <section className="max-w-3xl mx-auto px-4 pt-5">
+      {/* Akıllı Talep Havuzu CTA — vurgulu */}
+      <section className="max-w-3xl mx-auto px-4 pt-6">
         <button
           onClick={() => setRequestOpen(true)}
-          className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gold/15 via-gold/5 to-transparent border border-gold/40 hover:border-gold/70 transition-colors text-left"
+          className="tap-gold relative w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-gold/25 via-gold/10 to-background border-2 animate-gold-pulse-border text-left shadow-gold overflow-hidden"
         >
-          <div className="size-11 rounded-full bg-gold-gradient grid place-items-center shrink-0 shadow-gold">
-            <PackageSearch className="size-5 text-gold-foreground" />
+          <div className="size-14 rounded-2xl bg-gold-gradient grid place-items-center shrink-0 shadow-gold">
+            <PackageSearch className="size-7 text-gold-foreground" strokeWidth={2.4} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-display text-sm sm:text-base tracking-wide">Parça Bulunamadı mı? Talep Oluştur</p>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-              Talebiniz satıcı havuzuna düşsün, onaylı teklifler size gelsin.
+            <p className="font-display text-lg sm:text-xl tracking-wide text-gold">
+              Parça Bulunamadı mı?
+            </p>
+            <p className="font-semibold text-sm sm:text-base text-foreground -mt-0.5">
+              Talep Oluştur — Taşıtsan senin için bulsun
+            </p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
+              Talebin satıcı havuzuna düşer, onaylı teklifler doğrudan sana gelir.
             </p>
           </div>
-          <span className="text-gold font-semibold text-sm shrink-0">→</span>
+          <span className="text-gold font-bold text-xl shrink-0 animate-pulse">→</span>
         </button>
       </section>
 
