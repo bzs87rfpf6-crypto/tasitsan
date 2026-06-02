@@ -95,8 +95,15 @@ function Index() {
       if (active) {
         setParts((data ?? []) as Part[]);
         setLoading(false);
+        // Track searches (text or OEM) — only when there's a meaningful query.
+        if (q.trim().length >= 2) {
+          trackEvent("search", { query: q.trim(), category: cat, results: (data ?? []).length });
+        }
+        if (oem.trim().length >= 2) {
+          trackEvent("oem_search", { oem: oem.trim(), results: (data ?? []).length });
+        }
       }
-    }, 250);
+    }, 600);
     return () => { active = false; clearTimeout(t); };
   }, [q, cat, brand, model, year, oem, minPrice, maxPrice]);
 
