@@ -253,12 +253,12 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
           <input
             ref={fileRef}
             type="file"
-            accept="image/*"
-            capture="environment"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void handleFile(f);
+              e.target.value = "";
             }}
           />
         </DialogContent>
