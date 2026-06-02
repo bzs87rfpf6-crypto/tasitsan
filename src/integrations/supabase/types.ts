@@ -353,6 +353,42 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_otp_verifications: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_sent_at: string
+          phone: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_sent_at?: string
+          phone: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_sent_at?: string
+          phone?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -364,7 +400,9 @@ export type Database = {
           is_active: boolean
           is_approved: boolean
           is_verified: boolean
+          phone_verified_at: string | null
           updated_at: string
+          verified_phone: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -377,7 +415,9 @@ export type Database = {
           is_active?: boolean
           is_approved?: boolean
           is_verified?: boolean
+          phone_verified_at?: string | null
           updated_at?: string
+          verified_phone?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -390,7 +430,9 @@ export type Database = {
           is_active?: boolean
           is_approved?: boolean
           is_verified?: boolean
+          phone_verified_at?: string | null
           updated_at?: string
+          verified_phone?: string | null
           whatsapp?: string | null
         }
         Relationships: []
