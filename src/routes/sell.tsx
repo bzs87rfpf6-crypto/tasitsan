@@ -29,6 +29,7 @@ function SellPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [profileWa, setProfileWa] = useState("");
+  const [approvalState, setApprovalState] = useState<"loading" | "approved" | "pending">("loading");
 
   const [form, setForm] = useState({
     title: "", description: "", brand: "", model: "", year: "", oem_code: "",
@@ -43,12 +44,22 @@ function SellPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("whatsapp,city").eq("id", user.id).maybeSingle().then(({ data }) => {
+    let cancelled = false;
+    (async () => {
+      const [profileRes, roleRes] = await Promise.all([
+        supabase.from("profiles").select("whatsapp,city,is_approved").eq("id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const data = profileRes.data;
       if (data?.whatsapp) {
         setProfileWa(data.whatsapp);
         setForm((f) => ({ ...f, whatsapp: data.whatsapp ?? "", city: data.city ?? f.city }));
       }
-    });
+      const approved = !!roleRes.data || !!data?.is_approved;
+      setApprovalState(approved ? "approved" : "pending");
+    })();
+    return () => { cancelled = true; };
   }, [user]);
 
   // Stable blob URLs keyed by File so we don't recreate them every render
