@@ -363,6 +363,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_approved: boolean
+          is_verified: boolean
           updated_at: string
           whatsapp: string | null
         }
@@ -375,6 +376,7 @@ export type Database = {
           id: string
           is_active?: boolean
           is_approved?: boolean
+          is_verified?: boolean
           updated_at?: string
           whatsapp?: string | null
         }
@@ -387,6 +389,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_approved?: boolean
+          is_verified?: boolean
           updated_at?: string
           whatsapp?: string | null
         }
@@ -454,6 +457,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seller_verifications: {
+        Row: {
+          account_type: string
+          admin_notes: string | null
+          city: string | null
+          company_name: string | null
+          contact_person: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tax_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type?: string
+          admin_notes?: string | null
+          city?: string | null
+          company_name?: string | null
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tax_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          admin_notes?: string | null
+          city?: string | null
+          company_name?: string | null
+          contact_person?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tax_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {

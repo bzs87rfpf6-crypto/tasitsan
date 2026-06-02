@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { SafePartImage } from "@/components/SafePartImage";
 import { AvatarUploader } from "@/components/AvatarUploader";
+import { SellerVerification } from "@/components/SellerVerification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -146,6 +147,11 @@ function AccountPage() {
           <Button onClick={save} disabled={saving} className="w-full bg-gold-gradient text-gold-foreground font-semibold">
             {saving ? "..." : "Kaydet"}
           </Button>
+        </section>
+
+        <section className="bg-card border border-border rounded-xl p-4 space-y-3">
+          <h2 className="text-xs uppercase tracking-wider text-sky-400 font-semibold">Doğrulanmış Satıcı Başvurusu</h2>
+          <SellerVerification userId={user.id} />
         </section>
 
         <section className="space-y-3">

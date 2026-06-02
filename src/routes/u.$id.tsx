@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { UserAvatar } from "@/components/UserAvatar";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SafePartImage } from "@/components/SafePartImage";
 
 export const Route = createFileRoute("/u/$id")({
@@ -17,6 +18,7 @@ interface Profile {
   display_name: string | null;
   city: string | null;
   avatar_url: string | null;
+  is_verified: boolean;
   created_at: string;
 }
 
@@ -42,7 +44,7 @@ function PublicProfilePage() {
       const [{ data: p }, { data: ps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id,display_name,city,avatar_url,created_at")
+          .select("id,display_name,city,avatar_url,is_verified,created_at")
           .eq("id", id)
           .maybeSingle(),
         supabase
@@ -84,9 +86,13 @@ function PublicProfilePage() {
         <section className="bg-card border border-border rounded-xl p-5 flex items-center gap-4">
           <UserAvatar url={profile.avatar_url} name={profile.display_name} size={80} />
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-xl tracking-wide truncate">
-              {profile.display_name ?? "Satıcı"}
+            <h1 className="font-display text-xl tracking-wide truncate flex items-center gap-1.5">
+              <span className="truncate">{profile.display_name ?? "Satıcı"}</span>
+              {profile.is_verified && <VerifiedBadge size={18} />}
             </h1>
+            {profile.is_verified && (
+              <p className="text-[11px] text-sky-400 font-semibold">Doğrulanmış Satıcı</p>
+            )}
             {profile.city && (
               <p className="text-xs text-muted-foreground truncate">{profile.city}</p>
             )}
