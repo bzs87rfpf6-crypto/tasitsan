@@ -87,7 +87,7 @@ export async function trackEvent(
       country: geo.country,
       device: detectDevice(),
       user_agent: navigator.userAgent,
-      metadata,
+      metadata: metadata as never,
     });
 
     if (typeof window.gtag === "function") {
