@@ -119,3 +119,28 @@
   .animate-gold-pulse-border { animation: gold-pulse-border 2.6s ease-in-out infinite; }
 }
 
+
+/* ====== Mobile / PWA polish ====== */
+@layer base {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+  body {
+    /* Avoid iOS rubber-band background flash */
+    background: hsl(var(--background, 0 0% 4%));
+  }
+  /* Respect iOS safe area */
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-top    { padding-top: env(safe-area-inset-top); }
+}
+
+@layer utilities {
+  /* App-like page enter */
+  @keyframes app-page-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-app-page-in { animation: app-page-in 220ms ease-out both; }
+}
