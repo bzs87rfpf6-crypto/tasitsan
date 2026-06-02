@@ -199,7 +199,7 @@ function AdminPage() {
       supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved,avatar_url").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       supabase.from("site_settings").select("*").maybeSingle(),
     ]);
