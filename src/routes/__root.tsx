@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
+import { SplashScreen } from "@/components/SplashScreen";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 function NotFoundComponent() {
   return (
@@ -67,8 +69,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     const gsc = loaderData?.gsc ?? null;
     const meta: Array<Record<string, string>> = [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" },
       { name: "theme-color", content: "#0a0907" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Taşıtsan" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "format-detection", content: "telephone=no" },
       { title: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
       { name: "description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
       { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1" },
@@ -155,6 +162,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <InstallPrompt />
+        <SplashScreen />
         <Toaster theme="dark" position="top-center" />
       </AuthProvider>
     </QueryClientProvider>

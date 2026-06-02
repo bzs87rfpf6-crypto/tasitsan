@@ -1,14 +1,46 @@
 {
   "name": "Taşıtsan Parça Borsası",
   "short_name": "Taşıtsan",
-  "description": "Otomotiv yedek parça alım-satım platformu",
-  "start_url": "/",
+  "description": "Türkiye'nin otomotiv yedek parça borsası. OEM kodu ile parça ara, sat ve teklif al.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0a0907",
-  "theme_color": "#d4a017",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
+  "lang": "tr-TR",
+  "dir": "ltr",
+  "background_color": "#0a0907",
+  "theme_color": "#0a0907",
+  "categories": ["shopping", "business", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Parça Ara",
+      "short_name": "Ara",
+      "description": "OEM koduyla parça ara",
+      "url": "/?source=shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "İlan Ver",
+      "short_name": "Sat",
+      "description": "Yeni parça ilanı oluştur",
+      "url": "/sell?source=shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Talepler",
+      "short_name": "Talepler",
+      "description": "Parça taleplerini gör",
+      "url": "/requests?source=shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

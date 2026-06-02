@@ -494,6 +494,42 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth_key: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string | null
+          platform: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_key?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string | null
+          platform?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_key?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string | null
+          platform?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       request_quotes: {
         Row: {
           admin_notes: string | null
