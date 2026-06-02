@@ -64,6 +64,8 @@ function RequestsPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [cat, setCat] = useState("Tümü");
+  const [search, setSearch] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
   const [requests, setRequests] = useState<OpenRequest[]>([]);
   const [myQuotes, setMyQuotes] = useState<MyQuote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,9 +94,20 @@ function RequestsPage() {
     return m;
   }, [myQuotes]);
 
-  const filtered = useMemo(() =>
-    cat === "Tümü" ? requests : requests.filter((r) => r.category === cat),
-    [cat, requests]);
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const c = cityFilter.trim().toLowerCase();
+    return requests.filter((r) => {
+      if (cat !== "Tümü" && r.category !== cat) return false;
+      if (c && !(r.city || "").toLowerCase().includes(c)) return false;
+      if (s) {
+        const hay = [r.part_name, r.brand, r.model, r.oem_code, r.engine_code, r.search_query]
+          .filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(s)) return false;
+      }
+      return true;
+    });
+  }, [cat, requests, search, cityFilter]);
 
   if (authLoading || !user) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
