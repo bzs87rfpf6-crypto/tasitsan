@@ -80,6 +80,7 @@ export const Route = createFileRoute("/parts/$id")({
     const meta: Array<Record<string, string>> = [
       { title: seoTitle },
       { name: "description", content: desc },
+      ...(keywords ? [{ name: "keywords", content: keywords }] : []),
       { property: "og:title", content: seoTitle },
       { property: "og:description", content: desc },
       { property: "og:type", content: "product" },
