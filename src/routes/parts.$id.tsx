@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff, Phone, MessageCircle } from "lucide-react";
+import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff, Phone, MessageCircle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { recordPartView } from "@/lib/views";
 
 export const Route = createFileRoute("/parts/$id")({
   loader: async ({ params }) => {
@@ -114,6 +116,7 @@ function PartDetail() {
   const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
   const [contactPhone, setContactPhone] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [viewCount, setViewCount] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.from("site_settings").select("contact_phone").maybeSingle()
@@ -139,10 +142,13 @@ function PartDetail() {
       setLoading(false);
       if (data) {
         trackEvent("part_view", { part_id: data.id, title: data.title, brand: data.brand, model: data.model });
+        recordPartView(data.id, user?.id ?? null).then((c) => {
+          if (!cancelled && c !== null) setViewCount(c);
+        });
       }
     })();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, user?.id]);
 
   // Defensive: filter null, non-string, unsupported and broken URLs; use Storage
   // render URLs so Safari decodes small optimized images instead of huge originals.
@@ -284,9 +290,18 @@ function PartDetail() {
 
 
       <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
-        <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
-          {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
-        </span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
+            {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
+              <Eye className="size-3.5 text-gold" />
+              {(viewCount ?? 0).toLocaleString("tr-TR")} Görüntülenme
+            </span>
+            <FavoriteButton partId={part.id} size="md" />
+          </div>
+        </div>
         <h1 className="font-display text-2xl tracking-wide leading-tight">{part.title}</h1>
         <div className="flex items-end gap-4 flex-wrap">
           <div className="text-3xl font-display text-gold tracking-wider">

@@ -14,6 +14,7 @@ import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } fro
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }] }),
@@ -527,6 +528,7 @@ function AdminPage() {
         ) : tab === "dashboard" ? (
           <div className="space-y-4">
             <AnalyticsDashboard />
+            <ListingStatsPanel />
             <DashboardPanel
               users={users}
               parts={parts}

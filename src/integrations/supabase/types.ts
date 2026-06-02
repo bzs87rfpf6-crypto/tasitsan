@@ -92,6 +92,32 @@ export type Database = {
         }
         Relationships: []
       }
+      favorites: {
+        Row: {
+          created_at: string
+          part_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          part_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          part_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inquiries: {
         Row: {
           admin_notes: string | null
@@ -210,6 +236,38 @@ export type Database = {
           year?: number | null
         }
         Relationships: []
+      }
+      part_views: {
+        Row: {
+          created_at: string
+          id: string
+          part_id: string
+          view_date: string
+          viewer_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          part_id: string
+          view_date?: string
+          viewer_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          part_id?: string
+          view_date?: string
+          viewer_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "part_views_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parts: {
         Row: {
@@ -509,6 +567,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_part_view: {
+        Args: { _part_id: string; _viewer_key: string }
+        Returns: number
       }
     }
     Enums: {
