@@ -37,7 +37,7 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 function AccountPage() {
   const { user, loading, signOut } = useAuth();
   const nav = useNavigate();
-  const [profile, setProfile] = useState({ display_name: "", whatsapp: "", city: "" });
+  const [profile, setProfile] = useState({ display_name: "", whatsapp: "", city: "", avatar_url: null as string | null });
   const [myParts, setMyParts] = useState<MyPart[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -56,8 +56,13 @@ function AccountPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("display_name,whatsapp,city").eq("id", user.id).maybeSingle().then(({ data }) => {
-      if (data) setProfile({ display_name: data.display_name ?? "", whatsapp: data.whatsapp ?? "", city: data.city ?? "" });
+    supabase.from("profiles").select("display_name,whatsapp,city,avatar_url").eq("id", user.id).maybeSingle().then(({ data }) => {
+      if (data) setProfile({
+        display_name: data.display_name ?? "",
+        whatsapp: data.whatsapp ?? "",
+        city: data.city ?? "",
+        avatar_url: data.avatar_url ?? null,
+      });
     });
     loadParts(user.id);
   }, [user, loadParts]);
@@ -65,7 +70,8 @@ function AccountPage() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update(profile).eq("id", user.id);
+    const { avatar_url: _ignored, ...patch } = profile;
+    const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
     setSaving(false);
     if (error) toast.error(error.message);
     else toast.success("Profil güncellendi");
