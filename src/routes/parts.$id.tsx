@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff, Phone, MessageCircle } from "lucide-react";
+import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff, Phone, MessageCircle, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { recordPartView } from "@/lib/views";
 
 export const Route = createFileRoute("/parts/$id")({
   loader: async ({ params }) => {
@@ -114,6 +116,7 @@ function PartDetail() {
   const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
   const [contactPhone, setContactPhone] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [viewCount, setViewCount] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.from("site_settings").select("contact_phone").maybeSingle()
@@ -139,10 +142,13 @@ function PartDetail() {
       setLoading(false);
       if (data) {
         trackEvent("part_view", { part_id: data.id, title: data.title, brand: data.brand, model: data.model });
+        recordPartView(data.id, user?.id ?? null).then((c) => {
+          if (!cancelled && c !== null) setViewCount(c);
+        });
       }
     })();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, user?.id]);
 
   // Defensive: filter null, non-string, unsupported and broken URLs; use Storage
   // render URLs so Safari decodes small optimized images instead of huge originals.
