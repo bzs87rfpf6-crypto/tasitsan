@@ -133,7 +133,7 @@ function PartDetail() {
     (async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,stock_quantity")
+        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,oem_codes,engine_code,stock_quantity")
         .eq("id", id).maybeSingle();
       if (cancelled) return;
       if (error) {
