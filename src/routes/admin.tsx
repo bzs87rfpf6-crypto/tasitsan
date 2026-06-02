@@ -44,6 +44,7 @@ interface SiteSettings {
   email_from_address: string | null;
   email_smtp_host: string | null;
   email_smtp_port: number | null;
+  ga4_measurement_id: string | null;
 }
 
 interface Inquiry {
