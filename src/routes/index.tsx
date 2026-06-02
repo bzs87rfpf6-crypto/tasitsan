@@ -11,6 +11,7 @@ import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
 import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
