@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateDisplayName } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 
