@@ -46,6 +46,7 @@ interface SiteSettings {
   email_smtp_host: string | null;
   email_smtp_port: number | null;
   ga4_measurement_id: string | null;
+  gsc_verification_code: string | null;
 }
 
 interface Inquiry {
@@ -1236,6 +1237,7 @@ function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; on
       email_smtp_host: form.email_smtp_host?.toString().trim() || null,
       email_smtp_port: form.email_smtp_port ? Number(form.email_smtp_port) : null,
       ga4_measurement_id: form.ga4_measurement_id?.toString().trim() || null,
+      gsc_verification_code: form.gsc_verification_code?.toString().trim() || null,
     });
     setSaving(false);
   };
@@ -1305,12 +1307,20 @@ function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; on
       <section className="bg-card rounded-xl border border-border p-4 space-y-3">
         <div className="flex items-center gap-2">
           <LayoutDashboard className="size-4 text-gold" />
-          <h2 className="font-semibold text-sm">Google Analytics 4</h2>
+          <h2 className="font-semibold text-sm">SEO & Analitik</h2>
         </div>
         <label className="block">
-          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Measurement ID</span>
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Google Analytics 4 — Measurement ID</span>
           <Input value={form.ga4_measurement_id ?? ""} onChange={(e) => set("ga4_measurement_id", e.target.value)} className="mt-1 h-9 font-mono" placeholder="G-XXXXXXXXXX" />
           <span className="text-[10px] text-muted-foreground mt-1 block">GA4 ölçüm kimliğinizi girdiğinizde site etkinlikleri otomatik olarak Google'a iletilir.</span>
+        </label>
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Google Search Console Doğrulama Kodu</span>
+          <Input value={form.gsc_verification_code ?? ""} onChange={(e) => set("gsc_verification_code", e.target.value)} className="mt-1 h-9 font-mono" placeholder="abc123..." />
+          <span className="text-[10px] text-muted-foreground mt-1 block">
+            Search Console &gt; HTML etiketi yönteminde verilen <code>content</code> değerini buraya yapıştırın. Sitenizin <code>&lt;head&gt;</code> bölümüne otomatik eklenir.
+            Sitemap: <code>https://tasitsan.com.tr/sitemap.xml</code>
+          </span>
         </label>
       </section>
 
