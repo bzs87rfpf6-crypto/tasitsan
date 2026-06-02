@@ -233,8 +233,13 @@ function SellPage() {
           <Input placeholder="Şehir" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="h-12 bg-card" />
         </div>
 
-        <Input placeholder="OEM Kodu *" value={form.oem_code} required
-          onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })}
+        <div className="space-y-1">
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold">OEM Numaraları *</label>
+          <OemInput value={oemCodes} onChange={setOemCodes} required />
+        </div>
+
+        <Input placeholder="Motor Kodu (örn. M271, OM651)" value={form.engine_code}
+          onChange={(e) => setForm({ ...form, engine_code: e.target.value.toUpperCase() })}
           maxLength={60} className="h-12 bg-card font-mono" />
 
         <div>
