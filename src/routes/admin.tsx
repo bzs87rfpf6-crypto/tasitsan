@@ -566,6 +566,7 @@ function AdminPage() {
             onToggleAdmin={handleToggleAdmin}
             onToggleApproved={handleToggleApproved}
             onEditName={openEditUser}
+            onRemoveAvatar={handleRemoveAvatar}
           />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
