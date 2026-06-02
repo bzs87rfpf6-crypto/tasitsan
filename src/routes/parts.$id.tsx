@@ -60,6 +60,9 @@ function PartDetail() {
       }
       setPart((data as PartFull | null) ?? null);
       setLoading(false);
+      if (data) {
+        trackEvent("part_view", { part_id: data.id, title: data.title, brand: data.brand, model: data.model });
+      }
     })();
     return () => { cancelled = true; };
   }, [id]);
