@@ -161,13 +161,13 @@ function AdminPage() {
   const [rejectNote, setRejectNote] = useState("");
   const [notingRequest, setNotingRequest] = useState<PartRequest | null>(null);
   const [editingUser, setEditingUser] = useState<ProfileRow | null>(null);
-  const [editingName, setEditingName] = useState("");
-  const [savingName, setSavingName] = useState(false);
+  const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", is_approved: false });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const callDeleteUser = useServerFn(adminDeleteUser);
   const callSetRole = useServerFn(adminSetRole);
   const callSetActive = useServerFn(adminSetActive);
-  const callUpdateDisplayName = useServerFn(adminUpdateDisplayName);
+  const callUpdateProfile = useServerFn(adminUpdateProfile);
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
