@@ -105,6 +105,7 @@ function SellPage() {
     if (!user) return;
     if (files.length < 3) { toast.error("En az 3 fotoğraf yüklemelisin."); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli bir fiyat girin."); return; }
+    if (oemCodes.length === 0) { toast.error("En az bir OEM numarası girin."); return; }
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
