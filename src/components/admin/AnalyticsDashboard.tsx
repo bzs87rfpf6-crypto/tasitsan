@@ -203,28 +203,32 @@ function Empty() {
 }
 
 function RankList({ title, icon, items }: { title: string; icon: React.ReactNode; items: { label: string; value: number }[] }) {
-  const max = items[0]?.value ?? 1;
   return (
     <div className="bg-card rounded-xl border border-border p-3">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-gold">{icon}</span>
         <h3 className="text-xs font-semibold">{title}</h3>
       </div>
-      {items.length === 0 ? <Empty /> : (
-        <ul className="space-y-1.5">
-          {items.map((it, i) => (
-            <li key={i} className="text-xs">
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate flex-1 font-medium">{i + 1}. {it.label}</span>
-                <span className="text-gold font-mono tabular-nums">{it.value}</span>
-              </div>
-              <div className="h-1 mt-1 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full bg-gold-gradient" style={{ width: `${Math.max(6, (it.value / max) * 100)}%` }} />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      {items.length === 0 ? <Empty /> : <RankListItems items={items} />}
     </div>
+  );
+}
+
+function RankListItems({ items }: { items: { label: string; value: number }[] }) {
+  const max = items[0]?.value ?? 1;
+  return (
+    <ul className="space-y-1.5">
+      {items.map((it, i) => (
+        <li key={i} className="text-xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate flex-1 font-medium">{i + 1}. {it.label}</span>
+            <span className="text-gold font-mono tabular-nums">{it.value}</span>
+          </div>
+          <div className="h-1 mt-1 rounded-full bg-secondary overflow-hidden">
+            <div className="h-full bg-gold-gradient" style={{ width: `${Math.max(6, (it.value / max) * 100)}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
