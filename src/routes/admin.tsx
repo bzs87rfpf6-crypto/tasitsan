@@ -1298,7 +1298,20 @@ function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; on
         </div>
       </section>
 
+      <section className="bg-card rounded-xl border border-border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <LayoutDashboard className="size-4 text-gold" />
+          <h2 className="font-semibold text-sm">Google Analytics 4</h2>
+        </div>
+        <label className="block">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Measurement ID</span>
+          <Input value={form.ga4_measurement_id ?? ""} onChange={(e) => set("ga4_measurement_id", e.target.value)} className="mt-1 h-9 font-mono" placeholder="G-XXXXXXXXXX" />
+          <span className="text-[10px] text-muted-foreground mt-1 block">GA4 ölçüm kimliğinizi girdiğinizde site etkinlikleri otomatik olarak Google'a iletilir.</span>
+        </label>
+      </section>
+
       <Button type="submit" disabled={saving} className="w-full bg-gold-gradient text-gold-foreground font-semibold shadow-gold">
+
         <Save className="size-4 mr-1.5" /> {saving ? "Kaydediliyor..." : "Ayarları Kaydet"}
       </Button>
     </form>
