@@ -290,9 +290,18 @@ function PartDetail() {
 
 
       <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
-        <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
-          {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
-        </span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
+            {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
+              <Eye className="size-3.5 text-gold" />
+              {(viewCount ?? 0).toLocaleString("tr-TR")} Görüntülenme
+            </span>
+            <FavoriteButton partId={part.id} size="md" />
+          </div>
+        </div>
         <h1 className="font-display text-2xl tracking-wide leading-tight">{part.title}</h1>
         <div className="flex items-end gap-4 flex-wrap">
           <div className="text-3xl font-display text-gold tracking-wider">
