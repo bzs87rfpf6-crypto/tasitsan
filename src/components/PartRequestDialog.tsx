@@ -125,10 +125,12 @@ export function PartRequestDialog({
         part_name: form.part_name.trim(),
         search_query: form.part_name.trim(),
         oem_code: form.oem_code.trim() || null,
+        engine_code: form.engine_code.trim() || null,
         brand: form.brand.trim() || null,
         model: form.model.trim() || null,
         year: form.year ? parseInt(form.year) : null,
         category: form.category || null,
+        city: form.city.trim() || null,
         description: form.description.trim() || null,
         photos: photoUrls,
         full_name: form.full_name.trim(),
@@ -138,7 +140,7 @@ export function PartRequestDialog({
       });
       if (error) { console.error("[part-request] insert failed:", error); throw error; }
       toast.success("Talebiniz alındı. Satıcılar teklif verecek, Taşıtsan onay sonrası size iletecek.");
-      setForm({ part_name: "", oem_code: "", brand: "", model: "", year: "", category: "", description: "", full_name: "", phone: "", email: "" });
+      setForm({ part_name: "", oem_code: "", engine_code: "", brand: "", model: "", year: "", category: "", city: "", description: "", full_name: "", phone: "", email: "" });
       setFiles([]);
       onOpenChange(false);
     } catch (err: any) {
