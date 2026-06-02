@@ -34,6 +34,7 @@ interface ProfileRow {
   created_at: string;
   is_active: boolean;
   is_approved: boolean;
+  avatar_url: string | null;
 }
 
 interface SiteSettings {
