@@ -20,10 +20,18 @@ type PartRow = { id: string; title: string; seller_id: string; created_at: strin
 
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
 
-const BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|phantom|puppeteer|selenium/i;
-function isBotUA(ua: string | null): boolean {
-  if (!ua) return false;
-  return BOT_UA_RE.test(ua);
+const FALLBACK_BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|phantom|puppeteer|selenium/i;
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function compileBotRe(patterns: string[]): RegExp {
+  const cleaned = patterns.map((p) => p.trim()).filter(Boolean).map(escapeRegex);
+  if (!cleaned.length) return FALLBACK_BOT_UA_RE;
+  return new RegExp(cleaned.join("|"), "i");
+}
+function makeIsBotUA(re: RegExp) {
+  return (ua: string | null) => (!ua ? false : re.test(ua));
 }
 
 // Turkey detection: ipapi.co returns "Turkey" (sometimes "Türkiye"); be liberal.
@@ -55,7 +63,7 @@ export const getAnalyticsOverview = createServerFn({ method: "GET" })
     const since = new Date();
     since.setDate(since.getDate() - 30);
 
-    const [evRes, profilesRes, partsRes] = await Promise.all([
+    const [evRes, profilesRes, partsRes, botRulesRes] = await Promise.all([
       supabase
         .from("analytics_events")
         .select("id,event_type,session_id,user_id,path,city,country,device,user_agent,metadata,created_at")
@@ -64,9 +72,11 @@ export const getAnalyticsOverview = createServerFn({ method: "GET" })
         .limit(10000),
       supabase.from("profiles").select("id,created_at,city").limit(5000),
       supabase.from("parts").select("id,title,seller_id,created_at").limit(5000),
+      supabase.from("bot_filter_rules").select("pattern").eq("enabled", true),
     ]);
 
-    // Filter out bot/crawler traffic before any aggregation
+    // Filter out bot/crawler traffic using admin-managed rules (fallback baked in).
+    const isBotUA = makeIsBotUA(compileBotRe((botRulesRes.data ?? []).map((r) => r.pattern)));
     const allEvents = (evRes.data ?? []) as EventRow[];
     const events = allEvents.filter((e) => !isBotUA(e.user_agent));
     const profiles = (profilesRes.data ?? []) as ProfileRow[];
