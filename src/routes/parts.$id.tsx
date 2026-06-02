@@ -35,6 +35,12 @@ function PartDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ full_name: "", phone: "", email: "", message: "" });
   const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
+  const [contactPhone, setContactPhone] = useState<string>("");
+
+  useEffect(() => {
+    supabase.from("site_settings").select("contact_phone").maybeSingle()
+      .then(({ data }) => setContactPhone(data?.contact_phone ?? ""));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
