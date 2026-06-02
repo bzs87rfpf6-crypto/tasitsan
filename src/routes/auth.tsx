@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { AppHeader } from "@/components/AppHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,15 +11,40 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+// Auth requires an email under the hood. We synthesize a stable identifier
+// from the phone number so users can sign up & log in with phone only.
+const PHONE_DOMAIN = "phone.tasitsan.local";
+
+function normalizePhone(raw: string): string {
+  // Keep digits only. Drop leading 0 / 90 country prefix when present.
+  let d = (raw || "").replace(/\D/g, "");
+  if (d.startsWith("90") && d.length === 12) d = d.slice(2);
+  if (d.startsWith("0") && d.length === 11) d = d.slice(1);
+  return d;
+}
+
+function phoneToAuthEmail(phone: string): string {
+  return `${normalizePhone(phone)}@${PHONE_DOMAIN}`;
+}
+
 function AuthPage() {
   const nav = useNavigate();
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const sendReset = async () => {
-    if (!email) { toast.error("Önce e-posta gir"); return; }
+    const target = email.trim();
+    if (!target) {
+      toast.error("Şifre sıfırlama için kayıtlı e-posta adresini gir. E-postan yoksa yöneticiyle iletişime geç.");
+      return;
+    }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(target, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
@@ -32,105 +56,172 @@ function AuthPage() {
       setLoading(false);
     }
   };
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const digits = normalizePhone(phone);
+    if (digits.length < 10) {
+      toast.error("Geçerli bir telefon numarası gir (10 hane).");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Şifre en az 6 karakter olmalı.");
+      return;
+    }
+
     setLoading(true);
     try {
       if (mode === "signup") {
+        if (!name.trim()) {
+          toast.error("Ad-Soyad veya firma adı zorunlu.");
+          setLoading(false);
+          return;
+        }
+        const authEmail = phoneToAuthEmail(digits);
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: authEmail,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: { display_name: name, whatsapp },
+            data: {
+              display_name: name.trim(),
+              whatsapp: digits,
+              contact_email: email.trim() || null,
+            },
           },
         });
         if (error) throw error;
-        toast.success("Hesap oluşturuldu! Hemen ilan vermeye başlayabilirsin.");
-        if (data.session) {
-          nav({ to: "/" });
-        } else {
-          setMode("login");
-        }
+        toast.success(
+          "Kayıt alındı. Hesabın yönetici onayına gönderildi — onaylandığında ilan verebilirsin.",
+          { duration: 6000 },
+        );
+        if (data.session) nav({ to: "/" });
+        else setMode("login");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const authEmail = phoneToAuthEmail(digits);
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authEmail,
+          password,
+        });
         if (error) throw error;
         toast.success("Hoş geldin!");
         nav({ to: "/" });
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Bir hata oluştu");
+      const msg = err?.message ?? "Bir hata oluştu";
+      if (mode === "login" && /invalid/i.test(msg)) {
+        toast.error("Telefon veya şifre hatalı.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) toast.error("Google ile giriş başarısız");
-  };
-
   return (
     <div className="min-h-screen">
-      <AppHeader subtitle={mode === "login" ? "Giriş Yap" : "Kayıt Ol"} />
+      <AppHeader subtitle={mode === "login" ? "Giriş Yap" : mode === "signup" ? "Kayıt Ol" : "Şifre Sıfırla"} />
       <div className="max-w-md mx-auto px-4 pt-8 pb-12">
         <div className="text-center mb-6">
           <h1 className="font-display text-4xl text-gold">
-            {mode === "login" ? "TEKRAR HOŞ GELDİN" : "ARAMIZA KATIL"}
+            {mode === "login" ? "TEKRAR HOŞ GELDİN" : mode === "signup" ? "ARAMIZA KATIL" : "ŞİFREMİ UNUTTUM"}
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
-            {mode === "login" ? "Parçanı sat, alıcılara ulaş." : "Saniyeler içinde ilan vermeye başla."}
+            {mode === "signup"
+              ? "Telefon numaranla saniyeler içinde kayıt ol. Hesabın onaylandığında ilan verebilirsin."
+              : mode === "login"
+              ? "Telefon numaran ve şifrenle giriş yap."
+              : "E-postan varsa sıfırlama bağlantısı gönderelim."}
           </p>
         </div>
 
-        <Button onClick={google} variant="outline" className="w-full h-12 border-border bg-card hover:bg-secondary mb-4">
-          <svg viewBox="0 0 24 24" className="size-5 mr-2"><path fill="#fff" d="M21.35 11.1H12v3.2h5.35c-.23 1.4-1.65 4.1-5.35 4.1-3.22 0-5.85-2.66-5.85-5.95s2.63-5.95 5.85-5.95c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.83 3.97 14.6 3 12 3 6.98 3 3 6.98 3 12s3.98 9 9 9c5.2 0 8.65-3.65 8.65-8.8 0-.6-.07-1.05-.15-1.5z"/></svg>
-          Google ile devam et
-        </Button>
+        {mode === "signup" && (
+          <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed mb-4">
+            <span className="text-gold font-semibold">Onay süreci:</span> Yeni hesaplar Taşıtsan ekibi tarafından
+            incelenir. Onaydan sonra ilan vermeye başlayabilirsin.
+          </div>
+        )}
 
-        <div className="flex items-center gap-3 my-4 text-xs text-muted-foreground">
-          <div className="h-px bg-border flex-1" /> VEYA <div className="h-px bg-border flex-1" />
-        </div>
-
-        <form onSubmit={submit} className="space-y-3">
-          {mode === "signup" && (
-            <>
-              <Input placeholder="Adın veya işletme adı" value={name} onChange={(e) => setName(e.target.value)} required className="h-12 bg-card" />
-              <Input placeholder="WhatsApp (5xx xxx xx xx)" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required className="h-12 bg-card" />
-            </>
-          )}
-          <Input type="email" placeholder="E-posta" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-12 bg-card" />
-          <Input type="password" placeholder="Şifre" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="h-12 bg-card" />
-          <Button type="submit" disabled={loading} className="w-full h-12 bg-gold-gradient text-gold-foreground font-semibold shadow-gold hover:opacity-90">
-            {loading ? "..." : mode === "login" ? "Giriş Yap" : "Hesap Oluştur"}
-          </Button>
-        </form>
+        {mode === "forgot" ? (
+          <div className="space-y-3">
+            <Input
+              type="email"
+              placeholder="Kayıtlı e-posta"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-12 bg-card"
+            />
+            <Button onClick={sendReset} disabled={loading} className="w-full h-12 bg-gold-gradient text-gold-foreground font-semibold shadow-gold hover:opacity-90">
+              {loading ? "..." : "Sıfırlama Bağlantısı Gönder"}
+            </Button>
+            <button type="button" onClick={() => setMode("login")} className="w-full text-sm text-muted-foreground">
+              ← Girişe dön
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="space-y-3">
+            {mode === "signup" && (
+              <Input
+                placeholder="Ad-Soyad veya firma adı"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                maxLength={120}
+                className="h-12 bg-card"
+              />
+            )}
+            <Input
+              type="tel"
+              inputMode="numeric"
+              placeholder="Telefon (5xx xxx xx xx)"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="h-12 bg-card"
+            />
+            {mode === "signup" && (
+              <Input
+                type="email"
+                placeholder="E-posta (isteğe bağlı)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 bg-card"
+              />
+            )}
+            <Input
+              type="password"
+              placeholder="Şifre (en az 6 karakter)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="h-12 bg-card"
+            />
+            <Button type="submit" disabled={loading} className="w-full h-12 bg-gold-gradient text-gold-foreground font-semibold shadow-gold hover:opacity-90">
+              {loading ? "..." : mode === "login" ? "Giriş Yap" : "Hesap Oluştur"}
+            </Button>
+          </form>
+        )}
 
         {mode === "login" && (
           <button
             type="button"
-            onClick={sendReset}
-            disabled={loading}
+            onClick={() => setMode("forgot")}
             className="w-full mt-3 text-xs text-gold hover:underline"
           >
             Şifremi unuttum
           </button>
         )}
 
-
-        <button
-          onClick={() => setMode(mode === "login" ? "signup" : "login")}
-          className="w-full mt-4 text-sm text-muted-foreground"
-        >
-          {mode === "login" ? "Hesabın yok mu? " : "Zaten üye misin? "}
-          <span className="text-gold font-semibold">{mode === "login" ? "Kayıt ol" : "Giriş yap"}</span>
-        </button>
+        {mode !== "forgot" && (
+          <button
+            onClick={() => setMode(mode === "login" ? "signup" : "login")}
+            className="w-full mt-4 text-sm text-muted-foreground"
+          >
+            {mode === "login" ? "Hesabın yok mu? " : "Zaten üye misin? "}
+            <span className="text-gold font-semibold">{mode === "login" ? "Kayıt ol" : "Giriş yap"}</span>
+          </button>
+        )}
 
         <div className="text-center mt-6">
           <Link to="/" className="text-xs text-muted-foreground">← Anasayfaya dön</Link>
