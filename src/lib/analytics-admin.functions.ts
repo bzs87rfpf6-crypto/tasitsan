@@ -8,7 +8,9 @@ type EventRow = {
   user_id: string | null;
   path: string | null;
   city: string | null;
+  country: string | null;
   device: string | null;
+  user_agent: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
 };
@@ -17,6 +19,31 @@ type ProfileRow = { id: string; created_at: string; city: string | null };
 type PartRow = { id: string; title: string; seller_id: string; created_at: string };
 
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+
+const BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|phantom|puppeteer|selenium/i;
+function isBotUA(ua: string | null): boolean {
+  if (!ua) return false;
+  return BOT_UA_RE.test(ua);
+}
+
+// Turkey detection: ipapi.co returns "Turkey" (sometimes "Türkiye"); be liberal.
+const TR_COUNTRY_RE = /^(turkey|türkiye|turkiye|tr)$/i;
+function isTurkey(country: string | null): boolean {
+  if (!country) return false;
+  return TR_COUNTRY_RE.test(country.trim());
+}
+
+// Normalize Turkish city names (strip accents, title case-ish)
+function normalizeTrCity(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  // Capitalize first letter of each word
+  return trimmed
+    .toLocaleLowerCase("tr-TR")
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1))
+    .join(" ");
+}
 
 export const getAnalyticsOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
