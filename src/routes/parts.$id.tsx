@@ -371,6 +371,22 @@ function PartDetail() {
 
         <EquivalentParts partId={part.id} />
 
+        {seller && (
+          <Link
+            to="/u/$id"
+            params={{ id: seller.id }}
+            className="flex items-center gap-3 bg-card rounded-xl p-4 border border-border hover:border-gold transition"
+          >
+            <UserAvatar url={seller.avatar_url} name={seller.display_name} size={48} />
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Satıcı</div>
+              <div className="text-sm font-semibold truncate">{seller.display_name ?? "Satıcı"}</div>
+              {seller.city && <div className="text-[11px] text-muted-foreground truncate">{seller.city}</div>}
+            </div>
+            <span className="text-xs text-gold font-semibold">Profili gör →</span>
+          </Link>
+        )}
+
         {part.oem_code && (
           <AiOemSuggester
             oem={part.oem_code}
