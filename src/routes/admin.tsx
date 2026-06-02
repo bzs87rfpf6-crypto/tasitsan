@@ -524,13 +524,16 @@ function AdminPage() {
         {loading ? (
           <p className="text-center text-muted-foreground text-sm py-8">Yükleniyor...</p>
         ) : tab === "dashboard" ? (
-          <DashboardPanel
-            users={users}
-            parts={parts}
-            inquiries={inquiries}
-            requests={requests}
-            onJump={(t) => { setTab(t); setFilter("all"); }}
-          />
+          <div className="space-y-4">
+            <AnalyticsDashboard />
+            <DashboardPanel
+              users={users}
+              parts={parts}
+              inquiries={inquiries}
+              requests={requests}
+              onJump={(t) => { setTab(t); setFilter("all"); }}
+            />
+          </div>
         ) : tab === "users" ? (
           <UsersPanel
             users={filteredUsers}
