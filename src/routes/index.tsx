@@ -276,13 +276,34 @@ function Index() {
         )}
       </div>
 
-      <Link
-        to="/sell"
-        className="fixed bottom-20 right-4 z-30 size-14 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center shadow-gold active:scale-95 transition-transform"
-        aria-label="İlan ver"
-      >
-        <Plus className="size-7" strokeWidth={2.5} />
-      </Link>
+      {/* Sabit sağ-alt aksiyon kümesi */}
+      <div className="fixed right-4 bottom-20 z-30 flex flex-col items-end gap-3">
+        <button
+          type="button"
+          onClick={handleCall}
+          aria-label="Bizi Ara"
+          className="tap-gold group flex items-center gap-2 h-12 pl-3 pr-4 rounded-full bg-card border-2 border-gold/70 text-gold font-semibold text-sm shadow-gold"
+        >
+          <Phone className="size-5" strokeWidth={2.4} />
+          <span className="hidden sm:inline">Bizi Ara</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleWhatsapp}
+          aria-label="WhatsApp"
+          className="tap-gold flex items-center gap-2 h-12 pl-3 pr-4 rounded-full bg-whatsapp text-white font-semibold text-sm shadow-gold"
+        >
+          <MessageCircle className="size-5" strokeWidth={2.4} />
+          <span className="hidden sm:inline">WhatsApp</span>
+        </button>
+        <Link
+          to="/sell"
+          className="tap-gold size-14 rounded-full bg-gold-gradient text-gold-foreground grid place-items-center shadow-gold"
+          aria-label="İlan ver"
+        >
+          <Plus className="size-7" strokeWidth={2.5} />
+        </Link>
+      </div>
 
       <BottomNav />
 
