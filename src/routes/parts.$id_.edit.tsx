@@ -19,7 +19,7 @@ const CATEGORIES = [
   "Süspansiyon", "Klima", "Yakıt Sistemi", "Aydınlatma", "Diğer",
 ];
 
-export const Route = createFileRoute("/parts/$id/edit")({
+export const Route = createFileRoute("/parts/$id_/edit")({
   head: () => ({ meta: [{ title: "İlan Düzenle — Taşıtsan" }] }),
   component: EditPartPage,
 });
