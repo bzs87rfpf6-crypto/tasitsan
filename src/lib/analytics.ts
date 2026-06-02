@@ -81,6 +81,7 @@ export async function trackEvent(
   metadata: Record<string, unknown> = {},
 ) {
   if (typeof window === "undefined") return;
+  if (isLikelyBot()) return;
   try {
     const geo = await loadGeo();
     const { data: userData } = await supabase.auth.getSession();
