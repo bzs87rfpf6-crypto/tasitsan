@@ -818,26 +818,68 @@ function AdminPage() {
       <Dialog open={!!editingUser} onOpenChange={(v) => { if (!v) setEditingUser(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Kullanıcı Adını Düzenle</DialogTitle>
+            <DialogTitle>Kullanıcıyı Düzenle</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-[11px] text-muted-foreground">
-              Bu değişiklik tüm sistemde anında görünür ve işlem kaydı tutulur.
+              Değişiklikler tüm sistemde anında görünür ve işlem kaydı tutulur.
             </p>
-            <Input
-              autoFocus
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              placeholder="Kullanıcı adı / firma adı"
-              maxLength={100}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingName}>
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Ad / Firma Adı</label>
+              <Input
+                autoFocus
+                value={editForm.display_name}
+                onChange={(e) => setEditForm((f) => ({ ...f, display_name: e.target.value }))}
+                placeholder="Ad Soyad veya firma adı"
+                maxLength={100}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Telefon (WhatsApp)</label>
+              <Input
+                type="tel"
+                value={editForm.whatsapp}
+                onChange={(e) => setEditForm((f) => ({ ...f, whatsapp: e.target.value }))}
+                placeholder="5xx xxx xx xx"
+                maxLength={32}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Üyelik Durumu</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                <Button type="button" size="sm"
+                  variant={editForm.is_approved ? "default" : "outline"}
+                  onClick={() => setEditForm((f) => ({ ...f, is_approved: true }))}
+                  className={`h-8 text-[11px] ${editForm.is_approved ? "bg-gold-gradient text-gold-foreground" : ""}`}>
+                  <Check className="size-3 mr-1" /> Onaylı
+                </Button>
+                <Button type="button" size="sm"
+                  variant={!editForm.is_approved ? "default" : "outline"}
+                  onClick={() => setEditForm((f) => ({ ...f, is_approved: false }))}
+                  className={`h-8 text-[11px] ${!editForm.is_approved ? "bg-gold-gradient text-gold-foreground" : ""}`}>
+                  <XIcon className="size-3 mr-1" /> Onay Bekliyor
+                </Button>
+              </div>
+            </div>
+            {editingUser && (
+              <div className="space-y-1.5 pt-1 border-t border-border">
+                <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Hesap Erişimi</label>
+                <Button type="button" size="sm" variant="outline" onClick={toggleEditActive}
+                  disabled={user?.id === editingUser.id}
+                  className={`w-full h-8 text-[11px] ${!editingUser.is_active ? "border-destructive/40 text-destructive" : ""}`}>
+                  {editingUser.is_active
+                    ? <><UserX className="size-3 mr-1" /> Pasife Al</>
+                    : <><UserCheck className="size-3 mr-1" /> Tekrar Aktif Et</>}
+                </Button>
+              </div>
+            )}
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingEdit}>
                 İptal
               </Button>
-              <Button size="sm" onClick={saveUserName} disabled={savingName}
+              <Button size="sm" onClick={saveUserEdit} disabled={savingEdit}
                 className="bg-gold-gradient text-gold-foreground font-semibold">
-                <Save className="size-3.5 mr-1" /> {savingName ? "Kaydediliyor..." : "Kaydet"}
+                <Save className="size-3.5 mr-1" /> {savingEdit ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </div>
           </div>
