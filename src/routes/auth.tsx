@@ -14,7 +14,24 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+
+  const sendReset = async () => {
+    if (!email) { toast.error("Önce e-posta gir"); return; }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Sıfırlama bağlantısı e-postana gönderildi.");
+      setMode("login");
+    } catch (err: any) {
+      toast.error(err.message ?? "Bir hata oluştu");
+    } finally {
+      setLoading(false);
+    }
+  };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -94,6 +111,18 @@ function AuthPage() {
             {loading ? "..." : mode === "login" ? "Giriş Yap" : "Hesap Oluştur"}
           </Button>
         </form>
+
+        {mode === "login" && (
+          <button
+            type="button"
+            onClick={sendReset}
+            disabled={loading}
+            className="w-full mt-3 text-xs text-gold hover:underline"
+          >
+            Şifremi unuttum
+          </button>
+        )}
+
 
         <button
           onClick={() => setMode(mode === "login" ? "signup" : "login")}
