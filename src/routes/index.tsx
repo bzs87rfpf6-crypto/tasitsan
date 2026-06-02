@@ -120,15 +120,15 @@ function Index() {
           </div>
 
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gold pointer-events-none" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-6 text-gold pointer-events-none" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Örn. far, fren balatası, OEM A2118200561..."
-              className="pl-12 pr-12 h-14 sm:h-16 text-base sm:text-lg bg-card border-2 border-border focus-visible:border-gold rounded-2xl shadow-gold"
+              className="pl-12 pr-12 h-16 sm:h-[4.5rem] text-base sm:text-lg bg-card border-2 border-gold/60 focus-visible:border-gold rounded-2xl animate-search-glow"
             />
             {q && (
-              <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 size-8 rounded-full hover:bg-muted grid place-items-center">
+              <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 size-9 rounded-full hover:bg-gold/15 grid place-items-center tap-gold">
                 <X className="size-4" />
               </button>
             )}
@@ -136,7 +136,7 @@ function Index() {
 
           <button
             onClick={() => setPhotoOpen(true)}
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 transition-colors shadow-gold/30"
+            className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 shadow-gold/30"
           >
             <Camera className="size-4" />
             Fotoğraftan Parça Bul
