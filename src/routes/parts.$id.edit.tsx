@@ -175,31 +175,31 @@ function EditPartPage() {
             <span className={`text-[10px] ${totalPhotos >= 3 ? "text-emerald-400" : "text-muted-foreground"}`}>{totalPhotos}/3</span>
           </label>
           <div className="grid grid-cols-3 gap-2">
-            {existingPhotos.map((url, i) => (
-              <div key={url} className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                <img src={url} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setExistingPhotos(existingPhotos.filter((_, j) => j !== i))}
-                  className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
-                  <X className="size-3.5" />
-                </button>
-              </div>
-            ))}
-            {newFiles.map((f, i) => (
-              <div key={`${f.name}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                <img src={previews[i]} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setNewFiles(newFiles.filter((_, j) => j !== i))}
-                  className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
-                  <X className="size-3.5" />
-                </button>
-              </div>
-            ))}
-            {totalPhotos < 6 && (
-              <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-gold grid place-items-center cursor-pointer text-muted-foreground">
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
-                  onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
-                <Upload className="size-6" />
-              </label>
-            )}
+          {totalPhotos > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {existingPhotos.map((url, i) => (
+                <div key={url} className="relative aspect-square rounded-lg overflow-hidden bg-card">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => setExistingPhotos(existingPhotos.filter((_, j) => j !== i))}
+                    className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+              {newFiles.map((f, i) => (
+                <div key={`${f.name}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
+                  <img src={previews[i]} alt="" className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => setNewFiles(newFiles.filter((_, j) => j !== i))}
+                    className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {totalPhotos < 6 && (
+            <PhotoPicker onFiles={(fl) => addFiles(fl)} />
+          )}
           </div>
         </section>
 
