@@ -20,14 +20,15 @@ export const getPartSeo = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { data: part } = await supabaseAdmin
       .from("parts")
-      .select("id,title,description,brand,model,year,oem_code,city,price,photos,condition,status,stock_quantity,created_at,updated_at")
+      .select("id,title,description,brand,model,year,oem_code,oem_codes,engine_code,city,price,photos,condition,status,stock_quantity,created_at,updated_at")
       .eq("id", data.id)
       .maybeSingle();
     if (!part) return null;
     return part as {
       id: string; title: string; description: string | null;
       brand: string | null; model: string | null; year: number | null;
-      oem_code: string | null; city: string | null; price: number | null;
+      oem_code: string | null; oem_codes: string[] | null; engine_code: string | null;
+      city: string | null; price: number | null;
       photos: string[] | null; condition: string; status: string;
       stock_quantity: number | null; created_at: string; updated_at: string;
     };

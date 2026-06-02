@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { OemInput } from "@/components/OemInput";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
 // by <img>, and DNG files balloon memory enough to crash the tab into a reload.
@@ -33,9 +34,11 @@ function SellPage() {
   const [approvalState, setApprovalState] = useState<"loading" | "approved" | "pending">("loading");
 
   const [form, setForm] = useState({
-    title: "", description: "", brand: "", model: "", year: "", oem_code: "",
+    title: "", description: "", brand: "", model: "", year: "", engine_code: "",
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "", whatsapp: "",
   });
+  const [oemCodes, setOemCodes] = useState<string[]>([]);
+  
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -102,6 +105,7 @@ function SellPage() {
     if (!user) return;
     if (files.length < 3) { toast.error("En az 3 fotoğraf yüklemelisin."); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli bir fiyat girin."); return; }
+    if (oemCodes.length === 0) { toast.error("En az bir OEM numarası girin."); return; }
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
@@ -128,7 +132,8 @@ function SellPage() {
         brand: form.brand || null,
         model: form.model || null,
         year: form.year ? parseInt(form.year) : null,
-        oem_code: form.oem_code || null,
+        oem_codes: oemCodes,
+        engine_code: form.engine_code || null,
         category: form.category,
         condition: form.condition,
         price: form.price ? parseFloat(form.price) : null,
@@ -229,8 +234,13 @@ function SellPage() {
           <Input placeholder="Şehir" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="h-12 bg-card" />
         </div>
 
-        <Input placeholder="OEM Kodu *" value={form.oem_code} required
-          onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })}
+        <div className="space-y-1">
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold">OEM Numaraları *</label>
+          <OemInput value={oemCodes} onChange={setOemCodes} required />
+        </div>
+
+        <Input placeholder="Motor Kodu (örn. M271, OM651)" value={form.engine_code}
+          onChange={(e) => setForm({ ...form, engine_code: e.target.value.toUpperCase() })}
           maxLength={60} className="h-12 bg-card font-mono" />
 
         <div>

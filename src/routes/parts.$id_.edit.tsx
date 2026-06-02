@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { OemInput } from "@/components/OemInput";
 
 const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
@@ -32,9 +33,10 @@ function EditPartPage() {
   const [loading, setLoading] = useState(true);
   const [notOwner, setNotOwner] = useState(false);
   const [form, setForm] = useState({
-    title: "", description: "", brand: "", model: "", year: "", oem_code: "",
+    title: "", description: "", brand: "", model: "", year: "", engine_code: "",
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "",
   });
+  const [oemCodes, setOemCodes] = useState<string[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +71,7 @@ function EditPartPage() {
         brand: data.brand ?? "",
         model: data.model ?? "",
         year: data.year?.toString() ?? "",
-        oem_code: data.oem_code ?? "",
+        engine_code: data.engine_code ?? "",
         category: data.category ?? "Motor",
         condition: data.condition ?? "used",
         price: data.price?.toString() ?? "",
@@ -77,6 +79,8 @@ function EditPartPage() {
         city: data.city ?? "",
       });
       setExistingPhotos((data.photos as string[]) ?? []);
+      const arr = (data.oem_codes as string[] | null) ?? (data.oem_code ? [data.oem_code] : []);
+      setOemCodes(arr);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -126,7 +130,8 @@ function EditPartPage() {
         brand: form.brand || null,
         model: form.model || null,
         year: form.year ? parseInt(form.year) : null,
-        oem_code: form.oem_code || null,
+        oem_codes: oemCodes,
+        engine_code: form.engine_code || null,
         category: form.category,
         condition: form.condition,
         price: form.price ? parseFloat(form.price) : null,
@@ -218,8 +223,13 @@ function EditPartPage() {
             onChange={(e) => setForm({ ...form, city: e.target.value })} className="h-12 bg-card" />
         </div>
 
-        <Input placeholder="OEM Kodu" value={form.oem_code} required
-          onChange={(e) => setForm({ ...form, oem_code: e.target.value.toUpperCase() })}
+        <div className="space-y-1">
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold">OEM Numaraları *</label>
+          <OemInput value={oemCodes} onChange={setOemCodes} required />
+        </div>
+
+        <Input placeholder="Motor Kodu" value={form.engine_code}
+          onChange={(e) => setForm({ ...form, engine_code: e.target.value.toUpperCase() })}
           maxLength={60} className="h-12 bg-card font-mono" />
 
         <div>

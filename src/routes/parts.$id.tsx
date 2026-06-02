@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { recordPartView } from "@/lib/views";
+import { EquivalentParts } from "@/components/EquivalentParts";
+import { AiOemSuggester } from "@/components/AiOemSuggester";
 
 export const Route = createFileRoute("/parts/$id")({
   loader: async ({ params }) => {
@@ -35,13 +37,17 @@ export const Route = createFileRoute("/parts/$id")({
         links: [{ rel: "canonical", href: url }],
       };
     }
-    const titleParts = [p.title, p.oem_code, p.city].filter(Boolean).join(" • ");
+    const allOems = (p.oem_codes && p.oem_codes.length > 0 ? p.oem_codes : (p.oem_code ? [p.oem_code] : []));
+    const primaryOem = allOems[0] ?? null;
+    const oemListTxt = allOems.length > 0 ? allOems.join(", ") : null;
+    const titleParts = [p.title, primaryOem, p.city].filter(Boolean).join(" • ");
     const seoTitle = `${titleParts} | Taşıtsan Parça Borsası`;
     const brandModel = [p.brand, p.model, p.year].filter(Boolean).join(" ");
     const priceTxt = p.price != null ? `${Number(p.price).toLocaleString("tr-TR")} ₺` : "Fiyat sorunuz";
     const desc = (p.description?.slice(0, 140) ??
-      `${p.title}${brandModel ? ` — ${brandModel}` : ""}${p.oem_code ? `, OEM: ${p.oem_code}` : ""}${p.city ? `, ${p.city}` : ""}. ${priceTxt}. Taşıtsan Parça Borsası üzerinden güvenle teklif alın.`)
+      `${p.title}${brandModel ? ` — ${brandModel}` : ""}${oemListTxt ? `, OEM: ${oemListTxt}` : ""}${p.engine_code ? `, Motor: ${p.engine_code}` : ""}${p.city ? `, ${p.city}` : ""}. ${priceTxt}. Taşıtsan Parça Borsası üzerinden güvenle teklif alın.`)
       .replace(/\s+/g, " ").trim();
+    const keywords = [...allOems, p.engine_code, p.brand, p.model, p.title].filter(Boolean).join(", ");
     const image = (p.photos ?? []).find((u) => typeof u === "string" && u.startsWith("http")) ?? null;
     const availability = (p.stock_quantity ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
     const condition =
@@ -54,8 +60,9 @@ export const Route = createFileRoute("/parts/$id")({
       "@type": "Product",
       name: p.title,
       description: desc,
-      sku: p.oem_code ?? p.id,
-      mpn: p.oem_code ?? undefined,
+      sku: primaryOem ?? p.id,
+      mpn: primaryOem ?? undefined,
+      gtin: allOems.length > 1 ? allOems : undefined,
       brand: p.brand ? { "@type": "Brand", name: p.brand } : undefined,
       image: image ? [image] : undefined,
       itemCondition: condition,
@@ -73,6 +80,7 @@ export const Route = createFileRoute("/parts/$id")({
     const meta: Array<Record<string, string>> = [
       { title: seoTitle },
       { name: "description", content: desc },
+      ...(keywords ? [{ name: "keywords", content: keywords }] : []),
       { property: "og:title", content: seoTitle },
       { property: "og:description", content: desc },
       { property: "og:type", content: "product" },
@@ -101,7 +109,9 @@ interface PartFull {
   city: string | null; photos: string[] | null;
   seller_id: string; created_at: string;
   oem_code: string | null; stock_quantity: number | null;
+  oem_codes: string[] | null; engine_code: string | null;
 }
+
 
 function PartDetail() {
   const { id } = useParams({ from: "/parts/$id" });
@@ -131,7 +141,7 @@ function PartDetail() {
     (async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,stock_quantity")
+        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,oem_codes,engine_code,stock_quantity")
         .eq("id", id).maybeSingle();
       if (cancelled) return;
       if (error) {
@@ -324,14 +334,38 @@ function PartDetail() {
           {part.year && <Info icon={<Calendar className="size-4" />} label="Yıl" value={String(part.year)} />}
           {part.category && <Info icon={<Tag className="size-4" />} label="Kategori" value={part.category} />}
           {part.city && <Info icon={<MapPin className="size-4" />} label="Bölge" value={part.city} />}
-          {part.oem_code && <Info icon={<Tag className="size-4" />} label="OEM Kodu" value={part.oem_code} />}
+          {part.engine_code && <Info icon={<Tag className="size-4" />} label="Motor Kodu" value={part.engine_code} />}
         </div>
+
+        {((part.oem_codes && part.oem_codes.length > 0) || part.oem_code) && (
+          <div className="bg-card rounded-xl p-4 border border-border space-y-2">
+            <h2 className="text-xs uppercase tracking-wider text-gold">OEM Numaraları</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {(part.oem_codes && part.oem_codes.length > 0 ? part.oem_codes : [part.oem_code!]).map((code) => (
+                <span key={code} className="font-mono text-xs px-2.5 py-1 rounded-md bg-background border border-gold/30 text-gold">
+                  {code}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {part.description && (
           <div className="bg-card rounded-xl p-4 border border-border">
             <h2 className="text-xs uppercase tracking-wider text-gold mb-2">Açıklama</h2>
             <p className="text-sm whitespace-pre-wrap leading-relaxed">{part.description}</p>
           </div>
+        )}
+
+        <EquivalentParts partId={part.id} />
+
+        {part.oem_code && (
+          <AiOemSuggester
+            oem={part.oem_code}
+            brand={part.brand}
+            model={part.model}
+            title={part.title}
+          />
         )}
 
         <div className="bg-card rounded-xl p-4 border border-gold/30 flex gap-3">
@@ -342,6 +376,7 @@ function PartDetail() {
           </p>
         </div>
       </div>
+
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border safe-bottom">
         <div className="max-w-md mx-auto p-3 space-y-2">
