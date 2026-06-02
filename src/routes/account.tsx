@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { SafePartImage } from "@/components/SafePartImage";
+import { AvatarUploader } from "@/components/AvatarUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
