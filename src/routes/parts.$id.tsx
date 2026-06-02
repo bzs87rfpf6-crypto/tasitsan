@@ -37,13 +37,17 @@ export const Route = createFileRoute("/parts/$id")({
         links: [{ rel: "canonical", href: url }],
       };
     }
-    const titleParts = [p.title, p.oem_code, p.city].filter(Boolean).join(" • ");
+    const allOems = (p.oem_codes && p.oem_codes.length > 0 ? p.oem_codes : (p.oem_code ? [p.oem_code] : []));
+    const primaryOem = allOems[0] ?? null;
+    const oemListTxt = allOems.length > 0 ? allOems.join(", ") : null;
+    const titleParts = [p.title, primaryOem, p.city].filter(Boolean).join(" • ");
     const seoTitle = `${titleParts} | Taşıtsan Parça Borsası`;
     const brandModel = [p.brand, p.model, p.year].filter(Boolean).join(" ");
     const priceTxt = p.price != null ? `${Number(p.price).toLocaleString("tr-TR")} ₺` : "Fiyat sorunuz";
     const desc = (p.description?.slice(0, 140) ??
-      `${p.title}${brandModel ? ` — ${brandModel}` : ""}${p.oem_code ? `, OEM: ${p.oem_code}` : ""}${p.city ? `, ${p.city}` : ""}. ${priceTxt}. Taşıtsan Parça Borsası üzerinden güvenle teklif alın.`)
+      `${p.title}${brandModel ? ` — ${brandModel}` : ""}${oemListTxt ? `, OEM: ${oemListTxt}` : ""}${p.engine_code ? `, Motor: ${p.engine_code}` : ""}${p.city ? `, ${p.city}` : ""}. ${priceTxt}. Taşıtsan Parça Borsası üzerinden güvenle teklif alın.`)
       .replace(/\s+/g, " ").trim();
+    const keywords = [...allOems, p.engine_code, p.brand, p.model, p.title].filter(Boolean).join(", ");
     const image = (p.photos ?? []).find((u) => typeof u === "string" && u.startsWith("http")) ?? null;
     const availability = (p.stock_quantity ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock";
     const condition =
