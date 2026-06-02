@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SellRouteImport } from './routes/sell'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
+import { Route as MyRequestsRouteImport } from './routes/my-requests'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -39,6 +40,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RequestsRoute = RequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyRequestsRoute = MyRequestsRouteImport.update({
+  id: '/my-requests',
+  path: '/my-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FavoritesRoute = FavoritesRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
+  '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
+  '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
+  '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/favorites'
+    | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sell'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/favorites'
+    | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sell'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/favorites'
+    | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sell'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   FavoritesRoute: typeof FavoritesRoute
+  MyRequestsRoute: typeof MyRequestsRoute
   RequestsRoute: typeof RequestsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellRoute: typeof SellRoute
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/requests'
       preLoaderRoute: typeof RequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-requests': {
+      id: '/my-requests'
+      path: '/my-requests'
+      fullPath: '/my-requests'
+      preLoaderRoute: typeof MyRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/favorites': {
@@ -261,6 +281,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   FavoritesRoute: FavoritesRoute,
+  MyRequestsRoute: MyRequestsRoute,
   RequestsRoute: RequestsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SellRoute: SellRoute,
@@ -271,3 +292,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
