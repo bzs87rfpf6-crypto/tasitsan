@@ -18,7 +18,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
-import { Route as PartsIdEditRouteImport } from './routes/parts.$id.edit'
+import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -66,9 +66,9 @@ const PartsIdRoute = PartsIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartsIdEditRoute = PartsIdEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => PartsIdRoute,
+  id: '/parts/$id_/edit',
+  path: '/parts/$id/edit',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -80,7 +80,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/parts/$id': typeof PartsIdRouteWithChildren
+  '/parts/$id': typeof PartsIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -92,7 +92,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/parts/$id': typeof PartsIdRouteWithChildren
+  '/parts/$id': typeof PartsIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesById {
@@ -105,8 +105,8 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sell': typeof SellRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/parts/$id': typeof PartsIdRouteWithChildren
-  '/parts/$id/edit': typeof PartsIdEditRoute
+  '/parts/$id': typeof PartsIdRoute
+  '/parts/$id_/edit': typeof PartsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -144,7 +144,7 @@ export interface FileRouteTypes {
     | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
-    | '/parts/$id/edit'
+    | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -156,7 +156,8 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SellRoute: typeof SellRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  PartsIdRoute: typeof PartsIdRouteWithChildren
+  PartsIdRoute: typeof PartsIdRoute
+  PartsIdEditRoute: typeof PartsIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -224,26 +225,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/parts/$id/edit': {
-      id: '/parts/$id/edit'
-      path: '/edit'
+    '/parts/$id_/edit': {
+      id: '/parts/$id_/edit'
+      path: '/parts/$id/edit'
       fullPath: '/parts/$id/edit'
       preLoaderRoute: typeof PartsIdEditRouteImport
-      parentRoute: typeof PartsIdRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface PartsIdRouteChildren {
-  PartsIdEditRoute: typeof PartsIdEditRoute
-}
-
-const PartsIdRouteChildren: PartsIdRouteChildren = {
-  PartsIdEditRoute: PartsIdEditRoute,
-}
-
-const PartsIdRouteWithChildren =
-  PartsIdRoute._addFileChildren(PartsIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -254,7 +244,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SellRoute: SellRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  PartsIdRoute: PartsIdRouteWithChildren,
+  PartsIdRoute: PartsIdRoute,
+  PartsIdEditRoute: PartsIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
