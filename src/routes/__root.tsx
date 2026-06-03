@@ -197,7 +197,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <PwaLaunchDiagnostics />
-        <Outlet />
+        <div data-pwa-ready="true">
+          <Outlet />
+        </div>
         <DeepLinkHandler />
         <InstallPrompt />
         <SplashScreen />
