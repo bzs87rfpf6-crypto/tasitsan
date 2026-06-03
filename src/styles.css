@@ -77,11 +77,51 @@
   --shadow-gold: 0 8px 30px -10px oklch(0.82 0.16 86 / 0.45);
 }
 
+/* Legacy WebView fallback (Huawei EMUI / Chrome <111 / older Android WebView).
+   oklch() returns an invalid value on those engines, which collapses every
+   themed surface to canvas defaults — producing a fully black "PWA splash"
+   that never paints UI. Re-declare the palette in sRGB hex as a safety net. */
+@supports not (color: oklch(0% 0 0)) {
+  :root {
+    --background: #0a0907;
+    --foreground: #f5f2eb;
+    --card: #161310;
+    --card-foreground: #f5f2eb;
+    --popover: #161310;
+    --popover-foreground: #f5f2eb;
+    --primary: #d4a017;
+    --primary-foreground: #14110e;
+    --gold: #d4a017;
+    --gold-foreground: #14110e;
+    --gold-muted: #8a7028;
+    --secondary: #1d1a16;
+    --secondary-foreground: #f5f2eb;
+    --muted: #1d1a16;
+    --muted-foreground: #aaa292;
+    --accent: #d4a017;
+    --accent-foreground: #14110e;
+    --destructive: #c83a1f;
+    --destructive-foreground: #faf6ef;
+    --border: #3a342c;
+    --input: #2a2620;
+    --ring: #d4a017;
+    --whatsapp: #25d366;
+    --gradient-gold: linear-gradient(135deg, #e6b53a, #b8861a);
+    --shadow-gold: 0 8px 30px -10px rgba(212, 160, 23, 0.45);
+  }
+}
+
 .dark { /* same — app is dark-only */ }
 
 @layer base {
   * { border-color: var(--color-border); }
-  html, body { background-color: var(--color-background); color: var(--color-foreground); }
+  html, body {
+    /* Hard hex fallback first so legacy WebViews never end up with a black/blank canvas */
+    background-color: #0a0907;
+    background-color: var(--color-background);
+    color: #f5f2eb;
+    color: var(--color-foreground);
+  }
   body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0.02em; }
 }
@@ -128,8 +168,9 @@
     overscroll-behavior-y: none;
   }
   body {
-    /* Avoid iOS rubber-band background flash */
-    background: hsl(var(--background, 0 0% 4%));
+    /* Avoid iOS rubber-band background flash; hex fallback for legacy WebViews */
+    background-color: #0a0907;
+    background-color: var(--color-background);
   }
   /* Respect iOS safe area */
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
