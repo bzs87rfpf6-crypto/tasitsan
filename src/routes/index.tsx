@@ -242,8 +242,29 @@ function Index() {
         </div>
       </section>
 
+      {/* 🚨 Acil Parça Talebi CTA */}
+      <section className="max-w-3xl mx-auto px-4 pt-5">
+        <Link
+          to="/urgent/new"
+          className="tap-gold relative w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-destructive/25 via-destructive/10 to-background border-2 border-destructive/60 text-left shadow-lg overflow-hidden no-underline animate-pulse"
+        >
+          <div className="size-12 rounded-2xl bg-destructive/20 grid place-items-center shrink-0">
+            <span className="text-2xl">🚨</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-base sm:text-lg tracking-wide text-destructive">
+              Acil Parça Talebi Oluştur
+            </p>
+            <p className="text-[11px] sm:text-xs text-muted-foreground">
+              Tedarikçilere anında iletilsin · bilgileriniz gizli kalır
+            </p>
+          </div>
+          <span className="text-destructive font-bold text-xl shrink-0">→</span>
+        </Link>
+      </section>
+
       {/* Akıllı Talep Havuzu CTA — vurgulu */}
-      <section className="max-w-3xl mx-auto px-4 pt-6">
+      <section className="max-w-3xl mx-auto px-4 pt-4">
         <button
           onClick={() => setRequestOpen(true)}
           className="tap-gold relative w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-gold/25 via-gold/10 to-background border-2 animate-gold-pulse-border text-left shadow-gold overflow-hidden"

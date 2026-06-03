@@ -18,6 +18,7 @@ import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
 import { AdminVerificationsPanel } from "@/components/admin/AdminVerificationsPanel";
 import { BotFilterPanel } from "@/components/admin/BotFilterPanel";
 import { StockEvaluationPanel } from "@/components/admin/StockEvaluationPanel";
+import { UrgentRequestsPanel } from "@/components/admin/UrgentRequestsPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "verifications" | "bots" | "stock" | "settings";
+type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "settings";
 
 interface ProfileRow {
   id: string;
@@ -481,6 +482,7 @@ function AdminPage() {
             ["users", `Kullanıcılar (${users.length})`],
             ["inquiries", `Teklifler (${inquiries.length})`],
             ["requests", `Talepler (${requests.length})`],
+            ["urgent", "🚨 Acil"],
             ["verifications", "Doğrulama"],
             ["bots", "Bot Filtreleri"],
             ["stock", "Stok Analizi"],
@@ -576,6 +578,8 @@ function AdminPage() {
           />
         ) : tab === "verifications" ? (
           <AdminVerificationsPanel currentUserId={user?.id ?? null} />
+        ) : tab === "urgent" ? (
+          <UrgentRequestsPanel />
         ) : tab === "bots" ? (
           <BotFilterPanel />
         ) : tab === "stock" ? (
