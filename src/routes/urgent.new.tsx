@@ -154,7 +154,7 @@ function NewUrgent() {
           <p className="text-[10px] uppercase tracking-wider text-gold font-semibold">İletişim (gizli kalır)</p>
           <Field label="Ad Soyad *">
             <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              maxLength={100} placeholder={profile?.display_name ?? ""} />
+              maxLength={100} />
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Telefon *">
