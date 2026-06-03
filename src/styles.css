@@ -168,8 +168,9 @@
     overscroll-behavior-y: none;
   }
   body {
-    /* Avoid iOS rubber-band background flash */
-    background: hsl(var(--background, 0 0% 4%));
+    /* Avoid iOS rubber-band background flash; hex fallback for legacy WebViews */
+    background-color: #0a0907;
+    background-color: var(--color-background);
   }
   /* Respect iOS safe area */
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
