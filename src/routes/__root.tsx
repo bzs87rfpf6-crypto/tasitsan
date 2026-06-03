@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SplashScreen } from "@/components/SplashScreen";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { DeepLinkHandler } from "@/components/DeepLinkHandler";
+import { PwaLaunchDiagnostics } from "@/components/PwaLaunchDiagnostics";
 
 function NotFoundComponent() {
   return (
@@ -102,6 +103,39 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ],
       scripts: [
         {
+          children: `(function(){
+  window.__tasitsanLaunchErrors = window.__tasitsanLaunchErrors || [];
+  function record(type, payload) {
+    var item = payload || {};
+    item.type = type;
+    item.at = Date.now();
+    window.__tasitsanLaunchErrors.push(item);
+    if (window.__tasitsanLaunchErrors.length > 20) window.__tasitsanLaunchErrors.shift();
+    try { console.error('[Taşıtsan PWA] startup ' + type, item); } catch (_) {}
+    try {
+      if (window.__lovableEvents && window.__lovableEvents.captureException) {
+        window.__lovableEvents.captureException(new Error(item.message || 'PWA startup error'), { source: 'pwa_early_boot', type: type, item: item }, { mechanism: type, handled: false, severity: 'error' });
+      }
+    } catch (_) {}
+  }
+  window.addEventListener('error', function(event) {
+    record('onerror', { message: event.message, filename: event.filename, lineno: event.lineno, colno: event.colno, stack: event.error && event.error.stack });
+  });
+  window.addEventListener('unhandledrejection', function(event) {
+    var reason = event.reason || {};
+    record('unhandledrejection', { message: reason.message || String(reason), stack: reason.stack });
+  });
+  setTimeout(function(){
+    try {
+      var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+      var text = (document.body && document.body.innerText || '').trim();
+      var hasApp = !!document.querySelector('main, header, nav, [data-pwa-ready="true"]');
+      if (standalone && !hasApp && text.length < 20) record('blank_screen', { message: 'PWA standalone launch stayed blank', path: location.href, userAgent: navigator.userAgent });
+    } catch (_) {}
+  }, 5000);
+})();`,
+        },
+        {
           type: "application/ld+json",
           children: JSON.stringify({
             "@context": "https://schema.org",
@@ -162,6 +196,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <PwaLaunchDiagnostics />
         <Outlet />
         <DeepLinkHandler />
         <InstallPrompt />
