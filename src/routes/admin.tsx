@@ -578,6 +578,8 @@ function AdminPage() {
           <AdminVerificationsPanel currentUserId={user?.id ?? null} />
         ) : tab === "bots" ? (
           <BotFilterPanel />
+        ) : tab === "stock" ? (
+          <StockEvaluationPanel />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
