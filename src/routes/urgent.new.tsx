@@ -20,7 +20,7 @@ const CATEGORIES = [
 ];
 
 function NewUrgent() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const nav = useNavigate();
   const [form, setForm] = useState({
     oem_code: "",
