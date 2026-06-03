@@ -17,6 +17,7 @@ import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
 import { AdminVerificationsPanel } from "@/components/admin/AdminVerificationsPanel";
 import { BotFilterPanel } from "@/components/admin/BotFilterPanel";
+import { StockEvaluationPanel } from "@/components/admin/StockEvaluationPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "verifications" | "bots" | "settings";
+type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "verifications" | "bots" | "stock" | "settings";
 
 interface ProfileRow {
   id: string;
@@ -482,6 +483,7 @@ function AdminPage() {
             ["requests", `Talepler (${requests.length})`],
             ["verifications", "Doğrulama"],
             ["bots", "Bot Filtreleri"],
+            ["stock", "Stok Analizi"],
             ["settings", "Ayarlar"],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
@@ -576,6 +578,8 @@ function AdminPage() {
           <AdminVerificationsPanel currentUserId={user?.id ?? null} />
         ) : tab === "bots" ? (
           <BotFilterPanel />
+        ) : tab === "stock" ? (
+          <StockEvaluationPanel />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
