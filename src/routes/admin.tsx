@@ -27,7 +27,7 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "verifications" | "bots" | "settings";
+type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "verifications" | "bots" | "stock" | "settings";
 
 interface ProfileRow {
   id: string;
