@@ -483,6 +483,7 @@ function AdminPage() {
             ["requests", `Talepler (${requests.length})`],
             ["verifications", "Doğrulama"],
             ["bots", "Bot Filtreleri"],
+            ["stock", "Stok Analizi"],
             ["settings", "Ayarlar"],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
