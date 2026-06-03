@@ -175,6 +175,8 @@ function EditPartPage() {
           <ArrowLeft className="size-3.5" /> Hesabıma dön
         </button>
 
+        <StockInsightsCard partId={id} />
+
         <section className="space-y-2">
           <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
             <span>Fotoğraflar (3-6)</span>
