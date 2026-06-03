@@ -3,7 +3,13 @@ import emblem from "@/assets/tasitsan-emblem.png.asset.json";
 
 /**
  * Açılış ekranı. Sadece PWA standalone modunda veya ilk yüklemede gösterilir.
- * Sayfa içinde geçişlerde tetiklenmez.
+ *
+ * Önemli: Eski WebView'lerde (Huawei EMUI 10.1 / Chrome <111) oklch renkleri
+ * desteklenmediği için tema değişkenleri çözümlenemiyor ve uygulama tamamen
+ * siyah kalabiliyor. Bu yüzden splash'i:
+ *   - Sabit hex renklerle çiziyoruz (CSS değişkenlerine bağımlı değil).
+ *   - Her durumda en fazla 1500ms sonra GARANTİ olarak kaldırıyoruz
+ *     (state hatası, animasyon takılması, vs. olsa bile).
  */
 export function SplashScreen() {
   const [visible, setVisible] = useState(false);
@@ -11,22 +17,31 @@ export function SplashScreen() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // Sadece standalone (ana ekrana eklenmiş) veya sessionda ilk açılışta göster
-    const isStandalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      // iOS Safari
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-    const shown = sessionStorage.getItem("tasitsan_splash_shown");
-    if (!isStandalone && shown) return;
+
+    let shouldShow = false;
+    try {
+      const isStandalone =
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      const shown = sessionStorage.getItem("tasitsan_splash_shown");
+      shouldShow = isStandalone || !shown;
+      if (shouldShow) sessionStorage.setItem("tasitsan_splash_shown", "1");
+    } catch {
+      // sessionStorage / matchMedia eski WebView'de patlayabilir — splash atla
+      shouldShow = false;
+    }
+
+    if (!shouldShow) return;
 
     setVisible(true);
-    sessionStorage.setItem("tasitsan_splash_shown", "1");
-
     const leaveTimer = setTimeout(() => setLeaving(true), 900);
-    const hideTimer = setTimeout(() => setVisible(false), 1400);
+    const hideTimer = setTimeout(() => setVisible(false), 1500);
+    // Son güvenlik ağı: animasyon/JS hatası olsa bile 3sn'de mutlaka kapat.
+    const failsafe = setTimeout(() => setVisible(false), 3000);
     return () => {
       clearTimeout(leaveTimer);
       clearTimeout(hideTimer);
+      clearTimeout(failsafe);
     };
   }, []);
 
@@ -34,25 +49,45 @@ export function SplashScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${
-        leaving ? "opacity-0" : "opacity-100"
-      }`}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#0a0907",
+        color: "#f5f2eb",
+        opacity: leaving ? 0 : 1,
+        transition: "opacity 500ms ease",
+      }}
       aria-hidden="true"
     >
-      <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-500">
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.25rem" }}>
         <img
           src={emblem.url}
           alt=""
           width={120}
           height={120}
-          className="size-28 drop-shadow-[0_0_30px_rgba(212,160,23,0.35)]"
+          style={{ width: 112, height: 112, filter: "drop-shadow(0 0 30px rgba(212,160,23,0.35))" }}
         />
-        <div className="text-center">
-          <h1 className="font-display text-2xl text-gold tracking-wide">Taşıtsan</h1>
-          <p className="mt-1 text-xs text-muted-foreground">Parça Borsası</p>
+        <div style={{ textAlign: "center" }}>
+          <h1 style={{ fontFamily: "Bebas Neue, Impact, sans-serif", fontSize: "1.5rem", color: "#d4a017", letterSpacing: "0.04em", margin: 0 }}>
+            Taşıtsan
+          </h1>
+          <p style={{ marginTop: 4, fontSize: "0.75rem", color: "#aaa292" }}>Parça Borsası</p>
         </div>
-        <div className="mt-2 h-1 w-24 overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-full origin-left animate-[splash-bar_900ms_ease-out_forwards] bg-gold-gradient" />
+        <div style={{ marginTop: 8, height: 4, width: 96, overflow: "hidden", borderRadius: 999, backgroundColor: "#1d1a16" }}>
+          <div
+            style={{
+              height: "100%",
+              width: "100%",
+              transformOrigin: "left",
+              backgroundImage: "linear-gradient(135deg, #e6b53a, #b8861a)",
+              animation: "splash-bar 900ms ease-out forwards",
+            }}
+          />
         </div>
       </div>
       <style>{`
