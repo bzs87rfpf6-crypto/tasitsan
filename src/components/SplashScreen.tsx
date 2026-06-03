@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import emblem from "@/assets/tasitsan-emblem.png.asset.json";
+
+const EMBLEM_URL = "/icon-192.png";
 
 /**
  * Açılış ekranı. Sadece PWA standalone modunda veya ilk yüklemede gösterilir.
@@ -8,6 +9,7 @@ import emblem from "@/assets/tasitsan-emblem.png.asset.json";
  * desteklenmediği için tema değişkenleri çözümlenemiyor ve uygulama tamamen
  * siyah kalabiliyor. Bu yüzden splash'i:
  *   - Sabit hex renklerle çiziyoruz (CSS değişkenlerine bağımlı değil).
+ *   - Vite/asset import zincirine bağımlı olmayan public ikonunu kullanıyoruz.
  *   - Her durumda en fazla 1500ms sonra GARANTİ olarak kaldırıyoruz
  *     (state hatası, animasyon takılması, vs. olsa bile).
  */
@@ -66,7 +68,7 @@ export function SplashScreen() {
     >
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.25rem" }}>
         <img
-          src={emblem.url}
+          src={EMBLEM_URL}
           alt=""
           width={120}
           height={120}
