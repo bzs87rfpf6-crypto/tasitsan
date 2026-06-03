@@ -275,18 +275,17 @@ function BulkUploadPage() {
             details.push(`Satır ${r.__index}: ${r.oem[0]} ile eşleşen ilan bulunamadı`);
             continue;
           }
-          const patch: Record<string, unknown> =
-            mode === "stock"
-              ? { stock_quantity: r.qty }
-              : {
-                  title: r.title,
-                  description: r.description || null,
-                  brand: r.vehicleBrand || null,
-                  model: r.vehicleModel || null,
-                  year: r.year,
-                  price: r.price,
-                  stock_quantity: r.qty,
-                };
+          const patch = mode === "stock"
+            ? { stock_quantity: r.qty }
+            : {
+                title: r.title,
+                description: r.description || null,
+                brand: r.vehicleBrand || null,
+                model: r.vehicleModel || null,
+                year: r.year,
+                price: r.price,
+                stock_quantity: r.qty,
+              };
           const { error } = await supabase.from("parts").update(patch).eq("id", found.id);
           if (error) throw error;
           ok++;
