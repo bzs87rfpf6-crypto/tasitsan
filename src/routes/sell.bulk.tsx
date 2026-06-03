@@ -6,7 +6,7 @@ import { ArrowLeft, Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircl
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { parseOemList } from "@/lib/oem";
