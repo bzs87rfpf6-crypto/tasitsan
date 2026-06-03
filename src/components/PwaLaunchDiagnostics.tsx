@@ -33,6 +33,13 @@ function isBlankLaunchFrame() {
   return !appRoot && !hasEnoughText;
 }
 
+async function cleanupStaleAppShellCaches() {
+  if (!("caches" in window)) return;
+  const cacheNames = await caches.keys();
+  const staleCaches = cacheNames.filter((name) => /(^|-)precache-v\d+-|(^|-)runtime-|(^|-)googleAnalytics-/.test(name));
+  await Promise.allSettled(staleCaches.map((name) => caches.delete(name)));
+}
+
 async function cleanupStaleAppShellWorkers() {
   if (!("serviceWorker" in navigator)) return;
   const registrations = await navigator.serviceWorker.getRegistrations();
@@ -47,6 +54,8 @@ export function PwaLaunchDiagnostics() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    document.documentElement.setAttribute("data-pwa-hydrated", "true");
+
     const standalone = isStandaloneLaunch();
     console.info("[Taşıtsan PWA] launch", {
       standalone,
@@ -55,7 +64,7 @@ export function PwaLaunchDiagnostics() {
       userAgent: navigator.userAgent,
     });
 
-    cleanupStaleAppShellWorkers().catch((error) => {
+    Promise.all([cleanupStaleAppShellWorkers(), cleanupStaleAppShellCaches()]).catch((error) => {
       console.error("[Taşıtsan PWA] service worker cleanup failed", error);
       reportLovableError(error, { source: "pwa_launch", phase: "service_worker_cleanup" });
     });
