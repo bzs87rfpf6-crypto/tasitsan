@@ -241,8 +241,10 @@ export type Database = {
           engine_code: string | null
           full_name: string
           id: string
+          is_urgent: boolean
           message: string
           model: string | null
+          notes: string | null
           oem_code: string | null
           part_name: string | null
           phone: string
@@ -264,8 +266,10 @@ export type Database = {
           engine_code?: string | null
           full_name: string
           id?: string
+          is_urgent?: boolean
           message: string
           model?: string | null
+          notes?: string | null
           oem_code?: string | null
           part_name?: string | null
           phone: string
@@ -287,8 +291,10 @@ export type Database = {
           engine_code?: string | null
           full_name?: string
           id?: string
+          is_urgent?: boolean
           message?: string
           model?: string | null
+          notes?: string | null
           oem_code?: string | null
           part_name?: string | null
           phone?: string
@@ -533,9 +539,9 @@ export type Database = {
       request_quotes: {
         Row: {
           admin_notes: string | null
-          condition: string
+          condition: string | null
           created_at: string
-          delivery_time: string
+          delivery_time: string | null
           id: string
           note: string | null
           price: number
@@ -544,13 +550,14 @@ export type Database = {
           reviewed_by: string | null
           seller_id: string
           status: string
+          stock_quantity: number | null
           updated_at: string
         }
         Insert: {
           admin_notes?: string | null
-          condition: string
+          condition?: string | null
           created_at?: string
-          delivery_time: string
+          delivery_time?: string | null
           id?: string
           note?: string | null
           price: number
@@ -559,13 +566,14 @@ export type Database = {
           reviewed_by?: string | null
           seller_id: string
           status?: string
+          stock_quantity?: number | null
           updated_at?: string
         }
         Update: {
           admin_notes?: string | null
-          condition?: string
+          condition?: string | null
           created_at?: string
-          delivery_time?: string
+          delivery_time?: string | null
           id?: string
           note?: string | null
           price?: number
@@ -574,6 +582,7 @@ export type Database = {
           reviewed_by?: string | null
           seller_id?: string
           status?: string
+          stock_quantity?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -792,12 +801,43 @@ export type Database = {
           year: number
         }[]
       }
+      get_urgent_request_for_supplier: {
+        Args: { _id: string }
+        Returns: {
+          brand: string
+          category: string
+          city: string
+          created_at: string
+          id: string
+          model: string
+          notes: string
+          oem_code: string
+          part_name: string
+          year: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      list_urgent_requests_for_supplier: {
+        Args: { _limit?: number }
+        Returns: {
+          brand: string
+          category: string
+          city: string
+          created_at: string
+          has_my_quote: boolean
+          id: string
+          model: string
+          notes: string
+          oem_code: string
+          part_name: string
+          year: number
+        }[]
       }
       record_part_view: {
         Args: { _part_id: string; _viewer_key: string }
