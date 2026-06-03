@@ -578,6 +578,8 @@ function AdminPage() {
           />
         ) : tab === "verifications" ? (
           <AdminVerificationsPanel currentUserId={user?.id ?? null} />
+        ) : tab === "urgent" ? (
+          <UrgentRequestsPanel />
         ) : tab === "bots" ? (
           <BotFilterPanel />
         ) : tab === "stock" ? (
