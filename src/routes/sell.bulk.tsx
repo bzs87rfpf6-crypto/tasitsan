@@ -198,8 +198,8 @@ function BulkUploadPage() {
   };
 
   const downloadTemplate = () => {
-    const data = [
-      HEADERS,
+    const data: (string | number)[][] = [
+      [...HEADERS],
       ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Çıkma, çiziksiz"],
       ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Hafif boyalı"],
     ];
