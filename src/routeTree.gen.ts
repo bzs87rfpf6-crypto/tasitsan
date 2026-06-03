@@ -20,6 +20,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UIdRouteImport } from './routes/u.$id'
+import { Route as SellBulkRouteImport } from './routes/sell.bulk'
 import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
@@ -79,6 +80,11 @@ const UIdRoute = UIdRouteImport.update({
   path: '/u/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellBulkRoute = SellBulkRouteImport.update({
+  id: '/bulk',
+  path: '/bulk',
+  getParentRoute: () => SellRoute,
+} as any)
 const RequestsIdRoute = RequestsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -104,10 +110,11 @@ export interface FileRoutesByFullPath {
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/sell': typeof SellRoute
+  '/sell': typeof SellRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
+  '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
@@ -120,10 +127,11 @@ export interface FileRoutesByTo {
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/sell': typeof SellRoute
+  '/sell': typeof SellRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
+  '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
@@ -137,10 +145,11 @@ export interface FileRoutesById {
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/sell': typeof SellRoute
+  '/sell': typeof SellRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
+  '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
+    | '/sell/bulk'
     | '/u/$id'
     | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
+    | '/sell/bulk'
     | '/u/$id'
     | '/parts/$id/edit'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
+    | '/sell/bulk'
     | '/u/$id'
     | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
@@ -204,7 +216,7 @@ export interface RootRouteChildren {
   MyRequestsRoute: typeof MyRequestsRoute
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SellRoute: typeof SellRoute
+  SellRoute: typeof SellRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PartsIdRoute: typeof PartsIdRoute
   UIdRoute: typeof UIdRoute
@@ -290,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sell/bulk': {
+      id: '/sell/bulk'
+      path: '/bulk'
+      fullPath: '/sell/bulk'
+      preLoaderRoute: typeof SellBulkRouteImport
+      parentRoute: typeof SellRoute
+    }
     '/requests/$id': {
       id: '/requests/$id'
       path: '/$id'
@@ -326,6 +345,16 @@ const RequestsRouteWithChildren = RequestsRoute._addFileChildren(
   RequestsRouteChildren,
 )
 
+interface SellRouteChildren {
+  SellBulkRoute: typeof SellBulkRoute
+}
+
+const SellRouteChildren: SellRouteChildren = {
+  SellBulkRoute: SellBulkRoute,
+}
+
+const SellRouteWithChildren = SellRoute._addFileChildren(SellRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
@@ -335,7 +364,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyRequestsRoute: MyRequestsRoute,
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
-  SellRoute: SellRoute,
+  SellRoute: SellRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   PartsIdRoute: PartsIdRoute,
   UIdRoute: UIdRoute,

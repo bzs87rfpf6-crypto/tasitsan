@@ -191,6 +191,20 @@ function SellPage() {
       <AppHeader subtitle="Yeni İlan" />
       <form onSubmit={submit} className="max-w-md mx-auto px-4 pt-4 space-y-4">
 
+        <button
+          type="button"
+          onClick={() => nav({ to: "/sell/bulk" })}
+          className="w-full flex items-center justify-between rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-left hover:bg-gold/15 transition"
+        >
+          <div>
+            <div className="text-sm font-semibold text-gold">Toplu Parça Yükle</div>
+            <div className="text-[11px] text-muted-foreground">Excel veya CSV ile birden fazla ilan</div>
+          </div>
+          <span className="text-gold text-lg">→</span>
+        </button>
+
+
+
         <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
           <span className="text-gold font-semibold">Onay süreci:</span> Eklediğiniz ilanlar Taşıtsan ekibi tarafından incelendikten sonra yayınlanır.
         </div>
