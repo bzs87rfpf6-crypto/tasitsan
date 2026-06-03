@@ -44,8 +44,8 @@ function NewUrgent() {
     if (!form.part_name.trim()) { toast.error("Parça adı zorunludur"); return; }
     if (!form.brand.trim() || !form.model.trim()) { toast.error("Araç marka/model zorunludur"); return; }
     if (!form.city.trim()) { toast.error("Şehir zorunludur"); return; }
-    const fullName = (form.full_name.trim() || profile?.display_name || "").trim();
-    const phone = (form.phone.trim() || (profile as any)?.whatsapp || "").trim();
+    const fullName = form.full_name.trim();
+    const phone = form.phone.trim();
     if (!fullName || !phone) { toast.error("Ad soyad ve telefon zorunludur"); return; }
 
     setSubmitting(true);
