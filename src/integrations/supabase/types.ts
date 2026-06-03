@@ -774,6 +774,7 @@ export type Database = {
       }
     }
     Functions: {
+      evaluate_part_stock: { Args: { _part_id: string }; Returns: Json }
       find_equivalent_parts: {
         Args: { _limit?: number; _part_id: string }
         Returns: {
@@ -820,6 +821,7 @@ export type Database = {
           year: number
         }[]
       }
+      stock_dashboard_stats: { Args: never; Returns: Json }
       top_oem_searches: {
         Args: { _limit?: number; _range?: string }
         Returns: {
