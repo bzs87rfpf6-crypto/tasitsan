@@ -350,18 +350,18 @@ function BulkUploadPage() {
           >
             <Download className="size-4 mr-2" /> Şablon İndir
           </Button>
-          <Button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="h-12 bg-gold-gradient text-gold-foreground"
+          <label
+            htmlFor="bulk-file-input"
+            className="h-12 inline-flex items-center justify-center gap-2 rounded-md bg-gold-gradient text-gold-foreground font-medium text-sm cursor-pointer px-4 select-none active:opacity-90"
           >
-            <Upload className="size-4 mr-2" /> Dosya Seç
-          </Button>
-          <Input
+            <Upload className="size-4" /> Dosya Seç
+          </label>
+          <input
             ref={fileRef}
+            id="bulk-file-input"
             type="file"
-            accept=".xlsx,.xls,.csv"
-            className="hidden"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+            className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) onFile(f);
