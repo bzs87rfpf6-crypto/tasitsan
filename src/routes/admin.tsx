@@ -482,6 +482,7 @@ function AdminPage() {
             ["users", `Kullanıcılar (${users.length})`],
             ["inquiries", `Teklifler (${inquiries.length})`],
             ["requests", `Talepler (${requests.length})`],
+            ["urgent", "🚨 Acil"],
             ["verifications", "Doğrulama"],
             ["bots", "Bot Filtreleri"],
             ["stock", "Stok Analizi"],
