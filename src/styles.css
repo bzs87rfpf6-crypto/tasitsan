@@ -38,76 +38,62 @@
 :root {
   --radius: 0.75rem;
 
-  /* Taşıtsan — Black & Gold */
-  --background: oklch(0.14 0.005 60);          /* near-black */
-  --foreground: oklch(0.97 0.01 80);           /* warm white */
-
-  --card: oklch(0.18 0.008 60);
-  --card-foreground: oklch(0.97 0.01 80);
-
-  --popover: oklch(0.18 0.008 60);
-  --popover-foreground: oklch(0.97 0.01 80);
-
-  --primary: oklch(0.82 0.16 86);              /* gold */
-  --primary-foreground: oklch(0.16 0.005 60);
-
-  --gold: oklch(0.82 0.16 86);
-  --gold-foreground: oklch(0.16 0.005 60);
-  --gold-muted: oklch(0.55 0.10 86);
-
-  --secondary: oklch(0.22 0.008 60);
-  --secondary-foreground: oklch(0.97 0.01 80);
-
-  --muted: oklch(0.22 0.008 60);
-  --muted-foreground: oklch(0.7 0.015 80);
-
-  --accent: oklch(0.82 0.16 86);
-  --accent-foreground: oklch(0.16 0.005 60);
-
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.98 0.01 80);
-
-  --border: oklch(0.28 0.01 70);
-  --input: oklch(0.22 0.01 70);
-  --ring: oklch(0.82 0.16 86);
-
-  --whatsapp: oklch(0.68 0.18 145);
-
-  --gradient-gold: linear-gradient(135deg, oklch(0.88 0.14 90), oklch(0.72 0.18 75));
-  --shadow-gold: 0 8px 30px -10px oklch(0.82 0.16 86 / 0.45);
+  /* Taşıtsan — Black & Gold. sRGB defaults keep standalone PWA safe on old WebViews. */
+  --background: #0a0907;
+  --foreground: #f5f2eb;
+  --card: #161310;
+  --card-foreground: #f5f2eb;
+  --popover: #161310;
+  --popover-foreground: #f5f2eb;
+  --primary: #d4a017;
+  --primary-foreground: #14110e;
+  --gold: #d4a017;
+  --gold-foreground: #14110e;
+  --gold-muted: #8a7028;
+  --secondary: #1d1a16;
+  --secondary-foreground: #f5f2eb;
+  --muted: #1d1a16;
+  --muted-foreground: #aaa292;
+  --accent: #d4a017;
+  --accent-foreground: #14110e;
+  --destructive: #c83a1f;
+  --destructive-foreground: #faf6ef;
+  --border: #3a342c;
+  --input: #2a2620;
+  --ring: #d4a017;
+  --whatsapp: #25d366;
+  --gradient-gold: linear-gradient(135deg, #e6b53a, #b8861a);
+  --shadow-gold: 0 8px 30px -10px rgba(212, 160, 23, 0.45);
 }
 
-/* Legacy WebView fallback (Huawei EMUI / Chrome <111 / older Android WebView).
-   oklch() returns an invalid value on those engines, which collapses every
-   themed surface to canvas defaults — producing a fully black "PWA splash"
-   that never paints UI. Re-declare the palette in sRGB hex as a safety net. */
-@supports not (color: oklch(0% 0 0)) {
+/* Modern color upgrade only when the browser explicitly supports oklch(). */
+@supports (color: oklch(0.5 0 0)) {
   :root {
-    --background: #0a0907;
-    --foreground: #f5f2eb;
-    --card: #161310;
-    --card-foreground: #f5f2eb;
-    --popover: #161310;
-    --popover-foreground: #f5f2eb;
-    --primary: #d4a017;
-    --primary-foreground: #14110e;
-    --gold: #d4a017;
-    --gold-foreground: #14110e;
-    --gold-muted: #8a7028;
-    --secondary: #1d1a16;
-    --secondary-foreground: #f5f2eb;
-    --muted: #1d1a16;
-    --muted-foreground: #aaa292;
-    --accent: #d4a017;
-    --accent-foreground: #14110e;
-    --destructive: #c83a1f;
-    --destructive-foreground: #faf6ef;
-    --border: #3a342c;
-    --input: #2a2620;
-    --ring: #d4a017;
-    --whatsapp: #25d366;
-    --gradient-gold: linear-gradient(135deg, #e6b53a, #b8861a);
-    --shadow-gold: 0 8px 30px -10px rgba(212, 160, 23, 0.45);
+    --background: oklch(0.14 0.005 60);
+    --foreground: oklch(0.97 0.01 80);
+    --card: oklch(0.18 0.008 60);
+    --card-foreground: oklch(0.97 0.01 80);
+    --popover: oklch(0.18 0.008 60);
+    --popover-foreground: oklch(0.97 0.01 80);
+    --primary: oklch(0.82 0.16 86);
+    --primary-foreground: oklch(0.16 0.005 60);
+    --gold: oklch(0.82 0.16 86);
+    --gold-foreground: oklch(0.16 0.005 60);
+    --gold-muted: oklch(0.55 0.10 86);
+    --secondary: oklch(0.22 0.008 60);
+    --secondary-foreground: oklch(0.97 0.01 80);
+    --muted: oklch(0.22 0.008 60);
+    --muted-foreground: oklch(0.7 0.015 80);
+    --accent: oklch(0.82 0.16 86);
+    --accent-foreground: oklch(0.16 0.005 60);
+    --destructive: oklch(0.62 0.22 25);
+    --destructive-foreground: oklch(0.98 0.01 80);
+    --border: oklch(0.28 0.01 70);
+    --input: oklch(0.22 0.01 70);
+    --ring: oklch(0.82 0.16 86);
+    --whatsapp: oklch(0.68 0.18 145);
+    --gradient-gold: linear-gradient(135deg, oklch(0.88 0.14 90), oklch(0.72 0.18 75));
+    --shadow-gold: 0 8px 30px -10px oklch(0.82 0.16 86 / 0.45);
   }
 }
 
