@@ -1,0 +1,18 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_TEAM_ID.com.tasitsan.app"],
+        "components": [
+          { "/": "/parts/*", "comment": "Parça detay sayfaları" },
+          { "/": "/requests/*", "comment": "Talep detay sayfaları" },
+          { "/": "/u/*", "comment": "Kullanıcı profilleri" },
+          { "/": "/", "comment": "Anasayfa" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["REPLACE_TEAM_ID.com.tasitsan.app"]
+  }
+}

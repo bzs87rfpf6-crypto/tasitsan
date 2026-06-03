@@ -1,32 +1,38 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
- * Capacitor konfigürasyonu — native (Android APK / iOS IPA) paketleme için.
+ * Capacitor konfigürasyonu — Android APK/AAB ve iOS IPA üretimi için.
  *
- * Lovable sandbox'ında APK/IPA üretemez. Yerelde:
- *   1) Projeyi GitHub'a aktar, klonla
- *   2) bun install
- *   3) bun run build
- *   4) npx cap add android   (ve/veya)  npx cap add ios
- *   5) npx cap sync
- *   6) npx cap open android  → Android Studio → Build APK
- *      npx cap open ios      → Xcode → Archive
- *
- * Hot-reload geliştirme için `server.url` alanını lokal IP'ye çevirebilirsin.
+ * Lovable sandbox APK/IPA derleyemez (Android Studio + JDK / Xcode + CocoaPods gerekir).
+ * Üretim adımları için MOBILE_BUILD.md dosyasına bakın.
  */
 const config: CapacitorConfig = {
   appId: "com.tasitsan.app",
   appName: "Taşıtsan",
   webDir: ".output/public",
   backgroundColor: "#0a0907",
+
+  // Deep link & Universal Link / App Link doğrulaması:
+  //  - Android: https://tasitsan.com.tr/.well-known/assetlinks.json
+  //  - iOS:     https://tasitsan.com.tr/.well-known/apple-app-site-association
+  // server.url'i prod'da BOŞ bırak — uygulama paketlenmiş web bundle'ı kullanır.
+  // Hot-reload geliştirme için yerelde server.url = "http://<lan-ip>:8080" yapabilirsin.
+  server: {
+    androidScheme: "https",
+    iosScheme: "https",
+    hostname: "tasitsan.com.tr",
+  },
+
   ios: {
     contentInset: "automatic",
     backgroundColor: "#0a0907",
+    limitsNavigationsToAppBoundDomains: false,
   },
   android: {
     backgroundColor: "#0a0907",
     allowMixedContent: false,
   },
+
   plugins: {
     SplashScreen: {
       launchShowDuration: 1200,
@@ -39,6 +45,24 @@ const config: CapacitorConfig = {
     },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
+    },
+    StatusBar: {
+      style: "DARK",
+      backgroundColor: "#0a0907",
+      overlaysWebView: false,
+    },
+    Keyboard: {
+      resize: "body",
+      resizeOnFullScreen: true,
+    },
+    Camera: {
+      // izin metinleri Info.plist / AndroidManifest'e yazılır
+      androidImagePickerCompressionQuality: 85,
+      iosImagePickerCompressionQuality: 85,
+    },
+    App: {
+      // tasitsan://... custom scheme + https universal links
+      launchUrl: "https://tasitsan.com.tr",
     },
   },
 };
