@@ -304,12 +304,20 @@ function Index() {
               <p className="text-sm text-muted-foreground">Talep oluşturmak ister misiniz?</p>
               <p className="text-[11px] text-muted-foreground/80">Taşıtsan ekibi sizin için arayıp size dönüş yapar.</p>
             </div>
-            <Button
-              onClick={() => setRequestOpen(true)}
-              className="bg-gold-gradient text-gold-foreground font-semibold shadow-gold"
-            >
-              Parça Talebi Oluştur
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+              <Button
+                onClick={() => setRequestOpen(true)}
+                className="bg-gold-gradient text-gold-foreground font-semibold shadow-gold"
+              >
+                Parça Talebi Oluştur
+              </Button>
+              {(q.trim() || oem.trim() || brand.trim() || model.trim()) && (
+                <CreateAlertButton
+                  userId={user?.id ?? null}
+                  initial={{ keyword: q.trim(), brand: brand.trim(), model: model.trim(), oem: oem.trim().toUpperCase(), category: cat === "Tümü" ? "" : cat }}
+                />
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
