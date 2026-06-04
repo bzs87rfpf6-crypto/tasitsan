@@ -19,6 +19,7 @@ import { AdminVerificationsPanel } from "@/components/admin/AdminVerificationsPa
 import { BotFilterPanel } from "@/components/admin/BotFilterPanel";
 import { StockEvaluationPanel } from "@/components/admin/StockEvaluationPanel";
 import { UrgentRequestsPanel } from "@/components/admin/UrgentRequestsPanel";
+import { AdminNotificationsPanel } from "@/components/admin/AdminNotificationsPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
