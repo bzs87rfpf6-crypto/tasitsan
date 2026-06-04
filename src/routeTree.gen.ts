@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SellRouteImport } from './routes/sell'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as MyRequestsRouteImport } from './routes/my-requests'
@@ -20,6 +19,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UrgentIndexRouteImport } from './routes/urgent.index'
+import { Route as SellIndexRouteImport } from './routes/sell.index'
 import { Route as UrgentNewRouteImport } from './routes/urgent.new'
 import { Route as UIdRouteImport } from './routes/u.$id'
 import { Route as SellBulkRouteImport } from './routes/sell.bulk'
@@ -31,11 +31,6 @@ import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/p
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SellRoute = SellRouteImport.update({
-  id: '/sell',
-  path: '/sell',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -83,6 +78,11 @@ const UrgentIndexRoute = UrgentIndexRouteImport.update({
   path: '/urgent/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellIndexRoute = SellIndexRouteImport.update({
+  id: '/sell/',
+  path: '/sell/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UrgentNewRoute = UrgentNewRouteImport.update({
   id: '/urgent/new',
   path: '/urgent/new',
@@ -94,9 +94,9 @@ const UIdRoute = UIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SellBulkRoute = SellBulkRouteImport.update({
-  id: '/bulk',
-  path: '/bulk',
-  getParentRoute: () => SellRoute,
+  id: '/sell/bulk',
+  path: '/sell/bulk',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RequestsIdRoute = RequestsIdRouteImport.update({
   id: '/$id',
@@ -128,13 +128,13 @@ export interface FileRoutesByFullPath {
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/sell': typeof SellRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
   '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/sell/': typeof SellIndexRoute
   '/urgent/': typeof UrgentIndexRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
@@ -148,13 +148,13 @@ export interface FileRoutesByTo {
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/sell': typeof SellRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
   '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/sell': typeof SellIndexRoute
   '/urgent': typeof UrgentIndexRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
@@ -169,13 +169,13 @@ export interface FileRoutesById {
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/sell': typeof SellRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
   '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/sell/': typeof SellIndexRoute
   '/urgent/': typeof UrgentIndexRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
@@ -191,13 +191,13 @@ export interface FileRouteTypes {
     | '/my-requests'
     | '/requests'
     | '/reset-password'
-    | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
     | '/sell/bulk'
     | '/u/$id'
     | '/urgent/new'
+    | '/sell/'
     | '/urgent/'
     | '/api/public/push-dispatch'
     | '/parts/$id/edit'
@@ -211,13 +211,13 @@ export interface FileRouteTypes {
     | '/my-requests'
     | '/requests'
     | '/reset-password'
-    | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
     | '/sell/bulk'
     | '/u/$id'
     | '/urgent/new'
+    | '/sell'
     | '/urgent'
     | '/api/public/push-dispatch'
     | '/parts/$id/edit'
@@ -231,13 +231,13 @@ export interface FileRouteTypes {
     | '/my-requests'
     | '/requests'
     | '/reset-password'
-    | '/sell'
     | '/sitemap.xml'
     | '/parts/$id'
     | '/requests/$id'
     | '/sell/bulk'
     | '/u/$id'
     | '/urgent/new'
+    | '/sell/'
     | '/urgent/'
     | '/api/public/push-dispatch'
     | '/parts/$id_/edit'
@@ -252,11 +252,12 @@ export interface RootRouteChildren {
   MyRequestsRoute: typeof MyRequestsRoute
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SellRoute: typeof SellRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PartsIdRoute: typeof PartsIdRoute
+  SellBulkRoute: typeof SellBulkRoute
   UIdRoute: typeof UIdRoute
   UrgentNewRoute: typeof UrgentNewRoute
+  SellIndexRoute: typeof SellIndexRoute
   UrgentIndexRoute: typeof UrgentIndexRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   PartsIdEditRoute: typeof PartsIdEditRoute
@@ -269,13 +270,6 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sell': {
-      id: '/sell'
-      path: '/sell'
-      fullPath: '/sell'
-      preLoaderRoute: typeof SellRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -341,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UrgentIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sell/': {
+      id: '/sell/'
+      path: '/sell'
+      fullPath: '/sell/'
+      preLoaderRoute: typeof SellIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/urgent/new': {
       id: '/urgent/new'
       path: '/urgent/new'
@@ -357,10 +358,10 @@ declare module '@tanstack/react-router' {
     }
     '/sell/bulk': {
       id: '/sell/bulk'
-      path: '/bulk'
+      path: '/sell/bulk'
       fullPath: '/sell/bulk'
       preLoaderRoute: typeof SellBulkRouteImport
-      parentRoute: typeof SellRoute
+      parentRoute: typeof rootRouteImport
     }
     '/requests/$id': {
       id: '/requests/$id'
@@ -405,16 +406,6 @@ const RequestsRouteWithChildren = RequestsRoute._addFileChildren(
   RequestsRouteChildren,
 )
 
-interface SellRouteChildren {
-  SellBulkRoute: typeof SellBulkRoute
-}
-
-const SellRouteChildren: SellRouteChildren = {
-  SellBulkRoute: SellBulkRoute,
-}
-
-const SellRouteWithChildren = SellRoute._addFileChildren(SellRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
@@ -424,11 +415,12 @@ const rootRouteChildren: RootRouteChildren = {
   MyRequestsRoute: MyRequestsRoute,
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
-  SellRoute: SellRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   PartsIdRoute: PartsIdRoute,
+  SellBulkRoute: SellBulkRoute,
   UIdRoute: UIdRoute,
   UrgentNewRoute: UrgentNewRoute,
+  SellIndexRoute: SellIndexRoute,
   UrgentIndexRoute: UrgentIndexRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   PartsIdEditRoute: PartsIdEditRoute,
@@ -436,3 +428,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

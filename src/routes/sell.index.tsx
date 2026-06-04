@@ -18,7 +18,7 @@ import { recordBulkClick } from "@/lib/bulkNavTrace";
 const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
 
-export const Route = createFileRoute("/sell")({
+export const Route = createFileRoute("/sell/")({
   head: () => ({ meta: [{ title: "İlan Ver — Taşıtsan" }] }),
   component: SellPage,
 });

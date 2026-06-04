@@ -391,9 +391,12 @@ function BulkUploadPage() {
     if (fail > 0) toast.error(`${fail} kayıt başarısız.`);
   };
 
-  if (loading || !user) {
-    return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
-  }
+  // NOTE: Do NOT block the whole page on `loading || !user`. On PWA/Safari the
+  // Supabase session restore can take seconds (or fail silently after expiry),
+  // which leaves the page stuck on "Yükleniyor...". Instead render the UI
+  // immediately; the submit handler and the redirect effect guard auth.
+  const authPending = loading;
+  const authMissing = !loading && !user;
 
   return (
     <div className="min-h-screen pb-28">
@@ -409,6 +412,11 @@ function BulkUploadPage() {
             {navTrace?.ok
               ? `✓ /sell/bulk açıldı — tıklamadan ${navTrace.elapsedMs} ms sonra`
               : "ℹ Doğrudan açılış (önce buton tıklaması kaydedilmedi)"}
+          </div>
+        )}
+        {(authPending || authMissing) && (
+          <div className={`rounded-lg border px-3 py-2 text-xs ${authMissing ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-border bg-muted/30 text-muted-foreground"}`}>
+            {authMissing ? "Oturumunuz sonlanmış görünüyor. Yüklemeden önce tekrar giriş yapın." : "Oturum doğrulanıyor..."}
           </div>
         )}
         <Link to="/sell" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-gold">
