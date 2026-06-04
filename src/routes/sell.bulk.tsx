@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { parseOemList } from "@/lib/oem";
+import { recordBulkArrival } from "@/lib/bulkNavTrace";
 
 export const Route = createFileRoute("/sell/bulk")({
   head: () => ({ meta: [{ title: "Toplu Parça Yükle — Taşıtsan" }] }),
