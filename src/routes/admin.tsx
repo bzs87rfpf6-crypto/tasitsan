@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
+import { adminGetPartRequests, adminGetUsersFull, adminGetSellerContacts, adminGetPartsWithWhatsapp, adminGetSiteSettings, adminSaveSiteSettings } from "@/lib/admin-data.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
@@ -220,19 +221,19 @@ function AdminPage() {
     setLoading(true);
     const [iq, rq, pt, qt, us, rl, st] = await Promise.all([
       supabase.from("inquiries").select("*").order("created_at", { ascending: false }),
-      supabase.from("part_requests").select("*").order("created_at", { ascending: false }),
+      adminGetPartRequests().then((data) => ({ data, error: null as any })).catch((e) => ({ data: [] as any[], error: e })),
       supabase.from("parts").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved,avatar_url").order("created_at", { ascending: false }),
+      adminGetUsersFull().then((data) => ({ data, error: null as any })).catch((e) => ({ data: [] as any[], error: e })),
       supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
-      supabase.from("site_settings").select("*").maybeSingle(),
+      adminGetSiteSettings().then((data) => ({ data, error: null as any })).catch((e) => ({ data: null as any, error: e })),
     ]);
-    if (us.error) toast.error(us.error.message);
+    if (us.error) toast.error(us.error.message ?? "Kullanıcılar yüklenemedi");
     setUsers((us.data ?? []) as ProfileRow[]);
     setAdminIds(new Set(((rl.data ?? []) as { user_id: string }[]).map((r) => r.user_id)));
     if (st.data) setSettings(st.data as SiteSettings);
     if (iq.error) toast.error(iq.error.message);
-    if (rq.error) toast.error(rq.error.message);
+    if (rq.error) toast.error((rq.error as any).message ?? "Talepler yüklenemedi");
     if (pt.error) toast.error(pt.error.message);
     if (qt.error) toast.error(qt.error.message);
 
@@ -245,13 +246,13 @@ function AdminPage() {
 
     const [partsRes, buyersRes, sellersRes] = await Promise.all([
       partIds.length
-        ? supabase.from("parts").select("id,title,brand,model,whatsapp,city,seller_id").in("id", partIds)
+        ? adminGetPartsWithWhatsapp({ data: { ids: partIds } }).then((data) => ({ data })).catch(() => ({ data: [] as any[] }))
         : Promise.resolve({ data: [] as any[] }),
       buyerIds.length
         ? supabase.from("profiles").select("id,display_name").in("id", buyerIds)
         : Promise.resolve({ data: [] as any[] }),
       sellerIds.length
-        ? supabase.from("profiles").select("id,display_name,whatsapp").in("id", sellerIds)
+        ? adminGetSellerContacts({ data: { ids: sellerIds } }).then((data) => ({ data })).catch(() => ({ data: [] as any[] }))
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
@@ -426,11 +427,13 @@ function AdminPage() {
 
   const saveSettings = async (patch: Partial<SiteSettings>) => {
     if (!settings) return;
-    const { data, error } = await supabase.from("site_settings")
-      .update({ ...patch, updated_by: user?.id ?? null }).eq("id", settings.id).select().single();
-    if (error) { toast.error(error.message); return; }
-    setSettings(data as SiteSettings);
-    toast.success("Ayarlar kaydedildi");
+    try {
+      const row = await adminSaveSiteSettings({ data: { id: settings.id, patch: patch as any } });
+      setSettings(row as SiteSettings);
+      toast.success("Ayarlar kaydedildi");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Kaydedilemedi");
+    }
   };
 
   const filteredUsers = useMemo(() => {
