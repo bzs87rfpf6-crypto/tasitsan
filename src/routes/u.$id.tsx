@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Package, Calendar } from "lucide-react";
+import { Package, Calendar, Phone, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
@@ -20,7 +20,18 @@ interface Profile {
   avatar_url: string | null;
   is_verified: boolean;
   created_at: string;
+  whatsapp: string | null;
+  verified_phone: string | null;
 }
+
+const digits = (s: string | null) => (s ?? "").replace(/\D+/g, "");
+const fmtTr = (s: string | null) => {
+  const d = digits(s);
+  if (!d) return s ?? "";
+  const local = d.startsWith("90") ? d.slice(2) : d;
+  if (local.length === 10) return `0${local.slice(0,3)} ${local.slice(3,6)} ${local.slice(6,8)} ${local.slice(8,10)}`;
+  return s ?? "";
+};
 
 interface PartCard {
   id: string;
