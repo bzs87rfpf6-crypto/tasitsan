@@ -175,6 +175,24 @@ function AdminPage() {
   const [editingUser, setEditingUser] = useState<ProfileRow | null>(null);
   const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", is_approved: false });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const refresh = async () => {
+      const { count } = await supabase
+        .from("admin_notifications")
+        .select("*", { count: "exact", head: true })
+        .is("read_at", null);
+      setUnreadNotifs(count ?? 0);
+    };
+    refresh();
+    const ch = supabase
+      .channel("admin_notif_count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_notifications" }, refresh)
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [isAdmin]);
 
   const callDeleteUser = useServerFn(adminDeleteUser);
   const callSetRole = useServerFn(adminSetRole);
