@@ -414,6 +414,11 @@ function BulkUploadPage() {
               : "ℹ Doğrudan açılış (önce buton tıklaması kaydedilmedi)"}
           </div>
         )}
+        {(authPending || authMissing) && (
+          <div className={`rounded-lg border px-3 py-2 text-xs ${authMissing ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-border bg-muted/30 text-muted-foreground"}`}>
+            {authMissing ? "Oturumunuz sonlanmış görünüyor. Yüklemeden önce tekrar giriş yapın." : "Oturum doğrulanıyor..."}
+          </div>
+        )}
         <Link to="/sell" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-gold">
           <ArrowLeft className="size-3.5" /> Tekli ilan girişine dön
         </Link>
