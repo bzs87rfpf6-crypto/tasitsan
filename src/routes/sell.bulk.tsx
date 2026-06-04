@@ -288,6 +288,24 @@ function BulkUploadPage() {
     for (const r of valid) {
       try {
         if (mode === "insert") {
+          // Upload matching photos from ZIP, if any
+          const photoUrls: string[] = [];
+          const missing: string[] = [];
+          for (const name of r.photoNames.slice(0, 10)) {
+            const f = zipFiles.get(name.toLowerCase());
+            if (!f) { missing.push(name); continue; }
+            const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
+            const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+            const { error: upErr } = await supabase.storage
+              .from("part-photos")
+              .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
+            if (upErr) { missing.push(`${name} (upload err)`); continue; }
+            const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
+            photoUrls.push(pub.publicUrl);
+          }
+          if (missing.length > 0) {
+            details.push(`Satır ${r.__index}: eksik foto ${missing.join(", ")}`);
+          }
           const { error } = await supabase.from("parts").insert({
             seller_id: user.id,
             title: r.title,
@@ -301,7 +319,7 @@ function BulkUploadPage() {
             price: r.price,
             stock_quantity: r.qty,
             city: profile.city,
-            photos: [],
+            photos: photoUrls,
             whatsapp: profile.whatsapp,
             status: "pending",
           });
