@@ -56,7 +56,7 @@ export function PushSubscribeButton() {
       }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key),
+        applicationServerKey: urlBase64ToUint8Array(key).buffer as ArrayBuffer,
       });
       const json: any = sub.toJSON();
       await fnSub({
