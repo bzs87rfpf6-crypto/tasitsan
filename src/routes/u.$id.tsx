@@ -118,6 +118,34 @@ function PublicProfilePage() {
           </div>
         </section>
 
+        {(profile.whatsapp || profile.verified_phone) && (
+          <section className="bg-card border border-border rounded-xl p-4 space-y-2">
+            <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">İletişim</h2>
+            {profile.verified_phone && (
+              <a
+                href={`tel:+${digits(profile.verified_phone).startsWith("90") ? digits(profile.verified_phone) : "90" + digits(profile.verified_phone)}`}
+                className="flex items-center gap-3 h-11 px-3 rounded-lg border border-border hover:border-gold transition"
+              >
+                <Phone className="size-4 text-gold" />
+                <span className="text-sm font-semibold">{fmtTr(profile.verified_phone)}</span>
+                <span className="ml-auto text-[10px] text-sky-400 uppercase tracking-wider">Doğrulandı</span>
+              </a>
+            )}
+            {profile.whatsapp && (
+              <a
+                href={`https://wa.me/${digits(profile.whatsapp).startsWith("90") ? digits(profile.whatsapp) : "90" + digits(profile.whatsapp)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 h-11 px-3 rounded-lg border border-border hover:border-emerald-400 transition"
+              >
+                <MessageCircle className="size-4 text-emerald-400" />
+                <span className="text-sm font-semibold">WhatsApp</span>
+                <span className="ml-auto text-xs text-muted-foreground">{fmtTr(profile.whatsapp)}</span>
+              </a>
+            )}
+          </section>
+        )}
+
         <section className="space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center gap-1.5">
             <Package className="size-4" /> İlanları ({parts.length})
