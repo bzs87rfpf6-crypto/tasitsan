@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
+import JSZip from "jszip";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { ArrowLeft, Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, X, ImageIcon } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const HEADERS = [
   "ADET",
   "FİYAT",
   "AÇIKLAMA",
+  "FOTOĞRAFLAR",
 ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
@@ -40,6 +42,8 @@ const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
   "adet": "ADET", "stok": "ADET", "stock": "ADET", "quantity": "ADET",
   "fiyat": "FİYAT", "price": "FİYAT", "tutar": "FİYAT",
   "açıklama": "AÇIKLAMA", "aciklama": "AÇIKLAMA", "description": "AÇIKLAMA", "not": "AÇIKLAMA",
+  "fotoğraflar": "FOTOĞRAFLAR", "fotograflar": "FOTOĞRAFLAR", "foto": "FOTOĞRAFLAR", "fotos": "FOTOĞRAFLAR",
+  "photos": "FOTOĞRAFLAR", "photo": "FOTOĞRAFLAR", "resimler": "FOTOĞRAFLAR", "images": "FOTOĞRAFLAR",
 };
 
 interface Row {
@@ -53,10 +57,14 @@ interface Row {
   qty: number;
   price: number | null;
   description: string;
+  photoNames: string[];
   errors: string[];
   warnings: string[];
   duplicate?: boolean;
 }
+
+const IMAGE_MIME = /^image\/(jpeg|jpg|png|webp)$/i;
+const IMAGE_EXT = /\.(jpe?g|png|webp)$/i;
 
 function normalizeKey(k: string): (typeof HEADERS)[number] | null {
   const low = String(k ?? "").trim().toLowerCase();
@@ -91,6 +99,10 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     const priceStr = get("FİYAT").replace(/[^\d.,]/g, "").replace(",", ".");
     const price = priceStr ? parseFloat(priceStr) : null;
     const description = get("AÇIKLAMA");
+    const photosRaw = get("FOTOĞRAFLAR");
+    const photoNames = photosRaw
+      ? photosRaw.split(/[;,|\n]+/).map((s) => s.trim()).filter(Boolean).slice(0, 10)
+      : [];
 
     const errors: string[] = [];
     if (oem.length === 0) errors.push("OEM NO eksik");
@@ -101,9 +113,9 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     if (year && (year < 1950 || year > new Date().getFullYear() + 1)) errors.push("MODEL YILI geçersiz");
 
     return {
-      __index: i + 2, // +2 = header row + 1-indexed
+      __index: i + 2,
       oem, title, brand, vehicleBrand, vehicleModel, year, qty, price: price ?? null,
-      description, errors, warnings: [],
+      description, photoNames, errors, warnings: [],
     };
   });
 }
@@ -112,12 +124,16 @@ function BulkUploadPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const zipRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<Mode>("insert");
   const [rows, setRows] = useState<Row[]>([]);
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState<{ whatsapp: string; city: string | null; approved: boolean } | null>(null);
   const [result, setResult] = useState<{ ok: number; fail: number; details: string[] } | null>(null);
+  const [zipName, setZipName] = useState("");
+  // filename (lowercased basename) -> File
+  const [zipFiles, setZipFiles] = useState<Map<string, File>>(new Map());
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -197,11 +213,38 @@ function BulkUploadPage() {
     }
   };
 
+  const onZip = async (file: File) => {
+    setZipName(file.name);
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const map = new Map<string, File>();
+      const entries = Object.values(zip.files).filter((e) => !e.dir && IMAGE_EXT.test(e.name));
+      if (entries.length === 0) {
+        toast.error("ZIP içinde JPG/PNG/WebP bulunamadı.");
+        return;
+      }
+      let skipped = 0;
+      for (const entry of entries) {
+        const blob = await entry.async("blob");
+        if (blob.size > 10 * 1024 * 1024) { skipped++; continue; }
+        const base = entry.name.split("/").pop()!.toLowerCase();
+        const ext = base.split(".").pop()!.toLowerCase();
+        const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+        map.set(base, new File([blob], base, { type: mime }));
+      }
+      setZipFiles(map);
+      toast.success(`${map.size} fotoğraf ZIP'ten alındı${skipped ? ` (${skipped} büyük dosya atlandı)` : ""}.`);
+    } catch (e: any) {
+      console.error("[bulk] zip parse failed", e);
+      toast.error("ZIP açılamadı.");
+    }
+  };
+
   const downloadTemplate = () => {
     const data: (string | number)[][] = [
       [...HEADERS],
-      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Çıkma, çiziksiz"],
-      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Hafif boyalı"],
+      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
+      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Hafif boyalı", "camurluk-1.jpg"],
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws["!cols"] = HEADERS.map(() => ({ wch: 18 }));
@@ -217,7 +260,10 @@ function BulkUploadPage() {
     setRows([]);
     setFileName("");
     setResult(null);
+    setZipName("");
+    setZipFiles(new Map());
     if (fileRef.current) fileRef.current.value = "";
+    if (zipRef.current) zipRef.current.value = "";
   };
 
   const submit = async () => {
@@ -242,6 +288,24 @@ function BulkUploadPage() {
     for (const r of valid) {
       try {
         if (mode === "insert") {
+          // Upload matching photos from ZIP, if any
+          const photoUrls: string[] = [];
+          const missing: string[] = [];
+          for (const name of r.photoNames.slice(0, 10)) {
+            const f = zipFiles.get(name.toLowerCase());
+            if (!f) { missing.push(name); continue; }
+            const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
+            const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+            const { error: upErr } = await supabase.storage
+              .from("part-photos")
+              .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
+            if (upErr) { missing.push(`${name} (upload err)`); continue; }
+            const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
+            photoUrls.push(pub.publicUrl);
+          }
+          if (missing.length > 0) {
+            details.push(`Satır ${r.__index}: eksik foto ${missing.join(", ")}`);
+          }
           const { error } = await supabase.from("parts").insert({
             seller_id: user.id,
             title: r.title,
@@ -255,7 +319,7 @@ function BulkUploadPage() {
             price: r.price,
             stock_quantity: r.qty,
             city: profile.city,
-            photos: [],
+            photos: photoUrls,
             whatsapp: profile.whatsapp,
             status: "pending",
           });
@@ -335,7 +399,7 @@ function BulkUploadPage() {
         </div>
 
         <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
-          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. Fotoğraflar daha sonra ilan düzenleme ekranından eklenmelidir.</>}
+          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. İsteğe bağlı olarak bir ZIP içinde fotoğrafları yükleyin; Excel'deki <em>FOTOĞRAFLAR</em> sütununda yazan dosya adları (örn. <code>far1.jpg; far2.jpg</code>) ZIP içindeki dosyalarla eşleştirilir. İlan başına 1–10 fotoğraf.</>}
           {mode === "update" && <><span className="text-gold font-semibold">Toplu Güncelle:</span> OEM numarasına göre kendi ilanlarınızı bulur ve başlık, fiyat, stok dahil tüm alanları günceller.</>}
           {mode === "stock" && <><span className="text-gold font-semibold">Stok Güncelle:</span> Yalnızca ADET sütunu kullanılır; OEM eşleşen ilanlarınızın stok adedi güncellenir.</>}
         </div>
@@ -368,6 +432,33 @@ function BulkUploadPage() {
             }}
           />
         </div>
+
+        {mode === "insert" && (
+          <div className="space-y-2">
+            <label
+              htmlFor="bulk-zip-input"
+              className="h-11 inline-flex w-full items-center justify-center gap-2 rounded-md border border-gold/40 text-gold text-sm font-medium cursor-pointer px-4 active:opacity-90 hover:bg-gold/5"
+            >
+              <ImageIcon className="size-4" /> Fotoğraf ZIP'i Seç (opsiyonel)
+            </label>
+            <input
+              ref={zipRef}
+              id="bulk-zip-input"
+              type="file"
+              accept=".zip,application/zip,application/x-zip-compressed"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onZip(f);
+              }}
+            />
+            {zipName && (
+              <div className="text-[11px] text-muted-foreground px-1">
+                {zipName} • {zipFiles.size} foto hazır
+              </div>
+            )}
+          </div>
+        )}
 
         {fileName && (
           <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-xs">
