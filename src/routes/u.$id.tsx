@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Package, Calendar } from "lucide-react";
+import { Package, Calendar, Phone, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
@@ -20,7 +20,18 @@ interface Profile {
   avatar_url: string | null;
   is_verified: boolean;
   created_at: string;
+  whatsapp: string | null;
+  verified_phone: string | null;
 }
+
+const digits = (s: string | null) => (s ?? "").replace(/\D+/g, "");
+const fmtTr = (s: string | null) => {
+  const d = digits(s);
+  if (!d) return s ?? "";
+  const local = d.startsWith("90") ? d.slice(2) : d;
+  if (local.length === 10) return `0${local.slice(0,3)} ${local.slice(3,6)} ${local.slice(6,8)} ${local.slice(8,10)}`;
+  return s ?? "";
+};
 
 interface PartCard {
   id: string;
@@ -44,7 +55,7 @@ function PublicProfilePage() {
       const [{ data: p }, { data: ps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id,display_name,city,avatar_url,is_verified,created_at")
+          .select("id,display_name,city,avatar_url,is_verified,created_at,whatsapp,verified_phone")
           .eq("id", id)
           .maybeSingle(),
         supabase
@@ -106,6 +117,34 @@ function PublicProfilePage() {
             </div>
           </div>
         </section>
+
+        {(profile.whatsapp || profile.verified_phone) && (
+          <section className="bg-card border border-border rounded-xl p-4 space-y-2">
+            <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">İletişim</h2>
+            {profile.verified_phone && (
+              <a
+                href={`tel:+${digits(profile.verified_phone).startsWith("90") ? digits(profile.verified_phone) : "90" + digits(profile.verified_phone)}`}
+                className="flex items-center gap-3 h-11 px-3 rounded-lg border border-border hover:border-gold transition"
+              >
+                <Phone className="size-4 text-gold" />
+                <span className="text-sm font-semibold">{fmtTr(profile.verified_phone)}</span>
+                <span className="ml-auto text-[10px] text-sky-400 uppercase tracking-wider">Doğrulandı</span>
+              </a>
+            )}
+            {profile.whatsapp && (
+              <a
+                href={`https://wa.me/${digits(profile.whatsapp).startsWith("90") ? digits(profile.whatsapp) : "90" + digits(profile.whatsapp)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 h-11 px-3 rounded-lg border border-border hover:border-emerald-400 transition"
+              >
+                <MessageCircle className="size-4 text-emerald-400" />
+                <span className="text-sm font-semibold">WhatsApp</span>
+                <span className="ml-auto text-xs text-muted-foreground">{fmtTr(profile.whatsapp)}</span>
+              </a>
+            )}
+          </section>
+        )}
 
         <section className="space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center gap-1.5">
