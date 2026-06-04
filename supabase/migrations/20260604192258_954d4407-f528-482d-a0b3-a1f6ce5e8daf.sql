@@ -1,0 +1,1 @@
+GRANT SELECT (whatsapp, verified_phone) ON public.profiles TO anon, authenticated;
