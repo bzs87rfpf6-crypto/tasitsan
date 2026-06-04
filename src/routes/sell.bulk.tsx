@@ -416,22 +416,27 @@ function BulkUploadPage() {
         </div>
 
         {/* Template + Upload */}
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={downloadTemplate}
-            className="h-12 border-gold/40 text-gold hover:bg-gold/10"
-          >
-            <Download className="size-4 mr-2" /> Şablon İndir
-          </Button>
-          <Button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="h-12 bg-gold-gradient text-gold-foreground font-medium"
-          >
-            <Upload className="size-4 mr-2" /> Dosya Seç
-          </Button>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={downloadTemplate}
+              className="h-14 border-gold/40 text-gold hover:bg-gold/10 text-sm font-semibold"
+            >
+              <Download className="size-5 mr-2" /> Örnek Şablon İndir
+            </Button>
+            <Button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="h-14 bg-gold-gradient text-gold-foreground font-medium text-sm"
+            >
+              <Upload className="size-5 mr-2" /> Excel / CSV Seç
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Henüz dosyanız yok mu? Örnek şablonu indirip doldurun, ardından yükleyin.
+          </p>
           <input
             ref={fileRef}
             type="file"
