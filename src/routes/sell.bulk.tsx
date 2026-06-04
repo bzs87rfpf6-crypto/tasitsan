@@ -399,7 +399,7 @@ function BulkUploadPage() {
         </div>
 
         <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
-          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. Fotoğraflar daha sonra ilan düzenleme ekranından eklenmelidir.</>}
+          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. İsteğe bağlı olarak bir ZIP içinde fotoğrafları yükleyin; Excel'deki <em>FOTOĞRAFLAR</em> sütununda yazan dosya adları (örn. <code>far1.jpg; far2.jpg</code>) ZIP içindeki dosyalarla eşleştirilir. İlan başına 1–10 fotoğraf.</>}
           {mode === "update" && <><span className="text-gold font-semibold">Toplu Güncelle:</span> OEM numarasına göre kendi ilanlarınızı bulur ve başlık, fiyat, stok dahil tüm alanları günceller.</>}
           {mode === "stock" && <><span className="text-gold font-semibold">Stok Güncelle:</span> Yalnızca ADET sütunu kullanılır; OEM eşleşen ilanlarınızın stok adedi güncellenir.</>}
         </div>
@@ -432,6 +432,33 @@ function BulkUploadPage() {
             }}
           />
         </div>
+
+        {mode === "insert" && (
+          <div className="space-y-2">
+            <label
+              htmlFor="bulk-zip-input"
+              className="h-11 inline-flex w-full items-center justify-center gap-2 rounded-md border border-gold/40 text-gold text-sm font-medium cursor-pointer px-4 active:opacity-90 hover:bg-gold/5"
+            >
+              <ImageIcon className="size-4" /> Fotoğraf ZIP'i Seç (opsiyonel)
+            </label>
+            <input
+              ref={zipRef}
+              id="bulk-zip-input"
+              type="file"
+              accept=".zip,application/zip,application/x-zip-compressed"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onZip(f);
+              }}
+            />
+            {zipName && (
+              <div className="text-[11px] text-muted-foreground px-1">
+                {zipName} • {zipFiles.size} foto hazır
+              </div>
+            )}
+          </div>
+        )}
 
         {fileName && (
           <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-xs">
