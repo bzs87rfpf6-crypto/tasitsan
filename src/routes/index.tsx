@@ -313,7 +313,15 @@ function Index() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-xs text-muted-foreground px-1">{parts.length} sonuç</p>
+            <div className="flex items-center justify-between gap-2 px-1">
+              <p className="text-xs text-muted-foreground">{parts.length} sonuç</p>
+              {(q.trim() || oem.trim() || brand.trim() || model.trim()) && (
+                <CreateAlertButton
+                  userId={user?.id ?? null}
+                  initial={{ keyword: q.trim(), brand: brand.trim(), model: model.trim(), oem: oem.trim().toUpperCase(), category: cat === "Tümü" ? "" : cat }}
+                />
+              )}
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {parts.map((p) => <PartCard key={p.id} part={p} />)}
             </div>
