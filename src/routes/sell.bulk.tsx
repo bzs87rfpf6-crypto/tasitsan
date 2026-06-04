@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
+import JSZip from "jszip";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { ArrowLeft, Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, X, ImageIcon } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const HEADERS = [
   "ADET",
   "FİYAT",
   "AÇIKLAMA",
+  "FOTOĞRAFLAR",
 ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
@@ -40,6 +42,8 @@ const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
   "adet": "ADET", "stok": "ADET", "stock": "ADET", "quantity": "ADET",
   "fiyat": "FİYAT", "price": "FİYAT", "tutar": "FİYAT",
   "açıklama": "AÇIKLAMA", "aciklama": "AÇIKLAMA", "description": "AÇIKLAMA", "not": "AÇIKLAMA",
+  "fotoğraflar": "FOTOĞRAFLAR", "fotograflar": "FOTOĞRAFLAR", "foto": "FOTOĞRAFLAR", "fotos": "FOTOĞRAFLAR",
+  "photos": "FOTOĞRAFLAR", "photo": "FOTOĞRAFLAR", "resimler": "FOTOĞRAFLAR", "images": "FOTOĞRAFLAR",
 };
 
 interface Row {
@@ -53,10 +57,14 @@ interface Row {
   qty: number;
   price: number | null;
   description: string;
+  photoNames: string[];
   errors: string[];
   warnings: string[];
   duplicate?: boolean;
 }
+
+const IMAGE_MIME = /^image\/(jpeg|jpg|png|webp)$/i;
+const IMAGE_EXT = /\.(jpe?g|png|webp)$/i;
 
 function normalizeKey(k: string): (typeof HEADERS)[number] | null {
   const low = String(k ?? "").trim().toLowerCase();
