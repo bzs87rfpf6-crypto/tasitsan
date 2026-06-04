@@ -101,7 +101,25 @@ export function AdminNotificationsPanel() {
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 text-[11px]"
+          onClick={async () => {
+            const { error } = await supabase.from("admin_notifications").insert({
+              kind: "new_listing",
+              priority: "normal",
+              title: "🔔 Push Test",
+              body: `Test bildirimi · ${new Date().toLocaleTimeString("tr-TR")}`,
+              link: "/admin",
+            });
+            if (error) toast.error("Test başarısız: " + error.message);
+            else toast.success("Test bildirimi oluşturuldu — push gelmeli");
+          }}
+        >
+          <Send className="size-3.5 mr-1" /> Push Test Gönder
+        </Button>
         <PushSubscribeButton />
       </div>
 
