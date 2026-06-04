@@ -97,13 +97,14 @@ function SellPage() {
       toast.error(`Desteklenmeyen dosya: ${rejected.join(", ")}. Sadece JPG/PNG/WebP yükleyin (HEIC, DNG, RAW desteklenmez).`);
     }
     if (accepted.length === 0) return;
-    setFiles((prev) => [...prev, ...accepted].slice(0, 6));
+    setFiles((prev) => [...prev, ...accepted].slice(0, 10));
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (files.length < 3) { toast.error("En az 3 fotoğraf yüklemelisin."); return; }
+    if (files.length < 1) { toast.error("En az 1 fotoğraf yüklemelisin."); return; }
+    if (files.length > 10) { toast.error("En fazla 10 fotoğraf yükleyebilirsin."); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli bir fiyat girin."); return; }
     if (oemCodes.length === 0) { toast.error("En az bir OEM numarası girin."); return; }
     setSubmitting(true);

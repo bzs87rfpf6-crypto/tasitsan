@@ -2,17 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const subSchema = z.object({
-  endpoint: z.string().min(1).max(2048),
-  p256dh: z.string().max(512).optional().nullable(),
-  auth_key: z.string().max(512).optional().nullable(),
-  platform: z.enum(["web", "android", "ios"]).default("web"),
-  user_agent: z.string().max(512).optional().nullable(),
+const SubInput = z.object({
+  endpoint: z.string().url().max(2000),
+  p256dh: z.string().min(1).max(500),
+  auth: z.string().min(1).max(500),
+  user_agent: z.string().max(500).optional().nullable(),
 });
 
-export const savePushSubscription = createServerFn({ method: "POST" })
+export const subscribePush = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => subSchema.parse(input))
+  .inputValidator((d) => SubInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -21,9 +20,9 @@ export const savePushSubscription = createServerFn({ method: "POST" })
         {
           user_id: userId,
           endpoint: data.endpoint,
-          p256dh: data.p256dh ?? null,
-          auth_key: data.auth_key ?? null,
-          platform: data.platform,
+          p256dh: data.p256dh,
+          auth_key: data.auth,
+          platform: "web",
           user_agent: data.user_agent ?? null,
           last_seen_at: new Date().toISOString(),
         },
@@ -33,16 +32,18 @@ export const savePushSubscription = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const deletePushSubscription = createServerFn({ method: "POST" })
+export const unsubscribePush = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ endpoint: z.string().min(1).max(2048) }).parse(input))
+  .inputValidator((d) => z.object({ endpoint: z.string().url().max(2000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase
-      .from("push_subscriptions")
-      .delete()
-      .eq("user_id", userId)
-      .eq("endpoint", data.endpoint);
-    if (error) throw new Error(error.message);
+    await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", data.endpoint);
     return { ok: true };
   });
+
+export const getVapidPublicKey = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc("get_vapid_public_key");
+  if (error) throw new Error(error.message);
+  return { key: (data as string) ?? "" };
+});
