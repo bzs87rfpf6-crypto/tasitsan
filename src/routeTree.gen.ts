@@ -94,9 +94,9 @@ const UIdRoute = UIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const SellBulkRoute = SellBulkRouteImport.update({
-  id: '/bulk',
-  path: '/bulk',
-  getParentRoute: () => SellRoute,
+  id: '/sell/bulk',
+  path: '/sell/bulk',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RequestsIdRoute = RequestsIdRouteImport.update({
   id: '/$id',
@@ -254,6 +254,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PartsIdRoute: typeof PartsIdRoute
+  SellBulkRoute: typeof SellBulkRoute
   UIdRoute: typeof UIdRoute
   UrgentNewRoute: typeof UrgentNewRoute
   SellIndexRoute: typeof SellIndexRoute
@@ -357,10 +358,10 @@ declare module '@tanstack/react-router' {
     }
     '/sell/bulk': {
       id: '/sell/bulk'
-      path: '/bulk'
+      path: '/sell/bulk'
       fullPath: '/sell/bulk'
       preLoaderRoute: typeof SellBulkRouteImport
-      parentRoute: typeof SellRoute
+      parentRoute: typeof rootRouteImport
     }
     '/requests/$id': {
       id: '/requests/$id'
@@ -416,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   PartsIdRoute: PartsIdRoute,
+  SellBulkRoute: SellBulkRoute,
   UIdRoute: UIdRoute,
   UrgentNewRoute: UrgentNewRoute,
   SellIndexRoute: SellIndexRoute,
