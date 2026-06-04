@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as MyRequestsRouteImport } from './routes/my-requests'
+import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AlertsRouteImport } from './routes/alerts'
@@ -48,6 +49,11 @@ const RequestsRoute = RequestsRouteImport.update({
 const MyRequestsRoute = MyRequestsRouteImport.update({
   id: '/my-requests',
   path: '/my-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FavoritesRoute = FavoritesRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
+  '/insights': typeof InsightsRoute
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
+  '/insights': typeof InsightsRoute
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
+  '/insights': typeof InsightsRoute
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/auth'
     | '/favorites'
+    | '/insights'
     | '/my-requests'
     | '/requests'
     | '/reset-password'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/auth'
     | '/favorites'
+    | '/insights'
     | '/my-requests'
     | '/requests'
     | '/reset-password'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/auth'
     | '/favorites'
+    | '/insights'
     | '/my-requests'
     | '/requests'
     | '/reset-password'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   AlertsRoute: typeof AlertsRoute
   AuthRoute: typeof AuthRoute
   FavoritesRoute: typeof FavoritesRoute
+  InsightsRoute: typeof InsightsRoute
   MyRequestsRoute: typeof MyRequestsRoute
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -317,6 +330,13 @@ declare module '@tanstack/react-router' {
       path: '/my-requests'
       fullPath: '/my-requests'
       preLoaderRoute: typeof MyRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/favorites': {
@@ -453,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlertsRoute: AlertsRoute,
   AuthRoute: AuthRoute,
   FavoritesRoute: FavoritesRoute,
+  InsightsRoute: InsightsRoute,
   MyRequestsRoute: MyRequestsRoute,
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
