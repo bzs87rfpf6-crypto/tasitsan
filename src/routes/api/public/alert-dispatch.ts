@@ -106,7 +106,6 @@ export const Route = createFileRoute("/api/public/alert-dispatch")({
 
         // Mark alerts as matched
         const alertIds = matches.map((m: any) => m.id);
-        await supabaseAdmin.rpc("noop").catch(() => {});
         await supabaseAdmin
           .from("part_alerts")
           .update({ last_matched_at: new Date().toISOString() })
