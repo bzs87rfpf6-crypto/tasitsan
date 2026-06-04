@@ -19,6 +19,7 @@ import { AdminVerificationsPanel } from "@/components/admin/AdminVerificationsPa
 import { BotFilterPanel } from "@/components/admin/BotFilterPanel";
 import { StockEvaluationPanel } from "@/components/admin/StockEvaluationPanel";
 import { UrgentRequestsPanel } from "@/components/admin/UrgentRequestsPanel";
+import { AdminNotificationsPanel } from "@/components/admin/AdminNotificationsPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "settings";
+type Tab = "dashboard" | "notifications" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "settings";
 
 interface ProfileRow {
   id: string;
@@ -174,6 +175,24 @@ function AdminPage() {
   const [editingUser, setEditingUser] = useState<ProfileRow | null>(null);
   const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", is_approved: false });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const refresh = async () => {
+      const { count } = await supabase
+        .from("admin_notifications")
+        .select("*", { count: "exact", head: true })
+        .is("read_at", null);
+      setUnreadNotifs(count ?? 0);
+    };
+    refresh();
+    const ch = supabase
+      .channel("admin_notif_count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_notifications" }, refresh)
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [isAdmin]);
 
   const callDeleteUser = useServerFn(adminDeleteUser);
   const callSetRole = useServerFn(adminSetRole);
@@ -478,6 +497,7 @@ function AdminPage() {
         <div className="max-w-2xl mx-auto px-4 flex gap-1.5 border-b border-border overflow-x-auto">
           {([
             ["dashboard", "Panel"],
+            ["notifications", `🔔 Bildirim${unreadNotifs ? ` (${unreadNotifs})` : ""}`],
             ["products", `Ürünler${pendingCount ? ` (${pendingCount})` : ""}`],
             ["users", `Kullanıcılar (${users.length})`],
             ["inquiries", `Teklifler (${inquiries.length})`],
@@ -576,6 +596,8 @@ function AdminPage() {
             onEditName={openEditUser}
             onRemoveAvatar={handleRemoveAvatar}
           />
+        ) : tab === "notifications" ? (
+          <AdminNotificationsPanel />
         ) : tab === "verifications" ? (
           <AdminVerificationsPanel currentUserId={user?.id ?? null} />
         ) : tab === "urgent" ? (
