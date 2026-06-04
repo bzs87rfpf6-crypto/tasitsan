@@ -250,7 +250,18 @@ function BulkUploadPage() {
     ws["!cols"] = HEADERS.map(() => ({ wch: 18 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Parçalar");
-    XLSX.writeFile(wb, "tasitsan-toplu-parca-sablonu.xlsx");
+
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tasitsan-toplu-parca-sablonu.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Şablon indirildi");
   };
 
   const valid = useMemo(() => rows.filter((r) => r.errors.length === 0), [rows]);
