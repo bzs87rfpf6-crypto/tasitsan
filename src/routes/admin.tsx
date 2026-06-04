@@ -596,6 +596,8 @@ function AdminPage() {
             onEditName={openEditUser}
             onRemoveAvatar={handleRemoveAvatar}
           />
+        ) : tab === "notifications" ? (
+          <AdminNotificationsPanel />
         ) : tab === "verifications" ? (
           <AdminVerificationsPanel currentUserId={user?.id ?? null} />
         ) : tab === "urgent" ? (
