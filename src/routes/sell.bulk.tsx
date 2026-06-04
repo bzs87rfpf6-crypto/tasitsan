@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { parseOemList } from "@/lib/oem";
+import { recordBulkArrival } from "@/lib/bulkNavTrace";
 
 export const Route = createFileRoute("/sell/bulk")({
   head: () => ({ meta: [{ title: "Toplu Parça Yükle — Taşıtsan" }] }),
@@ -134,6 +135,18 @@ function BulkUploadPage() {
   const [zipName, setZipName] = useState("");
   // filename (lowercased basename) -> File
   const [zipFiles, setZipFiles] = useState<Map<string, File>>(new Map());
+  const [navTrace, setNavTrace] = useState<{ ok: boolean; elapsedMs?: number } | null>(null);
+  const [traceVisible, setTraceVisible] = useState(false);
+
+  useEffect(() => {
+    const result = recordBulkArrival();
+    setNavTrace(result);
+    const params = new URLSearchParams(window.location.search);
+    setTraceVisible(params.get("trace") === "1");
+    if (result.ok) {
+      toast.success(`Sayfa açıldı (${result.elapsedMs ?? 0} ms)`, { duration: 2500 });
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -386,6 +399,18 @@ function BulkUploadPage() {
     <div className="min-h-screen pb-28">
       <AppHeader subtitle="Toplu Parça Yükle" />
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-4">
+        {traceVisible && (
+          <div
+            data-testid="bulk-nav-trace"
+            className={`rounded-lg border px-3 py-2 text-xs font-mono ${
+              navTrace?.ok ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" : "border-amber-500/40 bg-amber-500/10 text-amber-200"
+            }`}
+          >
+            {navTrace?.ok
+              ? `✓ /sell/bulk açıldı — tıklamadan ${navTrace.elapsedMs} ms sonra`
+              : "ℹ Doğrudan açılış (önce buton tıklaması kaydedilmedi)"}
+          </div>
+        )}
         <Link to="/sell" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-gold">
           <ArrowLeft className="size-3.5" /> Tekli ilan girişine dön
         </Link>

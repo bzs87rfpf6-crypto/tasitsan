@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
+import { recordBulkClick } from "@/lib/bulkNavTrace";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
 // by <img>, and DNG files balloon memory enough to crash the tab into a reload.
@@ -45,6 +46,7 @@ function SellPage() {
   const openBulkUpload = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
+    recordBulkClick();
     window.location.assign("/sell/bulk");
   };
 
