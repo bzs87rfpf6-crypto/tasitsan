@@ -46,6 +46,7 @@ function SellPage() {
   const openBulkUpload = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
+    recordBulkClick();
     window.location.assign("/sell/bulk");
   };
 
