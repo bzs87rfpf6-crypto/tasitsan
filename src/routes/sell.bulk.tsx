@@ -414,42 +414,45 @@ function BulkUploadPage() {
           >
             <Download className="size-4 mr-2" /> Şablon İndir
           </Button>
-          <label
-            htmlFor="bulk-file-input"
-            className="h-12 inline-flex items-center justify-center gap-2 rounded-md bg-gold-gradient text-gold-foreground font-medium text-sm cursor-pointer px-4 select-none active:opacity-90"
+          <Button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="h-12 bg-gold-gradient text-gold-foreground font-medium"
           >
-            <Upload className="size-4" /> Dosya Seç
-          </label>
+            <Upload className="size-4 mr-2" /> Dosya Seç
+          </Button>
           <input
             ref={fileRef}
-            id="bulk-file-input"
             type="file"
-            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
-            className="sr-only"
+            accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/plain"
+            style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) onFile(f);
+              e.target.value = "";
             }}
           />
         </div>
 
         {mode === "insert" && (
           <div className="space-y-2">
-            <label
-              htmlFor="bulk-zip-input"
-              className="h-11 inline-flex w-full items-center justify-center gap-2 rounded-md border border-gold/40 text-gold text-sm font-medium cursor-pointer px-4 active:opacity-90 hover:bg-gold/5"
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => zipRef.current?.click()}
+              className="h-11 w-full border-gold/40 text-gold hover:bg-gold/10"
             >
-              <ImageIcon className="size-4" /> Fotoğraf ZIP'i Seç (opsiyonel)
-            </label>
+              <ImageIcon className="size-4 mr-2" /> Fotoğraf ZIP'i Seç (opsiyonel)
+            </Button>
             <input
               ref={zipRef}
-              id="bulk-zip-input"
               type="file"
-              accept=".zip,application/zip,application/x-zip-compressed"
-              className="sr-only"
+              accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream"
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) onZip(f);
+                e.target.value = "";
               }}
             />
             {zipName && (
