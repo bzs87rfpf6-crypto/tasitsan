@@ -42,6 +42,12 @@ function SellPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const openBulkUpload = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    window.location.assign("/sell/bulk");
+  };
+
   useEffect(() => {
     if (!authLoading && !user) nav({ to: "/auth" });
   }, [authLoading, user, nav]);
@@ -190,10 +196,10 @@ function SellPage() {
   return (
     <div className="min-h-screen pb-28">
       <AppHeader subtitle="Yeni İlan" />
-      <form onSubmit={submit} className="max-w-md mx-auto px-4 pt-4 space-y-4">
-
-        <Link
-          to="/sell/bulk"
+      <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
+        <a
+          href="/sell/bulk"
+          onClick={openBulkUpload}
           className="w-full flex items-center justify-between rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-left hover:bg-gold/15 transition no-underline"
         >
           <div>
@@ -201,7 +207,10 @@ function SellPage() {
             <div className="text-[11px] text-muted-foreground">Excel veya CSV ile birden fazla ilan</div>
           </div>
           <span className="text-gold text-lg">→</span>
-        </Link>
+        </a>
+      </div>
+
+      <form onSubmit={submit} className="max-w-md mx-auto px-4 pt-4 space-y-4">
 
 
 
