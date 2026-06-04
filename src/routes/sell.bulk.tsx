@@ -135,6 +135,18 @@ function BulkUploadPage() {
   const [zipName, setZipName] = useState("");
   // filename (lowercased basename) -> File
   const [zipFiles, setZipFiles] = useState<Map<string, File>>(new Map());
+  const [navTrace, setNavTrace] = useState<{ ok: boolean; elapsedMs?: number } | null>(null);
+  const [traceVisible, setTraceVisible] = useState(false);
+
+  useEffect(() => {
+    const result = recordBulkArrival();
+    setNavTrace(result);
+    const params = new URLSearchParams(window.location.search);
+    setTraceVisible(params.get("trace") === "1");
+    if (result.ok) {
+      toast.success(`Sayfa açıldı (${result.elapsedMs ?? 0} ms)`, { duration: 2500 });
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
