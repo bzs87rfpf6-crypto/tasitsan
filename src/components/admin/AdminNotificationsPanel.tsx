@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Bell, Check, CheckCheck, AlertTriangle, UserPlus, Package, MessageSquareQuote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { PushSubscribeButton } from "@/components/admin/PushSubscribeButton";
 
 export interface AdminNotification {
   id: string;
@@ -98,6 +99,11 @@ export function AdminNotificationsPanel() {
           )}
         </div>
       </div>
+
+      <div className="flex justify-end">
+        <PushSubscribeButton />
+      </div>
+
 
       {loading ? (
         <p className="text-xs text-muted-foreground">Yükleniyor…</p>
