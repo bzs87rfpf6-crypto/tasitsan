@@ -50,10 +50,9 @@ function Index() {
 
   useEffect(() => {
     supabase
-      .from("site_settings")
-      .select("contact_phone")
+      .rpc("get_public_site_settings")
       .maybeSingle()
-      .then(({ data }) => setContactPhone((data?.contact_phone as string) ?? ""));
+      .then(({ data }) => setContactPhone(((data as any)?.contact_phone as string) ?? ""));
   }, []);
 
   const phoneDigits = contactPhone.replace(/\D/g, "");

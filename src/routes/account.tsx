@@ -58,12 +58,13 @@ function AccountPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("display_name,whatsapp,city,avatar_url").eq("id", user.id).maybeSingle().then(({ data }) => {
-      if (data) setProfile({
-        display_name: data.display_name ?? "",
-        whatsapp: data.whatsapp ?? "",
-        city: data.city ?? "",
-        avatar_url: data.avatar_url ?? null,
+    supabase.rpc("get_my_profile").maybeSingle().then(({ data }) => {
+      const d = data as any;
+      if (d) setProfile({
+        display_name: d.display_name ?? "",
+        whatsapp: d.whatsapp ?? "",
+        city: d.city ?? "",
+        avatar_url: d.avatar_url ?? null,
       });
     });
     loadParts(user.id);

@@ -143,13 +143,14 @@ function BulkUploadPage() {
     if (!user) return;
     (async () => {
       const [p, r] = await Promise.all([
-        supabase.from("profiles").select("whatsapp,city,is_approved").eq("id", user.id).maybeSingle(),
+        supabase.rpc("get_my_profile").maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
       ]);
+      const pd = p.data as any;
       setProfile({
-        whatsapp: p.data?.whatsapp ?? "",
-        city: p.data?.city ?? null,
-        approved: !!r.data || !!p.data?.is_approved,
+        whatsapp: pd?.whatsapp ?? "",
+        city: pd?.city ?? null,
+        approved: !!r.data || !!pd?.is_approved,
       });
     })();
   }, [user]);

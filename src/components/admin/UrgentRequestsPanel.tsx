@@ -45,14 +45,15 @@ export function UrgentRequestsPanel() {
 
   const load = async () => {
     setLoading(true);
-    const { data: reqs, error } = await supabase
-      .from("part_requests")
-      .select("id,oem_code,part_name,brand,model,year,city,category,notes,status,admin_notes,full_name,phone,email,created_at")
-      .eq("is_urgent", true)
-      .order("created_at", { ascending: false })
-      .limit(200);
-    if (error) { toast.error("Acil talepler yüklenemedi"); setLoading(false); return; }
-    const list = (reqs ?? []) as UrgentRow[];
+    const { adminGetUrgentRequests, adminGetSellerContacts } = await import("@/lib/admin-data.functions");
+    let list: UrgentRow[] = [];
+    try {
+      list = (await adminGetUrgentRequests()) as UrgentRow[];
+    } catch (e: any) {
+      toast.error(e?.message ?? "Acil talepler yüklenemedi");
+      setLoading(false);
+      return;
+    }
     setRows(list);
 
     if (list.length) {
@@ -65,13 +66,10 @@ export function UrgentRequestsPanel() {
       const sellerIds = Array.from(new Set((qs ?? []).map((q: any) => q.seller_id)));
       const profMap = new Map<string, { name: string | null; phone: string | null }>();
       if (sellerIds.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id,display_name,whatsapp")
-          .in("id", sellerIds);
-        for (const p of (profs ?? []) as any[]) {
-          profMap.set(p.id, { name: p.display_name, phone: p.whatsapp });
-        }
+        try {
+          const profs = await adminGetSellerContacts({ data: { ids: sellerIds } });
+          for (const p of profs) profMap.set(p.id, { name: p.display_name, phone: p.whatsapp });
+        } catch { /* ignore */ }
       }
       const byReq: Record<string, QuoteRow[]> = {};
       for (const q of (qs ?? []) as any[]) {

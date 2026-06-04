@@ -858,6 +858,34 @@ export type Database = {
           year: number
         }[]
       }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          city: string
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          is_active: boolean
+          is_approved: boolean
+          is_verified: boolean
+          phone_verified_at: string
+          updated_at: string
+          verified_phone: string
+          whatsapp: string
+        }[]
+      }
+      get_public_site_settings: {
+        Args: never
+        Returns: {
+          contact_address: string
+          contact_email: string
+          contact_phone: string
+          ga4_measurement_id: string
+          gsc_verification_code: string
+        }[]
+      }
       get_urgent_request_for_supplier: {
         Args: { _id: string }
         Returns: {

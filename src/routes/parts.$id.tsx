@@ -150,8 +150,8 @@ function PartDetail() {
   }, [part?.seller_id]);
 
   useEffect(() => {
-    supabase.from("site_settings").select("contact_phone").maybeSingle()
-      .then(({ data }) => setContactPhone(data?.contact_phone ?? ""));
+    supabase.rpc("get_public_site_settings").maybeSingle()
+      .then(({ data }) => setContactPhone(((data as any)?.contact_phone as string) ?? ""));
   }, []);
 
   useEffect(() => {

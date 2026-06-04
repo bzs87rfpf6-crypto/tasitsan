@@ -51,11 +51,11 @@ function SellPage() {
     let cancelled = false;
     (async () => {
       const [profileRes, roleRes] = await Promise.all([
-        supabase.from("profiles").select("whatsapp,city,is_approved").eq("id", user.id).maybeSingle(),
+        supabase.rpc("get_my_profile").maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
       ]);
       if (cancelled) return;
-      const data = profileRes.data;
+      const data = profileRes.data as any;
       if (data?.whatsapp) {
         setProfileWa(data.whatsapp);
         setForm((f) => ({ ...f, whatsapp: data.whatsapp ?? "", city: data.city ?? f.city }));
