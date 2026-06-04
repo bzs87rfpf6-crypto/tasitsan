@@ -992,7 +992,35 @@ export type Database = {
           year: number
         }[]
       }
+      seller_demand_insights: {
+        Args: { _range?: string }
+        Returns: {
+          active_requests: number
+          alert_watchers: number
+          brand: string
+          model: string
+          oem_codes: string[]
+          part_id: string
+          photos: string[]
+          searches_30d: number
+          searches_7d: number
+          searches_today: number
+          title: string
+        }[]
+      }
       stock_dashboard_stats: { Args: never; Returns: Json }
+      top_demand_parts: {
+        Args: { _limit?: number; _range?: string }
+        Returns: {
+          oem: string
+          request_count: number
+          sample_brand: string
+          sample_model: string
+          sample_part_id: string
+          sample_title: string
+          search_count: number
+        }[]
+      }
       top_oem_searches: {
         Args: { _limit?: number; _range?: string }
         Returns: {
