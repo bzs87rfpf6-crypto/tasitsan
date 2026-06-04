@@ -1,0 +1,1 @@
+CREATE POLICY "Admins can insert notifications" ON public.admin_notifications FOR INSERT TO authenticated WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
