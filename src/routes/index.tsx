@@ -385,3 +385,56 @@ function Index() {
   );
 }
 
+function CreateAlertButton({
+  userId,
+  initial,
+}: {
+  userId: string | null;
+  initial: { keyword: string; brand: string; model: string; oem: string; category: string };
+}) {
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const onClick = async () => {
+    if (!userId) {
+      toast.error("Alarm kurmak için giriş yapın.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.from("part_alerts").insert({
+      user_id: userId,
+      keyword: initial.keyword || null,
+      brand: initial.brand || null,
+      model: initial.model || null,
+      oem_code: initial.oem || null,
+      category: initial.category || null,
+      is_active: true,
+    });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setDone(true);
+    toast.success("Parça alarmı oluşturuldu. Eşleşen ilan eklendiğinde bildirim alacaksınız.");
+  };
+
+  if (done) {
+    return (
+      <Link to="/alerts" className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gold hover:underline">
+        <BellPlus className="size-3.5" /> Alarmı görüntüle
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className="tap-gold inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-card border-2 border-gold/60 text-gold font-semibold text-xs hover:bg-gold/10 disabled:opacity-60"
+    >
+      <BellPlus className="size-3.5" />
+      {busy ? "Kaydediliyor..." : "Parça Gelince Haber Ver"}
+    </button>
+  );
+}
+
+
