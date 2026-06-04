@@ -126,6 +126,24 @@ function AccountPage() {
           </Link>
         </div>
 
+        <Link
+          to="/insights"
+          className="block bg-gradient-to-br from-gold/20 via-gold/5 to-background border-2 border-gold/50 rounded-2xl p-4 shadow-gold hover:shadow-gold/60 transition"
+        >
+          <div className="flex items-center gap-3">
+            <span className="size-11 rounded-xl bg-gold-gradient grid place-items-center shrink-0 shadow-gold">
+              <Flame className="size-5 text-gold-foreground" strokeWidth={2.4} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-base text-gold leading-tight">Hazır Müşteri Fırsatları</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                İlanlarınızı arayan ve bekleyen alıcıları görün.
+              </p>
+            </div>
+            <span className="text-gold font-bold text-lg shrink-0">→</span>
+          </div>
+        </Link>
+
 
         <section className="bg-card border border-border rounded-xl p-4 space-y-4">
           <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">Profil Fotoğrafı</h2>
