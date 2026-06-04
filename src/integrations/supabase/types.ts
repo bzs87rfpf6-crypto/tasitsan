@@ -285,6 +285,51 @@ export type Database = {
         }
         Relationships: []
       }
+      part_alerts: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          keyword: string | null
+          last_matched_at: string | null
+          match_count: number
+          model: string | null
+          oem_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string | null
+          last_matched_at?: string | null
+          match_count?: number
+          model?: string | null
+          oem_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string | null
+          last_matched_at?: string | null
+          match_count?: number
+          model?: string | null
+          oem_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       part_requests: {
         Row: {
           admin_notes: string | null
