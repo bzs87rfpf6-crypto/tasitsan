@@ -84,9 +84,9 @@ const UrgentIndexRoute = UrgentIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const UrgentNewRoute = UrgentNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => UrgentRoute,
+  id: '/urgent/new',
+  path: '/urgent/new',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const UIdRoute = UIdRouteImport.update({
   id: '/u/$id',
@@ -256,6 +256,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PartsIdRoute: typeof PartsIdRoute
   UIdRoute: typeof UIdRoute
+  UrgentNewRoute: typeof UrgentNewRoute
   UrgentIndexRoute: typeof UrgentIndexRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   PartsIdEditRoute: typeof PartsIdEditRoute
@@ -342,10 +343,10 @@ declare module '@tanstack/react-router' {
     }
     '/urgent/new': {
       id: '/urgent/new'
-      path: '/new'
+      path: '/urgent/new'
       fullPath: '/urgent/new'
       preLoaderRoute: typeof UrgentNewRouteImport
-      parentRoute: typeof UrgentRoute
+      parentRoute: typeof rootRouteImport
     }
     '/u/$id': {
       id: '/u/$id'
@@ -427,6 +428,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   PartsIdRoute: PartsIdRoute,
   UIdRoute: UIdRoute,
+  UrgentNewRoute: UrgentNewRoute,
   UrgentIndexRoute: UrgentIndexRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   PartsIdEditRoute: PartsIdEditRoute,
