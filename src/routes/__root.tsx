@@ -189,11 +189,10 @@ function RootComponent() {
       // Load GA4 id from site settings (public read).
       import("@/integrations/supabase/client").then(({ supabase }) => {
         supabase
-          .from("site_settings")
-          .select("ga4_measurement_id")
+          .rpc("get_public_site_settings")
           .maybeSingle()
           .then(({ data }) => {
-            ga4Id = (data?.ga4_measurement_id as string | null) ?? null;
+            ga4Id = ((data as any)?.ga4_measurement_id as string | null) ?? null;
             if (ga4Id) loadGa4(ga4Id);
             // initial page view
             trackEvent("page_view");
