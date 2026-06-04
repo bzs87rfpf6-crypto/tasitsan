@@ -99,6 +99,10 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     const priceStr = get("FİYAT").replace(/[^\d.,]/g, "").replace(",", ".");
     const price = priceStr ? parseFloat(priceStr) : null;
     const description = get("AÇIKLAMA");
+    const photosRaw = get("FOTOĞRAFLAR");
+    const photoNames = photosRaw
+      ? photosRaw.split(/[;,|\n]+/).map((s) => s.trim()).filter(Boolean).slice(0, 10)
+      : [];
 
     const errors: string[] = [];
     if (oem.length === 0) errors.push("OEM NO eksik");
@@ -109,9 +113,9 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     if (year && (year < 1950 || year > new Date().getFullYear() + 1)) errors.push("MODEL YILI geçersiz");
 
     return {
-      __index: i + 2, // +2 = header row + 1-indexed
+      __index: i + 2,
       oem, title, brand, vehicleBrand, vehicleModel, year, qty, price: price ?? null,
-      description, errors, warnings: [],
+      description, photoNames, errors, warnings: [],
     };
   });
 }
