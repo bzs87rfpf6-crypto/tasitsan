@@ -26,6 +26,7 @@ import { Route as SellBulkRouteImport } from './routes/sell.bulk'
 import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
+import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
 
 const UrgentRoute = UrgentRouteImport.update({
   id: '/urgent',
@@ -112,6 +113,11 @@ const PartsIdEditRoute = PartsIdEditRouteImport.update({
   path: '/parts/$id/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
+  id: '/api/public/push-dispatch',
+  path: '/api/public/push-dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
 export interface FileRoutesById {
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/sell/bulk': typeof SellBulkRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/sell/bulk'
     | '/u/$id'
     | '/urgent/new'
+    | '/api/public/push-dispatch'
     | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/sell/bulk'
     | '/u/$id'
     | '/urgent/new'
+    | '/api/public/push-dispatch'
     | '/parts/$id/edit'
   id:
     | '__root__'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/sell/bulk'
     | '/u/$id'
     | '/urgent/new'
+    | '/api/public/push-dispatch'
     | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -245,6 +257,7 @@ export interface RootRouteChildren {
   UrgentRoute: typeof UrgentRouteWithChildren
   PartsIdRoute: typeof PartsIdRoute
   UIdRoute: typeof UIdRoute
+  ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   PartsIdEditRoute: typeof PartsIdEditRoute
 }
 
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartsIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/push-dispatch': {
+      id: '/api/public/push-dispatch'
+      path: '/api/public/push-dispatch'
+      fullPath: '/api/public/push-dispatch'
+      preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -419,6 +439,7 @@ const rootRouteChildren: RootRouteChildren = {
   UrgentRoute: UrgentRouteWithChildren,
   PartsIdRoute: PartsIdRoute,
   UIdRoute: UIdRoute,
+  ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   PartsIdEditRoute: PartsIdEditRoute,
 }
 export const routeTree = rootRouteImport
