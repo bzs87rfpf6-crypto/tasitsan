@@ -27,6 +27,7 @@ import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
+import { Route as ApiPublicAlertDispatchRouteImport } from './routes/api/public/alert-dispatch'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -118,6 +119,11 @@ const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
   path: '/api/public/push-dispatch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAlertDispatchRoute = ApiPublicAlertDispatchRouteImport.update({
+  id: '/api/public/alert-dispatch',
+  path: '/api/public/alert-dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/urgent/new': typeof UrgentNewRoute
   '/sell/': typeof SellIndexRoute
   '/urgent/': typeof UrgentIndexRoute
+  '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/urgent/new': typeof UrgentNewRoute
   '/sell': typeof SellIndexRoute
   '/urgent': typeof UrgentIndexRoute
+  '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/urgent/new': typeof UrgentNewRoute
   '/sell/': typeof SellIndexRoute
   '/urgent/': typeof UrgentIndexRoute
+  '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
 }
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/urgent/new'
     | '/sell/'
     | '/urgent/'
+    | '/api/public/alert-dispatch'
     | '/api/public/push-dispatch'
     | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/urgent/new'
     | '/sell'
     | '/urgent'
+    | '/api/public/alert-dispatch'
     | '/api/public/push-dispatch'
     | '/parts/$id/edit'
   id:
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/urgent/new'
     | '/sell/'
     | '/urgent/'
+    | '/api/public/alert-dispatch'
     | '/api/public/push-dispatch'
     | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
@@ -259,6 +271,7 @@ export interface RootRouteChildren {
   UrgentNewRoute: typeof UrgentNewRoute
   SellIndexRoute: typeof SellIndexRoute
   UrgentIndexRoute: typeof UrgentIndexRoute
+  ApiPublicAlertDispatchRoute: typeof ApiPublicAlertDispatchRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   PartsIdEditRoute: typeof PartsIdEditRoute
 }
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/alert-dispatch': {
+      id: '/api/public/alert-dispatch'
+      path: '/api/public/alert-dispatch'
+      fullPath: '/api/public/alert-dispatch'
+      preLoaderRoute: typeof ApiPublicAlertDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -422,6 +442,7 @@ const rootRouteChildren: RootRouteChildren = {
   UrgentNewRoute: UrgentNewRoute,
   SellIndexRoute: SellIndexRoute,
   UrgentIndexRoute: UrgentIndexRoute,
+  ApiPublicAlertDispatchRoute: ApiPublicAlertDispatchRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   PartsIdEditRoute: PartsIdEditRoute,
 }
