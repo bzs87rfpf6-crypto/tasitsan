@@ -497,6 +497,7 @@ function AdminPage() {
         <div className="max-w-2xl mx-auto px-4 flex gap-1.5 border-b border-border overflow-x-auto">
           {([
             ["dashboard", "Panel"],
+            ["notifications", `🔔 Bildirim${unreadNotifs ? ` (${unreadNotifs})` : ""}`],
             ["products", `Ürünler${pendingCount ? ` (${pendingCount})` : ""}`],
             ["users", `Kullanıcılar (${users.length})`],
             ["inquiries", `Teklifler (${inquiries.length})`],
