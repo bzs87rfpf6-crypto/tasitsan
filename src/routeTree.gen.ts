@@ -15,6 +15,7 @@ import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as MyRequestsRouteImport } from './routes/my-requests'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
@@ -27,6 +28,7 @@ import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
+import { Route as ApiPublicAlertDispatchRouteImport } from './routes/api/public/alert-dispatch'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -56,6 +58,11 @@ const FavoritesRoute = FavoritesRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -118,11 +125,17 @@ const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
   path: '/api/public/push-dispatch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAlertDispatchRoute = ApiPublicAlertDispatchRouteImport.update({
+  id: '/api/public/alert-dispatch',
+  path: '/api/public/alert-dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
   '/my-requests': typeof MyRequestsRoute
@@ -136,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/urgent/new': typeof UrgentNewRoute
   '/sell/': typeof SellIndexRoute
   '/urgent/': typeof UrgentIndexRoute
+  '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
@@ -143,6 +157,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
   '/my-requests': typeof MyRequestsRoute
@@ -156,6 +171,7 @@ export interface FileRoutesByTo {
   '/urgent/new': typeof UrgentNewRoute
   '/sell': typeof SellIndexRoute
   '/urgent': typeof UrgentIndexRoute
+  '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id/edit': typeof PartsIdEditRoute
 }
@@ -164,6 +180,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
+  '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
   '/favorites': typeof FavoritesRoute
   '/my-requests': typeof MyRequestsRoute
@@ -177,6 +194,7 @@ export interface FileRoutesById {
   '/urgent/new': typeof UrgentNewRoute
   '/sell/': typeof SellIndexRoute
   '/urgent/': typeof UrgentIndexRoute
+  '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/parts/$id_/edit': typeof PartsIdEditRoute
 }
@@ -186,6 +204,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/alerts'
     | '/auth'
     | '/favorites'
     | '/my-requests'
@@ -199,6 +218,7 @@ export interface FileRouteTypes {
     | '/urgent/new'
     | '/sell/'
     | '/urgent/'
+    | '/api/public/alert-dispatch'
     | '/api/public/push-dispatch'
     | '/parts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -206,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/alerts'
     | '/auth'
     | '/favorites'
     | '/my-requests'
@@ -219,6 +240,7 @@ export interface FileRouteTypes {
     | '/urgent/new'
     | '/sell'
     | '/urgent'
+    | '/api/public/alert-dispatch'
     | '/api/public/push-dispatch'
     | '/parts/$id/edit'
   id:
@@ -226,6 +248,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/alerts'
     | '/auth'
     | '/favorites'
     | '/my-requests'
@@ -239,6 +262,7 @@ export interface FileRouteTypes {
     | '/urgent/new'
     | '/sell/'
     | '/urgent/'
+    | '/api/public/alert-dispatch'
     | '/api/public/push-dispatch'
     | '/parts/$id_/edit'
   fileRoutesById: FileRoutesById
@@ -247,6 +271,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
+  AlertsRoute: typeof AlertsRoute
   AuthRoute: typeof AuthRoute
   FavoritesRoute: typeof FavoritesRoute
   MyRequestsRoute: typeof MyRequestsRoute
@@ -259,6 +284,7 @@ export interface RootRouteChildren {
   UrgentNewRoute: typeof UrgentNewRoute
   SellIndexRoute: typeof SellIndexRoute
   UrgentIndexRoute: typeof UrgentIndexRoute
+  ApiPublicAlertDispatchRoute: typeof ApiPublicAlertDispatchRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   PartsIdEditRoute: typeof PartsIdEditRoute
 }
@@ -305,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -391,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/alert-dispatch': {
+      id: '/api/public/alert-dispatch'
+      path: '/api/public/alert-dispatch'
+      fullPath: '/api/public/alert-dispatch'
+      preLoaderRoute: typeof ApiPublicAlertDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -410,6 +450,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
+  AlertsRoute: AlertsRoute,
   AuthRoute: AuthRoute,
   FavoritesRoute: FavoritesRoute,
   MyRequestsRoute: MyRequestsRoute,
@@ -422,19 +463,10 @@ const rootRouteChildren: RootRouteChildren = {
   UrgentNewRoute: UrgentNewRoute,
   SellIndexRoute: SellIndexRoute,
   UrgentIndexRoute: UrgentIndexRoute,
+  ApiPublicAlertDispatchRoute: ApiPublicAlertDispatchRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   PartsIdEditRoute: PartsIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

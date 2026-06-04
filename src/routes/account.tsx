@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList } from "lucide-react";
+import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -105,7 +105,7 @@ function AccountPage() {
       <AppHeader subtitle="Hesabım" />
       <div className="max-w-md mx-auto px-4 pt-4 space-y-6">
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Link to="/favorites" className="flex flex-col items-center justify-center gap-1.5 bg-card border border-border hover:border-gold rounded-xl p-4 transition">
             <span className="size-9 rounded-full bg-destructive/10 grid place-items-center">
               <Heart className="size-4 text-destructive fill-destructive" />
@@ -117,6 +117,12 @@ function AccountPage() {
               <ClipboardList className="size-4 text-gold" />
             </span>
             <span className="text-xs font-semibold">Taleplerim</span>
+          </Link>
+          <Link to="/alerts" className="flex flex-col items-center justify-center gap-1.5 bg-card border border-border hover:border-gold rounded-xl p-4 transition">
+            <span className="size-9 rounded-full bg-sky-400/10 grid place-items-center">
+              <Bell className="size-4 text-sky-400" />
+            </span>
+            <span className="text-xs font-semibold text-center leading-tight">Parça Alarmlarım</span>
           </Link>
         </div>
 
