@@ -124,12 +124,16 @@ function BulkUploadPage() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const zipRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<Mode>("insert");
   const [rows, setRows] = useState<Row[]>([]);
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState<{ whatsapp: string; city: string | null; approved: boolean } | null>(null);
   const [result, setResult] = useState<{ ok: number; fail: number; details: string[] } | null>(null);
+  const [zipName, setZipName] = useState("");
+  // filename (lowercased basename) -> File
+  const [zipFiles, setZipFiles] = useState<Map<string, File>>(new Map());
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -209,11 +213,38 @@ function BulkUploadPage() {
     }
   };
 
+  const onZip = async (file: File) => {
+    setZipName(file.name);
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const map = new Map<string, File>();
+      const entries = Object.values(zip.files).filter((e) => !e.dir && IMAGE_EXT.test(e.name));
+      if (entries.length === 0) {
+        toast.error("ZIP içinde JPG/PNG/WebP bulunamadı.");
+        return;
+      }
+      let skipped = 0;
+      for (const entry of entries) {
+        const blob = await entry.async("blob");
+        if (blob.size > 10 * 1024 * 1024) { skipped++; continue; }
+        const base = entry.name.split("/").pop()!.toLowerCase();
+        const ext = base.split(".").pop()!.toLowerCase();
+        const mime = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+        map.set(base, new File([blob], base, { type: mime }));
+      }
+      setZipFiles(map);
+      toast.success(`${map.size} fotoğraf ZIP'ten alındı${skipped ? ` (${skipped} büyük dosya atlandı)` : ""}.`);
+    } catch (e: any) {
+      console.error("[bulk] zip parse failed", e);
+      toast.error("ZIP açılamadı.");
+    }
+  };
+
   const downloadTemplate = () => {
     const data: (string | number)[][] = [
       [...HEADERS],
-      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Çıkma, çiziksiz"],
-      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Hafif boyalı"],
+      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
+      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Hafif boyalı", "camurluk-1.jpg"],
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws["!cols"] = HEADERS.map(() => ({ wch: 18 }));
@@ -229,7 +260,10 @@ function BulkUploadPage() {
     setRows([]);
     setFileName("");
     setResult(null);
+    setZipName("");
+    setZipFiles(new Map());
     if (fileRef.current) fileRef.current.value = "";
+    if (zipRef.current) zipRef.current.value = "";
   };
 
   const submit = async () => {
