@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/urgent")({
+export const Route = createFileRoute("/urgent/")({
   head: () => ({
     meta: [
       { title: "🚨 Acil Parça Talepleri — Taşıtsan" },
