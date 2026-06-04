@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notifications: {
+        Row: {
+          actor_user_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          link: string | null
+          priority: string
+          read_at: string | null
+          related_id: string | null
+          title: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          link?: string | null
+          priority?: string
+          read_at?: string | null
+          related_id?: string | null
+          title: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          link?: string | null
+          priority?: string
+          read_at?: string | null
+          related_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           city: string | null
