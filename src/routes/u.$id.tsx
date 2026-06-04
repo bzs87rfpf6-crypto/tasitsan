@@ -55,7 +55,7 @@ function PublicProfilePage() {
       const [{ data: p }, { data: ps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id,display_name,city,avatar_url,is_verified,created_at")
+          .select("id,display_name,city,avatar_url,is_verified,created_at,whatsapp,verified_phone")
           .eq("id", id)
           .maybeSingle(),
         supabase
