@@ -1,136 +1,76 @@
 #!/usr/bin/env node
 /**
- * Capacitor Android/iOS için statik SPA bundle üretir.
+ * Capacitor Android/iOS için statik SPA shell üretir.
  *
- * TanStack Start build çıktısı (.output/public) Cloudflare Worker SSR için
- * tasarlanmıştır ve içinde root index.html yoktur. Capacitor ise webDir
- * altında index.html bekler. Bu script:
- *   1. Standart `vite build`'i çalıştırır.
- *   2. .output/public içeriğini dist/client/ altına kopyalar.
- *   3. Vite client manifestinden entry script'i bulup SPA shell
- *      dist/client/index.html dosyasını üretir.
+ * TanStack Start build çıktısı dist/client/ altına asset'leri (JS/CSS/ikon)
+ * yazıyor ama root index.html üretmiyor — çünkü prod'da HTML her istekte
+ * Cloudflare Worker SSR (dist/server) tarafından render ediliyor.
  *
- * Uygulama Capacitor içinde tamamen client-side render edilir; server
- * function çağrıları çalışma anında prod web origin'e (capacitor.config.ts
- * server.hostname) gider.
+ * Capacitor ise webDir altında bir index.html bekler. Bu script vite build
+ * sonrası TanStack Start manifestinden client entry script ve CSS'i bulup
+ * dist/client/index.html SPA shell'ini sentezler. Uygulama Capacitor içinde
+ * tamamen client-side hidrate olur; server function çağrıları
+ * capacitor.config.ts'deki server.hostname'e gider (https://tasitsan.com.tr).
  */
 import { execSync } from "node:child_process";
 import {
-  cpSync,
   existsSync,
-  mkdirSync,
   readFileSync,
   readdirSync,
-  rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 
-const SRC = ".output/public";
-const DEST = "dist/client";
+const CLIENT = "dist/client";
+const SERVER = "dist/server";
 
-function log(msg) {
-  console.log(`[cap-build] ${msg}`);
-}
+const log = (m) => console.log(`[cap-build] ${m}`);
 
 log("running `vite build`…");
 execSync("vite build", { stdio: "inherit" });
 
-if (!existsSync(SRC)) {
-  throw new Error(
-    `Beklenen build çıktısı bulunamadı: ${SRC}. vite build başarısız olmuş olabilir.`,
-  );
+if (!existsSync(CLIENT)) {
+  throw new Error(`Beklenen build çıktısı yok: ${CLIENT}.`);
 }
 
-log(`temizleniyor: ${DEST}`);
-rmSync(DEST, { recursive: true, force: true });
-mkdirSync(DEST, { recursive: true });
+// 1) TanStack Start manifestinden __root__ entry preload'larını çıkar.
+const manifestFile = readdirSync(SERVER).find((f) =>
+  /^_tanstack-start-manifest_v-.*\.mjs$/.test(f),
+);
+if (!manifestFile) {
+  throw new Error(`${SERVER} içinde _tanstack-start-manifest_v-*.mjs yok.`);
+}
+const manifestSrc = readFileSync(join(SERVER, manifestFile), "utf8");
 
-log(`kopyalanıyor: ${SRC} → ${DEST}`);
-cpSync(SRC, DEST, { recursive: true });
-
-// Vite manifest'ini bul (TanStack Start farklı sürümlerde farklı yere yazıyor).
-function findManifest(root) {
-  const candidates = [
-    join(root, ".vite", "manifest.json"),
-    join(root, "_build", ".vite", "manifest.json"),
-    join(root, "_build", "manifest.json"),
-    join(root, "manifest.json"),
-  ];
-  for (const p of candidates) {
-    if (existsSync(p)) return { path: p, root };
-  }
-  // Recursive arama (son çare).
-  const stack = [root];
-  while (stack.length) {
-    const dir = stack.pop();
-    let entries;
-    try {
-      entries = readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const name of entries) {
-      const full = join(dir, name);
-      let st;
-      try {
-        st = statSync(full);
-      } catch {
-        continue;
-      }
-      if (st.isDirectory()) {
-        stack.push(full);
-      } else if (name === "manifest.json" && full.includes(".vite")) {
-        return { path: full, root };
-      }
-    }
-  }
-  return null;
+// __root__ preload bloğu: "preloads": ["/assets/...js", ...]
+const rootMatch = manifestSrc.match(
+  /__root__:\s*\{[^}]*?preloads:\s*\[([^\]]+)\]/,
+);
+if (!rootMatch) {
+  throw new Error("Manifestte __root__ preloads bulunamadı.");
+}
+const entryScripts = [...rootMatch[1].matchAll(/"(\/assets\/[^"]+\.js)"/g)].map(
+  (m) => m[1],
+);
+if (entryScripts.length === 0) {
+  throw new Error("__root__ preloads boş.");
 }
 
-const found = findManifest(DEST);
-if (!found) {
-  log(
-    "UYARI: Vite manifest bulunamadı. dist/client/index.html oluşturulamıyor.",
-  );
-  log("Klasör içeriği:");
-  log(readdirSync(DEST).join(", "));
-  process.exit(1);
-}
+// 2) CSS dosyalarını bul (router bundle'ında referans var, dist/client/assets/*.css).
+const cssFiles = readdirSync(join(CLIENT, "assets"))
+  .filter((f) => f.endsWith(".css"))
+  .map((f) => `/assets/${f}`);
 
-const manifest = JSON.parse(readFileSync(found.path, "utf8"));
-
-// Entry chunk'ı bul (isEntry: true). Birden fazlaysa client entry'yi tercih et.
-const entries = Object.values(manifest).filter((c) => c && c.isEntry);
-if (entries.length === 0) {
-  throw new Error("Manifest'te isEntry: true chunk bulunamadı.");
-}
-const entry =
-  entries.find((c) => /client|entry/.test(c.src || c.file || "")) ?? entries[0];
-
-// Manifest dosya yolları .output/public köküne göre. dist/client'a kopyaladık,
-// bu yüzden / kökten serve edilebilirler.
-const scripts = new Set([entry.file]);
-const css = new Set(entry.css ?? []);
-const visited = new Set();
-function collectImports(chunkKey) {
-  if (visited.has(chunkKey)) return;
-  visited.add(chunkKey);
-  const chunk = manifest[chunkKey];
-  if (!chunk) return;
-  for (const c of chunk.css ?? []) css.add(c);
-  for (const k of chunk.imports ?? []) collectImports(k);
-}
-for (const key of Object.keys(manifest)) {
-  if (manifest[key] === entry) collectImports(key);
-}
-
-const moduleTags = [...scripts]
-  .map((f) => `    <script type="module" crossorigin src="/${f}"></script>`)
+// 3) SPA shell yaz.
+const scriptTags = entryScripts
+  .map((src, i) =>
+    i === 0
+      ? `    <script type="module" crossorigin src="${src}"></script>`
+      : `    <link rel="modulepreload" crossorigin href="${src}" />`,
+  )
   .join("\n");
-const cssTags = [...css]
-  .map((f) => `    <link rel="stylesheet" crossorigin href="/${f}" />`)
+const cssTags = cssFiles
+  .map((href) => `    <link rel="stylesheet" crossorigin href="${href}" />`)
   .join("\n");
 
 const html = `<!doctype html>
@@ -143,16 +83,16 @@ const html = `<!doctype html>
     <link rel="icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
 ${cssTags}
+${scriptTags}
   </head>
-  <body>
+  <body style="background:#0a0907;color:#f5f2eb;margin:0;">
     <div id="root"></div>
-${moduleTags}
   </body>
 </html>
 `;
 
-writeFileSync(join(DEST, "index.html"), html, "utf8");
-log(`yazıldı: ${join(DEST, "index.html")}`);
-log(`entry: ${entry.file}`);
-log(`css: ${[...css].join(", ") || "(yok)"}`);
-log("✓ Capacitor build tamamlandı. Şimdi: npx cap sync android");
+writeFileSync(join(CLIENT, "index.html"), html, "utf8");
+log(`yazıldı: ${CLIENT}/index.html`);
+log(`entry: ${entryScripts[0]} (+${entryScripts.length - 1} preload)`);
+log(`css: ${cssFiles.join(", ") || "(yok)"}`);
+log("✓ Capacitor build hazır. Şimdi: npx cap sync android");
