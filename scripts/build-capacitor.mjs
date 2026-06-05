@@ -27,7 +27,7 @@ const SERVER = "dist/server";
 const log = (m) => console.log(`[cap-build] ${m}`);
 
 log("running `vite build`…");
-execSync("vite build", { stdio: "inherit" });
+execSync("npx vite build", { stdio: "inherit" });
 
 if (!existsSync(CLIENT)) {
   throw new Error(`Beklenen build çıktısı yok: ${CLIENT}.`);
