@@ -9,7 +9,10 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.tasitsan.app",
   appName: "Taşıtsan",
-  webDir: ".output/public",
+  // dist/client → `bun run build:capacitor` tarafından üretilen statik SPA
+  // bundle'ı. .output/public içinde index.html olmadığı için doğrudan SSR
+  // çıktısına bağlanamıyoruz. Detay: scripts/build-capacitor.mjs
+  webDir: "dist/client",
   backgroundColor: "#0a0907",
 
   // Deep link & Universal Link / App Link doğrulaması:
