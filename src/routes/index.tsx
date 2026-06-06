@@ -80,6 +80,7 @@ function Index() {
         .limit(80);
 
       if (cat !== "Tümü") query = query.eq("category", cat);
+      if (partType) query = query.eq("part_type", partType);
       if (brand.trim()) query = query.ilike("brand", `%${brand.trim()}%`);
       if (model.trim()) query = query.ilike("model", `%${model.trim()}%`);
       if (year.trim()) query = query.eq("year", parseInt(year));
