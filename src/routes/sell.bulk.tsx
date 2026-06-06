@@ -265,8 +265,8 @@ function BulkUploadPage() {
   const downloadTemplate = () => {
     const data: (string | number)[][] = [
       [...HEADERS],
-      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
-      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Hafif boyalı", "camurluk-1.jpg"],
+      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Orijinal", "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
+      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Yan Sanayi", "Hafif boyalı", "camurluk-1.jpg"],
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws["!cols"] = HEADERS.map(() => ({ wch: 18 }));
