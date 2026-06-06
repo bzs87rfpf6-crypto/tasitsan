@@ -39,8 +39,12 @@ function EditPartPage() {
   });
   const [oemCodes, setOemCodes] = useState<string[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  const [removedPhotos, setRemovedPhotos] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const MAX_PHOTOS = 10;
+  const MIN_PHOTOS = 1;
 
   useEffect(() => {
     if (!authLoading && !user) nav({ to: "/auth" });
@@ -101,17 +105,38 @@ function EditPartPage() {
       if (f.size > 10 * 1024 * 1024) { rejected.push(`${f.name} (>10MB)`); continue; }
       accepted.push(f);
     }
-    if (rejected.length) toast.error(`Desteklenmeyen: ${rejected.join(", ")}`);
+    if (rejected.length) toast.error(`Desteklenmeyen: ${rejected.join(", ")}. Sadece JPG/PNG/WebP yükleyin.`);
     if (!accepted.length) return;
-    setNewFiles((prev) => [...prev, ...accepted].slice(0, Math.max(0, 6 - existingPhotos.length)));
+    const remaining = Math.max(0, MAX_PHOTOS - existingPhotos.length - newFiles.length);
+    if (remaining === 0) { toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz.`); return; }
+    setNewFiles((prev) => [...prev, ...accepted.slice(0, remaining)]);
+  };
+
+  const removeExisting = (url: string) => {
+    setExistingPhotos((prev) => prev.filter((u) => u !== url));
+    setRemovedPhotos((prev) => (prev.includes(url) ? prev : [...prev, url]));
+  };
+
+  const extractStoragePath = (url: string): string | null => {
+    const marker = "/storage/v1/object/public/part-photos/";
+    const idx = url.indexOf(marker);
+    if (idx === -1) return null;
+    try {
+      return decodeURIComponent(url.slice(idx + marker.length).split("?")[0]);
+    } catch {
+      return url.slice(idx + marker.length).split("?")[0];
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (totalPhotos < 3) { toast.error("En az 3 fotoğraf olmalı."); return; }
+    const finalCount = existingPhotos.length + newFiles.length;
+    if (finalCount < MIN_PHOTOS) { toast.error(`En az ${MIN_PHOTOS} fotoğraf olmalı.`); return; }
+    if (finalCount > MAX_PHOTOS) { toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz.`); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli fiyat girin."); return; }
     setSubmitting(true);
+    const uploadedPaths: string[] = [];
     try {
       const photoUrls = [...existingPhotos];
       for (const f of newFiles) {
@@ -121,6 +146,7 @@ function EditPartPage() {
           .from("part-photos")
           .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
         if (upErr) throw new Error(`Fotoğraf yüklenemedi: ${upErr.message}`);
+        uploadedPaths.push(path);
         const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
         photoUrls.push(pub.publicUrl);
       }
@@ -142,14 +168,28 @@ function EditPartPage() {
       }).eq("id", id).eq("seller_id", user.id);
       if (error) throw error;
 
+      // Delete removed photos from storage after successful DB update.
+      const pathsToDelete = removedPhotos
+        .map(extractStoragePath)
+        .filter((p): p is string => !!p);
+      if (pathsToDelete.length > 0) {
+        const { error: rmErr } = await supabase.storage.from("part-photos").remove(pathsToDelete);
+        if (rmErr) console.warn("[edit] eski fotoğraf silinemedi:", rmErr);
+      }
+
       toast.success("İlan güncellendi.");
       nav({ to: "/account" });
     } catch (err: any) {
+      // Rollback any newly uploaded files if the update failed.
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from("part-photos").remove(uploadedPaths).catch(() => {});
+      }
       toast.error(err.message ?? "Hata");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   if (authLoading || loading) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -179,24 +219,28 @@ function EditPartPage() {
 
         <section className="space-y-2">
           <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
-            <span>Fotoğraflar (3-6)</span>
-            <span className={`text-[10px] ${totalPhotos >= 3 ? "text-emerald-400" : "text-muted-foreground"}`}>{totalPhotos}/3</span>
+            <span>Fotoğraflar (en az {MIN_PHOTOS}, en fazla {MAX_PHOTOS})</span>
+            <span className={`text-[10px] ${totalPhotos >= MIN_PHOTOS ? "text-emerald-400" : "text-muted-foreground"}`}>
+              {totalPhotos}/{MAX_PHOTOS}
+            </span>
           </label>
           {totalPhotos > 0 && (
             <div className="grid grid-cols-3 gap-2">
-              {existingPhotos.map((url, i) => (
+              {existingPhotos.map((url) => (
                 <div key={url} className="relative aspect-square rounded-lg overflow-hidden bg-card">
                   <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => setExistingPhotos(existingPhotos.filter((_, j) => j !== i))}
+                  <button type="button" onClick={() => removeExisting(url)}
+                    aria-label="Fotoğrafı kaldır"
                     className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
                     <X className="size-3.5" />
                   </button>
                 </div>
               ))}
               {newFiles.map((f, i) => (
-                <div key={`${f.name}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
+                <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
                   <img src={previews[i]} alt="" className="w-full h-full object-cover" />
                   <button type="button" onClick={() => setNewFiles(newFiles.filter((_, j) => j !== i))}
+                    aria-label="Fotoğrafı kaldır"
                     className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
                     <X className="size-3.5" />
                   </button>
@@ -204,10 +248,14 @@ function EditPartPage() {
               ))}
             </div>
           )}
-          {totalPhotos < 6 && (
+          {totalPhotos < MAX_PHOTOS && (
             <PhotoPicker onFiles={(fl) => addFiles(fl)} />
           )}
+          <p className="text-[11px] text-muted-foreground">
+            Galeriden seçebilir veya kamerayla yeni fotoğraf çekebilirsiniz. JPG/PNG/WebP, en fazla 10MB.
+          </p>
         </section>
+
 
         <Input placeholder="Başlık" value={form.title} required maxLength={120}
           onChange={(e) => setForm({ ...form, title: e.target.value })} className="h-12 bg-card" />
