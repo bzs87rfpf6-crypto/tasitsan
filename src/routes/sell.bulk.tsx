@@ -103,6 +103,7 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     const qty = qtyStr ? Math.max(0, parseInt(qtyStr)) : 1;
     const priceStr = get("FİYAT").replace(/[^\d.,]/g, "").replace(",", ".");
     const price = priceStr ? parseFloat(priceStr) : null;
+    const partType = parsePartTypeFromExcel(get("PARÇA TİPİ"));
     const description = get("AÇIKLAMA");
     const photosRaw = get("FOTOĞRAFLAR");
     const photoNames = photosRaw
@@ -116,11 +117,14 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     if (!vehicleModel) errors.push("ARAÇ MODELİ eksik");
     if (price == null || price <= 0) errors.push("FİYAT geçersiz");
     if (year && (year < 1950 || year > new Date().getFullYear() + 1)) errors.push("MODEL YILI geçersiz");
+    const partTypeRaw = get("PARÇA TİPİ");
+    const warnings: string[] = [];
+    if (partTypeRaw && !partType) warnings.push(`PARÇA TİPİ tanınmadı: "${partTypeRaw}"`);
 
     return {
       __index: i + 2,
       oem, title, brand, vehicleBrand, vehicleModel, year, qty, price: price ?? null,
-      description, photoNames, errors, warnings: [],
+      partType, description, photoNames, errors, warnings,
     };
   });
 }
