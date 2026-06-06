@@ -169,14 +169,23 @@ function Index() {
             )}
           </div>
 
-          <button
-            onClick={() => setPhotoOpen(true)}
-            className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 shadow-gold/30"
-          >
-            <Camera className="size-4" />
-            Fotoğraftan Parça Bul
-            <Sparkles className="size-3.5 opacity-70" />
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setAiExpertOpen(true)}
+              className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+            >
+              <Sparkles className="size-4" />
+              AI Parça Uzmanı
+            </button>
+            <button
+              onClick={() => setPhotoOpen(true)}
+              className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 shadow-gold/30"
+            >
+              <Camera className="size-4" />
+              Fotoğraftan Bul
+            </button>
+          </div>
+
 
 
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
