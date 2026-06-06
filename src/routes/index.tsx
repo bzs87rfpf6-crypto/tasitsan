@@ -75,7 +75,7 @@ function Index() {
     const t = setTimeout(async () => {
       let query = supabase
         .from("parts")
-        .select("id,title,brand,model,year,price,city,photos,condition,category,stock_quantity,oem_code,seller_id")
+        .select("id,title,brand,model,year,price,city,photos,condition,category,stock_quantity,oem_code,seller_id,part_type")
         .order("created_at", { ascending: false })
         .limit(80);
 
