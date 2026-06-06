@@ -71,6 +71,7 @@ export function PartRequestDialog({
         year: f.year || initial.year || "",
         oem_code: f.oem_code || initial.oem || "",
         category: f.category || initial.category || "",
+        urgency: initial.urgency ?? f.urgency,
       }));
     }
     onOpenChange(v);
