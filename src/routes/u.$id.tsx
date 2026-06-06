@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Package, Calendar, Phone, MessageCircle } from "lucide-react";
+import { Package, Calendar, Phone, MessageCircle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SafePartImage } from "@/components/SafePartImage";
+import { useAuth } from "@/hooks/use-auth";
+
 
 export const Route = createFileRoute("/u/$id")({
   head: () => ({ meta: [{ title: "Satıcı Profili — Taşıtsan" }] }),
