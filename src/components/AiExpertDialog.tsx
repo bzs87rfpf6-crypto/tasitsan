@@ -255,12 +255,30 @@ export function AiExpertDialog({
                 ))}
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-2xl p-5 text-center space-y-2">
+              <div className="bg-card border border-border rounded-2xl p-5 text-center space-y-3">
                 <PackageSearch className="size-7 text-muted-foreground mx-auto" />
                 <p className="text-sm">Bu OEM numaraları için stokta eşleşme bulunamadı.</p>
+                {onCreateRequest && (
+                  <Button
+                    onClick={() => {
+                      onCreateRequest({
+                        search_query: interpretation.part_name || query,
+                        brand: interpretation.brand || "",
+                        model: interpretation.model || "",
+                        year: interpretation.year > 0 ? String(interpretation.year) : "",
+                        oem: interpretation.candidate_oems[0] || "",
+                        category: interpretation.category || "",
+                      });
+                      onOpenChange(false);
+                    }}
+                    className="bg-gold-gradient text-gold-foreground font-semibold shadow-gold"
+                  >
+                    🚀 Parça Talebi Oluştur
+                  </Button>
+                )}
                 {fallback.length > 0 && (
                   <>
-                    <p className="text-xs text-muted-foreground">Marka/modele göre benzer ürünler:</p>
+                    <p className="text-xs text-muted-foreground pt-2">Marka/modele göre benzer ürünler:</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
                       {fallback.map((p) => <PartCard key={p.id} part={p} />)}
                     </div>
