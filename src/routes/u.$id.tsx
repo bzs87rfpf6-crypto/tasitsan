@@ -46,6 +46,7 @@ interface PartCard {
 
 function PublicProfilePage() {
   const { id } = useParams({ from: "/u/$id" });
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [parts, setParts] = useState<PartCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +58,7 @@ function PublicProfilePage() {
       const [{ data: p }, { data: ps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id,display_name,city,avatar_url,is_verified,created_at,whatsapp,verified_phone")
+          .select("id,display_name,city,avatar_url,is_verified,created_at")
           .eq("id", id)
           .maybeSingle(),
         supabase
@@ -68,11 +69,24 @@ function PublicProfilePage() {
           .order("created_at", { ascending: false }),
       ]);
       if (cancelled) return;
-      setProfile((p as Profile | null) ?? null);
+      let merged: Profile | null = p ? { ...(p as any), whatsapp: null, verified_phone: null } : null;
+      if (merged && user) {
+        const { data: contact } = await supabase
+          .from("profiles")
+          .select("whatsapp,verified_phone")
+          .eq("id", id)
+          .maybeSingle();
+        if (contact) {
+          merged.whatsapp = (contact as any).whatsapp ?? null;
+          merged.verified_phone = (contact as any).verified_phone ?? null;
+        }
+      }
+      setProfile(merged);
       setParts((ps ?? []) as PartCard[]);
       setLoading(false);
     })();
     return () => { cancelled = true; };
+
   }, [id]);
 
   if (loading) {
