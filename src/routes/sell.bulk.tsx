@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { parseOemList } from "@/lib/oem";
+import { parsePartTypeFromExcel, type PartType } from "@/lib/part-type";
 import { recordBulkArrival } from "@/lib/bulkNavTrace";
 
 export const Route = createFileRoute("/sell/bulk")({
@@ -29,6 +30,7 @@ const HEADERS = [
   "MODEL YILI",
   "ADET",
   "FİYAT",
+  "PARÇA TİPİ",
   "AÇIKLAMA",
   "FOTOĞRAFLAR",
 ] as const;
@@ -42,6 +44,7 @@ const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
   "model yılı": "MODEL YILI", "model yili": "MODEL YILI", "yıl": "MODEL YILI", "year": "MODEL YILI",
   "adet": "ADET", "stok": "ADET", "stock": "ADET", "quantity": "ADET",
   "fiyat": "FİYAT", "price": "FİYAT", "tutar": "FİYAT",
+  "parça tipi": "PARÇA TİPİ", "parca tipi": "PARÇA TİPİ", "tip": "PARÇA TİPİ", "tür": "PARÇA TİPİ", "tur": "PARÇA TİPİ", "part_type": "PARÇA TİPİ",
   "açıklama": "AÇIKLAMA", "aciklama": "AÇIKLAMA", "description": "AÇIKLAMA", "not": "AÇIKLAMA",
   "fotoğraflar": "FOTOĞRAFLAR", "fotograflar": "FOTOĞRAFLAR", "foto": "FOTOĞRAFLAR", "fotos": "FOTOĞRAFLAR",
   "photos": "FOTOĞRAFLAR", "photo": "FOTOĞRAFLAR", "resimler": "FOTOĞRAFLAR", "images": "FOTOĞRAFLAR",
@@ -57,6 +60,7 @@ interface Row {
   year: number | null;
   qty: number;
   price: number | null;
+  partType: PartType | null;
   description: string;
   photoNames: string[];
   errors: string[];
@@ -99,6 +103,7 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     const qty = qtyStr ? Math.max(0, parseInt(qtyStr)) : 1;
     const priceStr = get("FİYAT").replace(/[^\d.,]/g, "").replace(",", ".");
     const price = priceStr ? parseFloat(priceStr) : null;
+    const partType = parsePartTypeFromExcel(get("PARÇA TİPİ"));
     const description = get("AÇIKLAMA");
     const photosRaw = get("FOTOĞRAFLAR");
     const photoNames = photosRaw
@@ -112,11 +117,14 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     if (!vehicleModel) errors.push("ARAÇ MODELİ eksik");
     if (price == null || price <= 0) errors.push("FİYAT geçersiz");
     if (year && (year < 1950 || year > new Date().getFullYear() + 1)) errors.push("MODEL YILI geçersiz");
+    const partTypeRaw = get("PARÇA TİPİ");
+    const warnings: string[] = [];
+    if (partTypeRaw && !partType) warnings.push(`PARÇA TİPİ tanınmadı: "${partTypeRaw}"`);
 
     return {
       __index: i + 2,
       oem, title, brand, vehicleBrand, vehicleModel, year, qty, price: price ?? null,
-      description, photoNames, errors, warnings: [],
+      partType, description, photoNames, errors, warnings,
     };
   });
 }
@@ -193,7 +201,7 @@ function BulkUploadPage() {
         prev.map((r) => {
           const dupLocal = r.oem.some((c) => localDupOems.has(c));
           const dupDb = r.oem.some((c) => dbOems.has(c));
-          const warnings: string[] = [];
+          const warnings: string[] = [...(r.warnings ?? []).filter((w) => w !== "Dosyada tekrar eden OEM" && w !== "Bu OEM ile mevcut ilanınız var")];
           if (dupLocal) warnings.push("Dosyada tekrar eden OEM");
           if (dupDb) warnings.push("Bu OEM ile mevcut ilanınız var");
           return { ...r, duplicate: dupLocal || dupDb, warnings };
@@ -257,8 +265,8 @@ function BulkUploadPage() {
   const downloadTemplate = () => {
     const data: (string | number)[][] = [
       [...HEADERS],
-      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
-      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Hafif boyalı", "camurluk-1.jpg"],
+      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Orijinal", "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
+      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Yan Sanayi", "Hafif boyalı", "camurluk-1.jpg"],
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws["!cols"] = HEADERS.map(() => ({ wch: 18 }));
@@ -341,6 +349,7 @@ function BulkUploadPage() {
             oem_codes: r.oem,
             category: "Diğer",
             condition: "used",
+            part_type: r.partType,
             price: r.price,
             stock_quantity: r.qty,
             city: profile.city,

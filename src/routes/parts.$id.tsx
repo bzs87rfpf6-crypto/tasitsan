@@ -17,6 +17,7 @@ import { EquivalentParts } from "@/components/EquivalentParts";
 import { AiOemSuggester } from "@/components/AiOemSuggester";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { PartTypeBadge } from "@/components/PartTypeBadge";
 
 export const Route = createFileRoute("/parts/$id")({
   loader: async ({ params }) => {
@@ -112,6 +113,7 @@ interface PartFull {
   seller_id: string; created_at: string;
   oem_code: string | null; stock_quantity: number | null;
   oem_codes: string[] | null; engine_code: string | null;
+  part_type: string | null;
 }
 
 
@@ -162,7 +164,7 @@ function PartDetail() {
     (async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,oem_codes,engine_code,stock_quantity")
+        .select("id,title,description,brand,model,year,category,condition,price,city,photos,seller_id,created_at,oem_code,oem_codes,engine_code,stock_quantity,part_type")
         .eq("id", id).maybeSingle();
       if (cancelled) return;
       if (error) {
@@ -322,9 +324,12 @@ function PartDetail() {
 
       <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
-            {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
+              {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
+            </span>
+            {part.part_type && <PartTypeBadge partType={part.part_type} size="md" />}
+          </div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
               <Eye className="size-3.5 text-gold" />

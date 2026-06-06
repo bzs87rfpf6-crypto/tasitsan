@@ -3,6 +3,7 @@ import { MapPin, Package } from "lucide-react";
 import { SafePartImage } from "@/components/SafePartImage";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { PartTypeBadge } from "@/components/PartTypeBadge";
 
 export interface Part {
   id: string;
@@ -14,6 +15,7 @@ export interface Part {
   city: string | null;
   photos: string[] | null;
   condition: string;
+  part_type?: string | null;
   stock_quantity?: number | null;
   oem_code?: string | null;
   seller_verified?: boolean;
@@ -36,6 +38,11 @@ export function PartCard({ part }: { part: Part }) {
         <span className="absolute top-2 left-2 text-[10px] uppercase tracking-wider bg-background/80 text-gold px-2 py-0.5 rounded-full border border-gold/30">
           {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "2.El"}
         </span>
+        {part.part_type && (
+          <div className="absolute bottom-2 left-2">
+            <PartTypeBadge partType={part.part_type} size="sm" />
+          </div>
+        )}
         {part.stock_quantity != null && part.stock_quantity > 0 && (
           <span className="absolute top-2 right-11 text-[10px] font-semibold bg-background/80 text-foreground px-2 py-0.5 rounded-full border border-border flex items-center gap-1">
             <Package className="size-3" /> {part.stock_quantity}

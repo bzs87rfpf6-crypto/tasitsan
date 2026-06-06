@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
+import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 import { recordBulkClick } from "@/lib/bulkNavTrace";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
@@ -38,6 +39,7 @@ function SellPage() {
     title: "", description: "", brand: "", model: "", year: "", engine_code: "",
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "", whatsapp: "",
   });
+  const [partType, setPartType] = useState<PartType | "">("");
   const [oemCodes, setOemCodes] = useState<string[]>([]);
   
   const [files, setFiles] = useState<File[]>([]);
@@ -115,6 +117,7 @@ function SellPage() {
     if (files.length > 10) { toast.error("En fazla 10 fotoğraf yükleyebilirsin."); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli bir fiyat girin."); return; }
     if (oemCodes.length === 0) { toast.error("En az bir OEM numarası girin."); return; }
+    if (!partType) { toast.error("Parça tipi seçin."); return; }
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
@@ -145,6 +148,7 @@ function SellPage() {
         engine_code: form.engine_code || null,
         category: form.category,
         condition: form.condition,
+        part_type: partType,
         price: form.price ? parseFloat(form.price) : null,
         stock_quantity: form.stock_quantity ? Math.max(0, parseInt(form.stock_quantity)) : 1,
         city: form.city || null,
@@ -289,6 +293,27 @@ function SellPage() {
                   form.condition === v ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
                 }`}>{l}</button>
             ))}
+          </div>
+        </div>
+
+
+
+        <div>
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">Parça Tipi *</label>
+          <div className="grid grid-cols-2 gap-2">
+            {PART_TYPE_VALUES.map((v) => {
+              const m = PART_TYPE_META[v];
+              const active = partType === v;
+              return (
+                <button key={v} type="button" onClick={() => setPartType(v)}
+                  className={`h-11 px-2 rounded-lg text-[11px] font-bold border flex items-center justify-center gap-1.5 ${
+                    active ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                  }`}>
+                  <span aria-hidden>{m.emoji}</span>
+                  <span className="truncate">{m.longLabel}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

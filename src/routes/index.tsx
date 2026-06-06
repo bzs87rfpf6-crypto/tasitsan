@@ -12,6 +12,7 @@ import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
+import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,6 +42,7 @@ function Index() {
   const [oem, setOem] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [partType, setPartType] = useState<PartType | "">("");
 
   const [parts, setParts] = useState<Part[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,11 +75,12 @@ function Index() {
     const t = setTimeout(async () => {
       let query = supabase
         .from("parts")
-        .select("id,title,brand,model,year,price,city,photos,condition,category,stock_quantity,oem_code,seller_id")
+        .select("id,title,brand,model,year,price,city,photos,condition,category,stock_quantity,oem_code,seller_id,part_type")
         .order("created_at", { ascending: false })
         .limit(80);
 
       if (cat !== "Tümü") query = query.eq("category", cat);
+      if (partType) query = query.eq("part_type", partType);
       if (brand.trim()) query = query.ilike("brand", `%${brand.trim()}%`);
       if (model.trim()) query = query.ilike("model", `%${model.trim()}%`);
       if (year.trim()) query = query.eq("year", parseInt(year));
@@ -125,7 +128,7 @@ function Index() {
       }
     }, 600);
     return () => { active = false; clearTimeout(t); };
-  }, [q, cat, brand, model, year, oem, minPrice, maxPrice]);
+  }, [q, cat, brand, model, year, oem, minPrice, maxPrice, partType]);
 
   const activeFilterCount = useMemo(() =>
     [brand, model, year, oem, minPrice, maxPrice].filter((v) => v.trim() !== "").length,
@@ -200,6 +203,33 @@ function Index() {
               </button>
             ))}
           </div>
+
+          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
+            <button
+              onClick={() => setPartType("")}
+              className={`tap-gold shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
+                partType === "" ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold" : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
+              }`}
+            >Tüm Tipler</button>
+            {PART_TYPE_VALUES.map((v) => {
+              const m = PART_TYPE_META[v];
+              const active = partType === v;
+              return (
+                <button
+                  key={v}
+                  onClick={() => setPartType(active ? "" : v)}
+                  className={`tap-gold shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border flex items-center gap-1 ${
+                    active ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold" : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
+                  }`}
+                >
+                  <span aria-hidden>{m.emoji}</span>
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+
+
 
           {showFilters && (
             <div className="bg-card border border-border rounded-2xl p-4 space-y-3 animate-in fade-in slide-in-from-top-2">
