@@ -324,9 +324,12 @@ function PartDetail() {
 
       <div className="max-w-md mx-auto px-4 pt-4 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
-            {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-block text-[10px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-1 rounded border border-gold/30">
+              {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "İkinci El"}
+            </span>
+            {part.part_type && <PartTypeBadge partType={part.part_type} size="md" />}
+          </div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
               <Eye className="size-3.5 text-gold" />
