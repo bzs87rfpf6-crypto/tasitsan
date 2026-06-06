@@ -204,6 +204,33 @@ function Index() {
             ))}
           </div>
 
+          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
+            <button
+              onClick={() => setPartType("")}
+              className={`tap-gold shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
+                partType === "" ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold" : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
+              }`}
+            >Tüm Tipler</button>
+            {PART_TYPE_VALUES.map((v) => {
+              const m = PART_TYPE_META[v];
+              const active = partType === v;
+              return (
+                <button
+                  key={v}
+                  onClick={() => setPartType(active ? "" : v)}
+                  className={`tap-gold shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border flex items-center gap-1 ${
+                    active ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold" : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
+                  }`}
+                >
+                  <span aria-hidden>{m.emoji}</span>
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+
+
+
           {showFilters && (
             <div className="bg-card border border-border rounded-2xl p-4 space-y-3 animate-in fade-in slide-in-from-top-2">
               <div className="flex items-center justify-between">
