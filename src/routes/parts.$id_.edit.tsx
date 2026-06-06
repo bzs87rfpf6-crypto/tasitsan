@@ -408,6 +408,28 @@ function EditPartPage() {
           </div>
         </div>
 
+        <div>
+          <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">Parça Tipi</label>
+          <div className="grid grid-cols-2 gap-2">
+            {PART_TYPE_VALUES.map((v) => {
+              const m = PART_TYPE_META[v];
+              const active = partType === v;
+              return (
+                <button key={v} type="button" onClick={() => setPartType(active ? "" : v)}
+                  className={`h-11 px-2 rounded-lg text-[11px] font-bold border flex items-center justify-center gap-1.5 ${
+                    active ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                  }`}>
+                  <span aria-hidden>{m.emoji}</span>
+                  <span className="truncate">{m.longLabel}</span>
+                </button>
+              );
+            })}
+          </div>
+          {!partType && <p className="text-[11px] text-muted-foreground mt-1.5">Seçilmezse "Belirtilmemiş" olarak görüntülenir.</p>}
+        </div>
+
+
+
         <div className="grid grid-cols-2 gap-2">
           <div className="relative">
             <Input placeholder="Fiyat" inputMode="decimal" value={form.price} required
