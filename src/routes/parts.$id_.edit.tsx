@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
 import { StockInsightsCard } from "@/components/StockInsightsCard";
+import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 
 const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
