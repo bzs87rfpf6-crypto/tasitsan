@@ -134,7 +134,27 @@ function PublicProfilePage() {
           </div>
         </section>
 
-        {(profile.whatsapp || profile.verified_phone) && (
+        {!user ? (
+          <section className="bg-card border border-gold/30 rounded-xl p-4 text-center space-y-3">
+            <div className="mx-auto size-10 rounded-full bg-gold/10 grid place-items-center">
+              <Lock className="size-5 text-gold" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold">İletişim bilgileri üyelere özel</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Satıcının telefon, WhatsApp ve diğer iletişim bilgilerini görmek için giriş yapın.
+              </p>
+            </div>
+            <Link
+              to="/auth"
+              search={{ redirect: `/u/${id}` } as any}
+              className="inline-flex items-center justify-center h-11 px-5 rounded-lg bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+            >
+              Giriş Yap / Üye Ol
+            </Link>
+          </section>
+        ) : (profile.whatsapp || profile.verified_phone) && (
+
           <section className="bg-card border border-border rounded-xl p-4 space-y-2">
             <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">İletişim</h2>
             {profile.verified_phone && (
