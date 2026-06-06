@@ -171,6 +171,7 @@ function EditPartPage() {
       );
       const arr = (data.oem_codes as string[] | null) ?? (data.oem_code ? [data.oem_code] : []);
       setOemCodes(arr);
+      setPartType(((data as any).part_type as PartType | null) ?? "");
       setLoading(false);
     })();
     return () => { cancelled = true; };
