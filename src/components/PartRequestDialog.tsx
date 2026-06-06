@@ -25,7 +25,14 @@ export interface PartRequestInitial {
   year?: string;
   oem?: string;
   category?: string;
+  urgency?: "normal" | "urgent" | "very_urgent";
 }
+
+const URGENCY_OPTIONS: Array<{ value: "normal" | "urgent" | "very_urgent"; label: string; emoji: string; cls: string }> = [
+  { value: "normal", label: "Normal", emoji: "🟢", cls: "border-emerald-500/50 text-emerald-400" },
+  { value: "urgent", label: "Acil", emoji: "🟠", cls: "border-orange-500/60 text-orange-400" },
+  { value: "very_urgent", label: "Çok Acil", emoji: "🔴", cls: "border-destructive/70 text-destructive" },
+];
 
 export function PartRequestDialog({
   open, onOpenChange, userId, initial = {},
@@ -48,6 +55,7 @@ export function PartRequestDialog({
     full_name: "",
     phone: "",
     email: "",
+    urgency: "normal" as "normal" | "urgent" | "very_urgent",
   });
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
