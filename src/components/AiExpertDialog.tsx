@@ -38,7 +38,15 @@ const SUGGESTIONS = [
   "Renault Megane 4 turbo hortumu",
 ];
 
-export function AiExpertDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function AiExpertDialog({
+  open,
+  onOpenChange,
+  onCreateRequest,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreateRequest?: (initial: { search_query: string; brand: string; model: string; year: string; oem: string; category: string }) => void;
+}) {
   const interpret = useServerFn(interpretPartQuery);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
