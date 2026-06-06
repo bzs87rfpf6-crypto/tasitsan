@@ -148,7 +148,7 @@ export function PartRequestDialog({
         message: form.description.trim() || form.part_name.trim(),
         urgency: form.urgency,
         is_urgent: form.urgency !== "normal",
-      });
+      } as never);
       if (error) { console.error("[part-request] insert failed:", error); throw error; }
       toast.success("Talebiniz alındı. Satıcılar teklif verecek, Taşıtsan onay sonrası size iletecek.");
       setForm({ part_name: "", oem_code: "", engine_code: "", brand: "", model: "", year: "", category: "", city: "", description: "", full_name: "", phone: "", email: "", urgency: "normal" });
