@@ -60,6 +60,7 @@ interface Row {
   year: number | null;
   qty: number;
   price: number | null;
+  partType: PartType | null;
   description: string;
   photoNames: string[];
   errors: string[];
