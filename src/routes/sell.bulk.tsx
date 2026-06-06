@@ -30,6 +30,7 @@ const HEADERS = [
   "MODEL YILI",
   "ADET",
   "FİYAT",
+  "PARÇA TİPİ",
   "AÇIKLAMA",
   "FOTOĞRAFLAR",
 ] as const;
@@ -43,6 +44,7 @@ const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
   "model yılı": "MODEL YILI", "model yili": "MODEL YILI", "yıl": "MODEL YILI", "year": "MODEL YILI",
   "adet": "ADET", "stok": "ADET", "stock": "ADET", "quantity": "ADET",
   "fiyat": "FİYAT", "price": "FİYAT", "tutar": "FİYAT",
+  "parça tipi": "PARÇA TİPİ", "parca tipi": "PARÇA TİPİ", "tip": "PARÇA TİPİ", "tür": "PARÇA TİPİ", "tur": "PARÇA TİPİ", "part_type": "PARÇA TİPİ",
   "açıklama": "AÇIKLAMA", "aciklama": "AÇIKLAMA", "description": "AÇIKLAMA", "not": "AÇIKLAMA",
   "fotoğraflar": "FOTOĞRAFLAR", "fotograflar": "FOTOĞRAFLAR", "foto": "FOTOĞRAFLAR", "fotos": "FOTOĞRAFLAR",
   "photos": "FOTOĞRAFLAR", "photo": "FOTOĞRAFLAR", "resimler": "FOTOĞRAFLAR", "images": "FOTOĞRAFLAR",
