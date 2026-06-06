@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { PackageSearch, Send, Check, Clock, X as XIcon, ArrowLeft } from "lucide-react";
+import { PackageSearch, Send, Check, Clock, X as XIcon, ArrowLeft, Megaphone, Timer, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { SafePartImage } from "@/components/SafePartImage";
 
 export const Route = createFileRoute("/requests")({
-  head: () => ({ meta: [{ title: "Talep Havuzu — Taşıtsan" }] }),
+  head: () => ({ meta: [{ title: "Parça Talep Merkezi — Taşıtsan" }] }),
   component: RequestsPage,
 });
 
@@ -20,6 +20,36 @@ const CATEGORIES = [
   "Tümü", "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
   "Süspansiyon", "Klima", "Yakıt Sistemi", "Aydınlatma", "Diğer",
 ];
+
+type Urgency = "all" | "normal" | "urgent" | "very_urgent";
+type DateRange = "all" | "24h" | "7d" | "30d";
+
+const URGENCY_META: Record<Exclude<Urgency, "all">, { label: string; emoji: string; cls: string }> = {
+  normal:      { label: "Normal",   emoji: "🟢", cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/40" },
+  urgent:      { label: "Acil",     emoji: "🟠", cls: "bg-orange-500/15 text-orange-400 border-orange-500/50" },
+  very_urgent: { label: "Çok Acil", emoji: "🔴", cls: "bg-destructive/15 text-destructive border-destructive/60 animate-pulse" },
+};
+
+const URGENCY_FILTERS: Array<{ value: Urgency; label: string }> = [
+  { value: "all", label: "Tüm Aciliyetler" },
+  { value: "normal", label: "🟢 Normal" },
+  { value: "urgent", label: "🟠 Acil" },
+  { value: "very_urgent", label: "🔴 Çok Acil" },
+];
+
+const DATE_FILTERS: Array<{ value: DateRange; label: string }> = [
+  { value: "all", label: "Tüm Zamanlar" },
+  { value: "24h", label: "Son 24 saat" },
+  { value: "7d", label: "Son 7 gün" },
+  { value: "30d", label: "Son 30 gün" },
+];
+
+const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+  new:         { label: "Açık",          cls: "bg-card text-foreground border-border" },
+  in_progress: { label: "Teklif Geldi",  cls: "bg-gold/15 text-gold border-gold/40" },
+  resolved:    { label: "Karşılandı",    cls: "bg-emerald-500/15 text-emerald-400 border-emerald-500/40" },
+  closed:      { label: "İptal Edildi",  cls: "bg-muted text-muted-foreground border-border" },
+};
 
 interface OpenRequest {
   id: string;
@@ -37,6 +67,8 @@ interface OpenRequest {
   photos: string[];
   status: string;
   created_at: string;
+  urgency?: Urgency | null;
+  is_urgent?: boolean | null;
 }
 
 interface MyQuote {
@@ -48,6 +80,13 @@ interface MyQuote {
   status: "pending" | "approved" | "rejected";
 }
 
+interface CenterStats {
+  active: number;
+  fulfilled: number;
+  avg_first_quote_minutes: number;
+  avg_fulfillment_hours: number;
+}
+
 const CONDITION_LABEL: Record<string, string> = {
   new: "Sıfır", used: "Çıkma", refurbished: "Revizyonlu",
 };
@@ -57,8 +96,30 @@ const QUOTE_STATUS_LABEL: Record<string, string> = {
 const QUOTE_STATUS_COLOR: Record<string, string> = {
   pending: "bg-gold/15 text-gold border-gold/40",
   approved: "bg-emerald-500/15 text-emerald-400 border-emerald-500/40",
-  rejected: "bg-destructive/15 text-destructive border-destructive/40",
+  rejected: "bg-destructive/15 text-destructive border-destructive/60",
 };
+
+function effectiveUrgency(r: OpenRequest): Exclude<Urgency, "all"> {
+  if (r.urgency === "very_urgent") return "very_urgent";
+  if (r.urgency === "urgent") return "urgent";
+  if (r.urgency === "normal") return "normal";
+  // Backward compat fallback
+  return r.is_urgent ? "urgent" : "normal";
+}
+
+function formatMinutes(min: number): string {
+  if (!min || min <= 0) return "—";
+  if (min < 60) return `${Math.round(min)} dk`;
+  const h = min / 60;
+  if (h < 24) return `${h.toFixed(1)} sa`;
+  return `${(h / 24).toFixed(1)} gün`;
+}
+
+function formatHours(h: number): string {
+  if (!h || h <= 0) return "—";
+  if (h < 24) return `${h.toFixed(1)} sa`;
+  return `${(h / 24).toFixed(1)} gün`;
+}
 
 function RequestsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -66,8 +127,11 @@ function RequestsPage() {
   const [cat, setCat] = useState("Tümü");
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("");
+  const [urgencyFilter, setUrgencyFilter] = useState<Urgency>("all");
+  const [dateFilter, setDateFilter] = useState<DateRange>("all");
   const [requests, setRequests] = useState<OpenRequest[]>([]);
   const [myQuotes, setMyQuotes] = useState<MyQuote[]>([]);
+  const [stats, setStats] = useState<CenterStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [quoting, setQuoting] = useState<OpenRequest | null>(null);
 
@@ -76,13 +140,17 @@ function RequestsPage() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [reqRes, quoteRes] = await Promise.all([
+    const [reqRes, quoteRes, statsRes] = await Promise.all([
       supabase.from("open_part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("id,request_id,price,delivery_time,condition,status").eq("seller_id", user.id),
+      (supabase.rpc as unknown as (fn: string) => Promise<{ data: unknown; error: unknown }>)("request_center_stats"),
     ]);
     if (reqRes.error) toast.error(reqRes.error.message);
     setRequests((reqRes.data ?? []) as OpenRequest[]);
     setMyQuotes((quoteRes.data ?? []) as MyQuote[]);
+    if (!statsRes.error && statsRes.data) {
+      setStats(statsRes.data as CenterStats);
+    }
     setLoading(false);
   };
 
@@ -97,9 +165,16 @@ function RequestsPage() {
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
     const c = cityFilter.trim().toLowerCase();
+    const now = Date.now();
+    const cutoffMs = dateFilter === "24h" ? 24 * 3600 * 1000
+                  : dateFilter === "7d" ? 7 * 24 * 3600 * 1000
+                  : dateFilter === "30d" ? 30 * 24 * 3600 * 1000
+                  : 0;
     return requests.filter((r) => {
       if (cat !== "Tümü" && r.category !== cat) return false;
       if (c && !(r.city || "").toLowerCase().includes(c)) return false;
+      if (urgencyFilter !== "all" && effectiveUrgency(r) !== urgencyFilter) return false;
+      if (cutoffMs && now - new Date(r.created_at).getTime() > cutoffMs) return false;
       if (s) {
         const hay = [r.part_name, r.brand, r.model, r.oem_code, r.engine_code, r.search_query]
           .filter(Boolean).join(" ").toLowerCase();
@@ -107,7 +182,7 @@ function RequestsPage() {
       }
       return true;
     });
-  }, [cat, requests, search, cityFilter]);
+  }, [cat, requests, search, cityFilter, urgencyFilter, dateFilter]);
 
   if (authLoading || !user) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -118,19 +193,45 @@ function RequestsPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link to="/" className="size-9 rounded-full bg-card grid place-items-center"><ArrowLeft className="size-4" /></Link>
-          <div className="min-w-0">
-            <h1 className="font-display text-lg tracking-wide">Talep Havuzu</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-lg tracking-wide flex items-center gap-1.5">
+              <Megaphone className="size-4 text-gold" /> Parça Talep Merkezi
+            </h1>
             <p className="text-[11px] text-muted-foreground">
-              Müşterilerin aradığı parçalara teklif verin · {filtered.length} açık talep
+              Müşterilerin aradığı parçalara teklif verin · {filtered.length} talep
             </p>
           </div>
         </div>
+
         <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-2 gap-2">
           <Input placeholder="Marka, model, OEM..." value={search}
             onChange={(e) => setSearch(e.target.value)} className="h-9 text-xs" />
           <Input placeholder="Şehir" value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)} className="h-9 text-xs" />
         </div>
+
+        <div className="max-w-2xl mx-auto px-4 pb-2 flex gap-1.5 overflow-x-auto scrollbar-none">
+          {URGENCY_FILTERS.map((u) => (
+            <button key={u.value} onClick={() => setUrgencyFilter(u.value)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all ${
+                urgencyFilter === u.value
+                  ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
+                  : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
+              }`}>{u.label}</button>
+          ))}
+        </div>
+
+        <div className="max-w-2xl mx-auto px-4 pb-2 flex gap-1.5 overflow-x-auto scrollbar-none">
+          {DATE_FILTERS.map((d) => (
+            <button key={d.value} onClick={() => setDateFilter(d.value)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wider border transition-all ${
+                dateFilter === d.value
+                  ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
+                  : "border-border text-muted-foreground hover:text-gold hover:border-gold/50"
+              }`}>{d.label}</button>
+          ))}
+        </div>
+
         <div className="max-w-2xl mx-auto px-4 pb-2.5 flex gap-1.5 overflow-x-auto scrollbar-none">
           {CATEGORIES.map((c) => (
             <button key={c} onClick={() => setCat(c)}
@@ -143,20 +244,41 @@ function RequestsPage() {
         </div>
       </header>
 
+      {/* Stats */}
+      <section className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <StatCard icon={<Megaphone className="size-4" />} label="Aktif Talep" value={stats?.active ?? 0} />
+          <StatCard icon={<CheckCircle2 className="size-4" />} label="Karşılanan" value={stats?.fulfilled ?? 0} />
+          <StatCard icon={<Timer className="size-4" />} label="Ort. İlk Teklif" value={formatMinutes(stats?.avg_first_quote_minutes ?? 0)} />
+          <StatCard icon={<Clock className="size-4" />} label="Ort. Karşılanma" value={formatHours(stats?.avg_fulfillment_hours ?? 0)} />
+        </div>
+      </section>
+
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
         {loading ? (
           <p className="text-center text-muted-foreground text-sm py-8">Yükleniyor...</p>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 px-4 space-y-3 bg-card border border-border rounded-2xl">
             <PackageSearch className="size-10 text-gold mx-auto" />
-            <p className="font-display">Şu an bu kategoride açık talep yok.</p>
-            <p className="text-xs text-muted-foreground">Yeni talepler geldiğinde burada görünecek.</p>
+            <p className="font-display">Bu filtrelerle eşleşen talep yok.</p>
+            <p className="text-xs text-muted-foreground">Filtreyi temizleyin veya yeni talepleri bekleyin.</p>
           </div>
         ) : (
           filtered.map((r) => {
             const mine = myQuoteByRequest.get(r.id);
+            const u = effectiveUrgency(r);
+            const um = URGENCY_META[u];
+            const sm = STATUS_LABEL[r.status] ?? STATUS_LABEL.new;
             return (
               <article key={r.id} className="bg-card rounded-xl border border-border p-3 sm:p-4 space-y-3">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border font-bold ${um.cls}`}>
+                    {um.emoji} {um.label}
+                  </span>
+                  <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border ${sm.cls}`}>
+                    {sm.label}
+                  </span>
+                </div>
                 <div className="flex gap-3">
                   {r.photos?.[0] && (
                     <div className="size-20 rounded-lg overflow-hidden bg-secondary shrink-0">
@@ -224,6 +346,17 @@ function RequestsPage() {
         onClose={() => setQuoting(null)}
         onSubmitted={() => { setQuoting(null); void load(); }}
       />
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number | string }) {
+  return (
+    <div className="bg-card border border-border rounded-xl p-3">
+      <div className="flex items-center gap-1.5 text-gold text-[10px] uppercase tracking-wider font-semibold">
+        {icon}<span className="truncate">{label}</span>
+      </div>
+      <p className="font-display text-xl mt-0.5 tracking-wide">{value}</p>
     </div>
   );
 }

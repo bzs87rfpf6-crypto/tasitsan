@@ -4,7 +4,7 @@ import { Search, PlusSquare, Inbox, User } from "lucide-react";
 const items = [
   { to: "/", label: "Ara", icon: Search },
   { to: "/sell", label: "Sat", icon: PlusSquare },
-  { to: "/requests", label: "Talepler", icon: Inbox },
+  { to: "/requests", label: "Talep Merkezi", icon: Inbox },
   { to: "/account", label: "Hesap", icon: User },
 ] as const;
 

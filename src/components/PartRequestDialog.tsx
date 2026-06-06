@@ -25,7 +25,14 @@ export interface PartRequestInitial {
   year?: string;
   oem?: string;
   category?: string;
+  urgency?: "normal" | "urgent" | "very_urgent";
 }
+
+const URGENCY_OPTIONS: Array<{ value: "normal" | "urgent" | "very_urgent"; label: string; emoji: string; cls: string }> = [
+  { value: "normal", label: "Normal", emoji: "🟢", cls: "border-emerald-500/50 text-emerald-400" },
+  { value: "urgent", label: "Acil", emoji: "🟠", cls: "border-orange-500/60 text-orange-400" },
+  { value: "very_urgent", label: "Çok Acil", emoji: "🔴", cls: "border-destructive/70 text-destructive" },
+];
 
 export function PartRequestDialog({
   open, onOpenChange, userId, initial = {},
@@ -48,6 +55,7 @@ export function PartRequestDialog({
     full_name: "",
     phone: "",
     email: "",
+    urgency: "normal" as "normal" | "urgent" | "very_urgent",
   });
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +71,7 @@ export function PartRequestDialog({
         year: f.year || initial.year || "",
         oem_code: f.oem_code || initial.oem || "",
         category: f.category || initial.category || "",
+        urgency: initial.urgency ?? f.urgency,
       }));
     }
     onOpenChange(v);
@@ -137,10 +146,12 @@ export function PartRequestDialog({
         phone: form.phone.trim(),
         email: form.email.trim() || null,
         message: form.description.trim() || form.part_name.trim(),
-      });
+        urgency: form.urgency,
+        is_urgent: form.urgency !== "normal",
+      } as never);
       if (error) { console.error("[part-request] insert failed:", error); throw error; }
       toast.success("Talebiniz alındı. Satıcılar teklif verecek, Taşıtsan onay sonrası size iletecek.");
-      setForm({ part_name: "", oem_code: "", engine_code: "", brand: "", model: "", year: "", category: "", city: "", description: "", full_name: "", phone: "", email: "" });
+      setForm({ part_name: "", oem_code: "", engine_code: "", brand: "", model: "", year: "", category: "", city: "", description: "", full_name: "", phone: "", email: "", urgency: "normal" });
       setFiles([]);
       onOpenChange(false);
     } catch (err: any) {
@@ -219,6 +230,30 @@ export function PartRequestDialog({
             <Textarea placeholder="Açıklama (parçanın detayı, kullanım yeri, vb.)" rows={3} maxLength={600}
               value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="resize-none" />
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] uppercase tracking-wider text-gold font-semibold">Aciliyet *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {URGENCY_OPTIONS.map((u) => {
+                  const active = form.urgency === u.value;
+                  return (
+                    <button
+                      key={u.value}
+                      type="button"
+                      onClick={() => setForm({ ...form, urgency: u.value })}
+                      className={`h-10 rounded-lg text-xs font-semibold border transition-all flex items-center justify-center gap-1 ${
+                        active
+                          ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
+                          : `bg-card ${u.cls}`
+                      }`}
+                    >
+                      <span aria-hidden>{u.emoji}</span> {u.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
 
             <div className="pt-1.5 border-t border-border" />
             <Input placeholder="Ad Soyad *" value={form.full_name} maxLength={100}

@@ -977,6 +977,7 @@ export type Database = {
         Args: { _part_id: string; _viewer_key: string }
         Returns: number
       }
+      request_center_stats: { Args: never; Returns: Json }
       search_parts_by_oem: {
         Args: { _limit?: number; _oem: string }
         Returns: {
