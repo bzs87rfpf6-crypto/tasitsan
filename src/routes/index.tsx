@@ -42,6 +42,7 @@ function Index() {
   const [oem, setOem] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [partType, setPartType] = useState<PartType | "">("");
 
   const [parts, setParts] = useState<Part[]>([]);
   const [loading, setLoading] = useState(true);
