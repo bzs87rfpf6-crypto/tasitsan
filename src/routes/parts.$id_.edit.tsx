@@ -1,7 +1,25 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { X, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { PhotoPicker } from "@/components/PhotoPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -15,16 +33,76 @@ import { StockInsightsCard } from "@/components/StockInsightsCard";
 
 const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
+const MAX_PHOTOS = 10;
+const MIN_PHOTOS = 1;
 
 const CATEGORIES = [
   "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
   "Süspansiyon", "Klima", "Yakıt Sistemi", "Aydınlatma", "Diğer",
 ];
 
+type PhotoItem =
+  | { id: string; kind: "existing"; url: string }
+  | { id: string; kind: "new"; file: File; preview: string };
+
 export const Route = createFileRoute("/parts/$id_/edit")({
   head: () => ({ meta: [{ title: "İlan Düzenle — Taşıtsan" }] }),
   component: EditPartPage,
 });
+
+function SortablePhoto({
+  item,
+  onRemove,
+  isPrimary,
+}: {
+  item: PhotoItem;
+  onRemove: () => void;
+  isPrimary: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    touchAction: "none",
+  };
+  const src = item.kind === "existing" ? item.url : item.preview;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative aspect-square rounded-lg overflow-hidden bg-card border ${
+        isDragging ? "border-gold ring-2 ring-gold/40" : "border-transparent"
+      }`}
+    >
+      <img src={src} alt="" className="w-full h-full object-cover pointer-events-none select-none" draggable={false} />
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label="Sürükle ve sırayı değiştir"
+        className="absolute inset-x-0 bottom-0 h-7 flex items-center justify-center gap-1 bg-background/70 backdrop-blur-sm text-[10px] uppercase tracking-wider text-muted-foreground cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="size-3" />
+        Sürükle
+      </button>
+      {isPrimary && (
+        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-gold text-gold-foreground text-[9px] font-bold uppercase tracking-wider">
+          Kapak
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="Fotoğrafı kaldır"
+        className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center"
+      >
+        <X className="size-3.5" />
+      </button>
+    </div>
+  );
+}
 
 function EditPartPage() {
   const { id } = Route.useParams();
@@ -38,13 +116,15 @@ function EditPartPage() {
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "",
   });
   const [oemCodes, setOemCodes] = useState<string[]>([]);
-  const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  const [items, setItems] = useState<PhotoItem[]>([]);
   const [removedPhotos, setRemovedPhotos] = useState<string[]>([]);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const MAX_PHOTOS = 10;
-  const MIN_PHOTOS = 1;
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   useEffect(() => {
     if (!authLoading && !user) nav({ to: "/auth" });
@@ -83,7 +163,10 @@ function EditPartPage() {
         stock_quantity: data.stock_quantity?.toString() ?? "1",
         city: data.city ?? "",
       });
-      setExistingPhotos((data.photos as string[]) ?? []);
+      const photos = (data.photos as string[]) ?? [];
+      setItems(
+        photos.map((url, i) => ({ id: `existing-${i}-${url}`, kind: "existing" as const, url })),
+      );
       const arr = (data.oem_codes as string[] | null) ?? (data.oem_code ? [data.oem_code] : []);
       setOemCodes(arr);
       setLoading(false);
@@ -91,10 +174,13 @@ function EditPartPage() {
     return () => { cancelled = true; };
   }, [user, id, nav]);
 
-  const previews = useMemo(() => newFiles.map((f) => URL.createObjectURL(f)), [newFiles]);
-  useEffect(() => () => { previews.forEach((u) => URL.revokeObjectURL(u)); }, [previews]);
-
-  const totalPhotos = existingPhotos.length + newFiles.length;
+  // Revoke object URLs for any 'new' items when unmounting.
+  useEffect(() => {
+    return () => {
+      items.forEach((it) => { if (it.kind === "new") URL.revokeObjectURL(it.preview); });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addFiles = (list: FileList | null) => {
     if (!list || list.length === 0) return;
@@ -107,14 +193,35 @@ function EditPartPage() {
     }
     if (rejected.length) toast.error(`Desteklenmeyen: ${rejected.join(", ")}. Sadece JPG/PNG/WebP yükleyin.`);
     if (!accepted.length) return;
-    const remaining = Math.max(0, MAX_PHOTOS - existingPhotos.length - newFiles.length);
+    const remaining = Math.max(0, MAX_PHOTOS - items.length);
     if (remaining === 0) { toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz.`); return; }
-    setNewFiles((prev) => [...prev, ...accepted.slice(0, remaining)]);
+    const next: PhotoItem[] = accepted.slice(0, remaining).map((file) => ({
+      id: `new-${crypto.randomUUID()}`,
+      kind: "new" as const,
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setItems((prev) => [...prev, ...next]);
   };
 
-  const removeExisting = (url: string) => {
-    setExistingPhotos((prev) => prev.filter((u) => u !== url));
-    setRemovedPhotos((prev) => (prev.includes(url) ? prev : [...prev, url]));
+  const removeItem = (item: PhotoItem) => {
+    if (item.kind === "existing") {
+      setRemovedPhotos((prev) => (prev.includes(item.url) ? prev : [...prev, item.url]));
+    } else {
+      URL.revokeObjectURL(item.preview);
+    }
+    setItems((prev) => prev.filter((it) => it.id !== item.id));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setItems((prev) => {
+      const oldIndex = prev.findIndex((it) => it.id === active.id);
+      const newIndex = prev.findIndex((it) => it.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
   };
 
   const extractStoragePath = (url: string): string | null => {
@@ -131,25 +238,30 @@ function EditPartPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const finalCount = existingPhotos.length + newFiles.length;
-    if (finalCount < MIN_PHOTOS) { toast.error(`En az ${MIN_PHOTOS} fotoğraf olmalı.`); return; }
-    if (finalCount > MAX_PHOTOS) { toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz.`); return; }
+    if (items.length < MIN_PHOTOS) { toast.error(`En az ${MIN_PHOTOS} fotoğraf olmalı.`); return; }
+    if (items.length > MAX_PHOTOS) { toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz.`); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli fiyat girin."); return; }
     setSubmitting(true);
     const uploadedPaths: string[] = [];
     try {
-      const photoUrls = [...existingPhotos];
-      for (const f of newFiles) {
-        const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
+      // Upload new files, preserving order.
+      const uploadedUrls = new Map<string, string>();
+      for (const it of items) {
+        if (it.kind !== "new") continue;
+        const ext = (it.file.name.split(".").pop() ?? "jpg").toLowerCase();
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("part-photos")
-          .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
+          .upload(path, it.file, { cacheControl: "3600", upsert: false, contentType: it.file.type || "image/jpeg" });
         if (upErr) throw new Error(`Fotoğraf yüklenemedi: ${upErr.message}`);
         uploadedPaths.push(path);
         const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
-        photoUrls.push(pub.publicUrl);
+        uploadedUrls.set(it.id, pub.publicUrl);
       }
+
+      const photoUrls = items.map((it) =>
+        it.kind === "existing" ? it.url : (uploadedUrls.get(it.id) as string),
+      );
 
       const { error } = await supabase.from("parts").update({
         title: form.title,
@@ -180,7 +292,6 @@ function EditPartPage() {
       toast.success("İlan güncellendi.");
       nav({ to: "/account" });
     } catch (err: any) {
-      // Rollback any newly uploaded files if the update failed.
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("part-photos").remove(uploadedPaths).catch(() => {});
       }
@@ -189,7 +300,6 @@ function EditPartPage() {
       setSubmitting(false);
     }
   };
-
 
   if (authLoading || loading) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -220,39 +330,26 @@ function EditPartPage() {
         <section className="space-y-2">
           <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
             <span>Fotoğraflar (en az {MIN_PHOTOS}, en fazla {MAX_PHOTOS})</span>
-            <span className={`text-[10px] ${totalPhotos >= MIN_PHOTOS ? "text-emerald-400" : "text-muted-foreground"}`}>
-              {totalPhotos}/{MAX_PHOTOS}
+            <span className={`text-[10px] ${items.length >= MIN_PHOTOS ? "text-emerald-400" : "text-muted-foreground"}`}>
+              {items.length}/{MAX_PHOTOS}
             </span>
           </label>
-          {totalPhotos > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              {existingPhotos.map((url) => (
-                <div key={url} className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => removeExisting(url)}
-                    aria-label="Fotoğrafı kaldır"
-                    className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
-                    <X className="size-3.5" />
-                  </button>
+          {items.length > 0 && (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={items.map((it) => it.id)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-3 gap-2">
+                  {items.map((it, i) => (
+                    <SortablePhoto key={it.id} item={it} onRemove={() => removeItem(it)} isPrimary={i === 0} />
+                  ))}
                 </div>
-              ))}
-              {newFiles.map((f, i) => (
-                <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
-                  <img src={previews[i]} alt="" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => setNewFiles(newFiles.filter((_, j) => j !== i))}
-                    aria-label="Fotoğrafı kaldır"
-                    className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
-          {totalPhotos < MAX_PHOTOS && (
+          {items.length < MAX_PHOTOS && (
             <PhotoPicker onFiles={(fl) => addFiles(fl)} />
           )}
-          <p className="text-[11px] text-muted-foreground">
-            Galeriden seçebilir veya kamerayla yeni fotoğraf çekebilirsiniz. JPG/PNG/WebP, en fazla 10MB.
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Fotoğrafları sürükleyerek sırayı değiştirebilirsiniz. İlk fotoğraf <span className="text-gold font-semibold">kapak</span> olarak görüntülenir. JPG/PNG/WebP, en fazla 10MB.
           </p>
         </section>
 
