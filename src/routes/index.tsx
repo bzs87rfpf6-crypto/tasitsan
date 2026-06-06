@@ -128,7 +128,7 @@ function Index() {
       }
     }, 600);
     return () => { active = false; clearTimeout(t); };
-  }, [q, cat, brand, model, year, oem, minPrice, maxPrice]);
+  }, [q, cat, brand, model, year, oem, minPrice, maxPrice, partType]);
 
   const activeFilterCount = useMemo(() =>
     [brand, model, year, oem, minPrice, maxPrice].filter((v) => v.trim() !== "").length,
