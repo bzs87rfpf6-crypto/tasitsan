@@ -39,8 +39,12 @@ function EditPartPage() {
   });
   const [oemCodes, setOemCodes] = useState<string[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  const [removedPhotos, setRemovedPhotos] = useState<string[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const MAX_PHOTOS = 10;
+  const MIN_PHOTOS = 1;
 
   useEffect(() => {
     if (!authLoading && !user) nav({ to: "/auth" });
