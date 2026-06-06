@@ -146,10 +146,12 @@ export function PartRequestDialog({
         phone: form.phone.trim(),
         email: form.email.trim() || null,
         message: form.description.trim() || form.part_name.trim(),
+        urgency: form.urgency,
+        is_urgent: form.urgency !== "normal",
       });
       if (error) { console.error("[part-request] insert failed:", error); throw error; }
       toast.success("Talebiniz alındı. Satıcılar teklif verecek, Taşıtsan onay sonrası size iletecek.");
-      setForm({ part_name: "", oem_code: "", engine_code: "", brand: "", model: "", year: "", category: "", city: "", description: "", full_name: "", phone: "", email: "" });
+      setForm({ part_name: "", oem_code: "", engine_code: "", brand: "", model: "", year: "", category: "", city: "", description: "", full_name: "", phone: "", email: "", urgency: "normal" });
       setFiles([]);
       onOpenChange(false);
     } catch (err: any) {
