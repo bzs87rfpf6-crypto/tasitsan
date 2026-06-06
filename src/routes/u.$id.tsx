@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Package, Calendar, Phone, MessageCircle } from "lucide-react";
+import { Package, Calendar, Phone, MessageCircle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SafePartImage } from "@/components/SafePartImage";
+import { useAuth } from "@/hooks/use-auth";
+
 
 export const Route = createFileRoute("/u/$id")({
   head: () => ({ meta: [{ title: "Satıcı Profili — Taşıtsan" }] }),
@@ -44,6 +46,7 @@ interface PartCard {
 
 function PublicProfilePage() {
   const { id } = useParams({ from: "/u/$id" });
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [parts, setParts] = useState<PartCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +58,7 @@ function PublicProfilePage() {
       const [{ data: p }, { data: ps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id,display_name,city,avatar_url,is_verified,created_at,whatsapp,verified_phone")
+          .select("id,display_name,city,avatar_url,is_verified,created_at")
           .eq("id", id)
           .maybeSingle(),
         supabase
@@ -66,12 +69,25 @@ function PublicProfilePage() {
           .order("created_at", { ascending: false }),
       ]);
       if (cancelled) return;
-      setProfile((p as Profile | null) ?? null);
+      let merged: Profile | null = p ? { ...(p as any), whatsapp: null, verified_phone: null } : null;
+      if (merged && user) {
+        const { data: contact } = await supabase
+          .from("profiles")
+          .select("whatsapp,verified_phone")
+          .eq("id", id)
+          .maybeSingle();
+        if (contact) {
+          merged.whatsapp = (contact as any).whatsapp ?? null;
+          merged.verified_phone = (contact as any).verified_phone ?? null;
+        }
+      }
+      setProfile(merged);
       setParts((ps ?? []) as PartCard[]);
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [id]);
+
+  }, [id, user]);
 
   if (loading) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -118,7 +134,27 @@ function PublicProfilePage() {
           </div>
         </section>
 
-        {(profile.whatsapp || profile.verified_phone) && (
+        {!user ? (
+          <section className="bg-card border border-gold/30 rounded-xl p-4 text-center space-y-3">
+            <div className="mx-auto size-10 rounded-full bg-gold/10 grid place-items-center">
+              <Lock className="size-5 text-gold" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold">İletişim bilgileri üyelere özel</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Satıcının telefon, WhatsApp ve diğer iletişim bilgilerini görmek için giriş yapın.
+              </p>
+            </div>
+            <Link
+              to="/auth"
+              search={{ redirect: `/u/${id}` } as any}
+              className="inline-flex items-center justify-center h-11 px-5 rounded-lg bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+            >
+              Giriş Yap / Üye Ol
+            </Link>
+          </section>
+        ) : (profile.whatsapp || profile.verified_phone) && (
+
           <section className="bg-card border border-border rounded-xl p-4 space-y-2">
             <h2 className="text-xs uppercase tracking-wider text-gold font-semibold">İletişim</h2>
             {profile.verified_phone && (
