@@ -201,7 +201,7 @@ function BulkUploadPage() {
         prev.map((r) => {
           const dupLocal = r.oem.some((c) => localDupOems.has(c));
           const dupDb = r.oem.some((c) => dbOems.has(c));
-          const warnings: string[] = [];
+          const warnings: string[] = [...(r.warnings ?? []).filter((w) => w !== "Dosyada tekrar eden OEM" && w !== "Bu OEM ile mevcut ilanınız var")];
           if (dupLocal) warnings.push("Dosyada tekrar eden OEM");
           if (dupDb) warnings.push("Bu OEM ile mevcut ilanınız var");
           return { ...r, duplicate: dupLocal || dupDb, warnings };
