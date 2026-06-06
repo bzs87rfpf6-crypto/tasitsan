@@ -293,7 +293,10 @@ function SellPage() {
                   form.condition === v ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
                 }`}>{l}</button>
             ))}
+          </div>
         </div>
+
+
 
         <div>
           <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">Parça Tipi *</label>
