@@ -231,6 +231,30 @@ export function PartRequestDialog({
               value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="resize-none" />
 
+            <div className="space-y-1.5">
+              <label className="text-[11px] uppercase tracking-wider text-gold font-semibold">Aciliyet *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {URGENCY_OPTIONS.map((u) => {
+                  const active = form.urgency === u.value;
+                  return (
+                    <button
+                      key={u.value}
+                      type="button"
+                      onClick={() => setForm({ ...form, urgency: u.value })}
+                      className={`h-10 rounded-lg text-xs font-semibold border transition-all flex items-center justify-center gap-1 ${
+                        active
+                          ? "bg-gold-gradient text-gold-foreground border-transparent shadow-gold"
+                          : `bg-card ${u.cls}`
+                      }`}
+                    >
+                      <span aria-hidden>{u.emoji}</span> {u.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+
             <div className="pt-1.5 border-t border-border" />
             <Input placeholder="Ad Soyad *" value={form.full_name} maxLength={100}
               onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
