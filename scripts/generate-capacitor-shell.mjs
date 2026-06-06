@@ -9,8 +9,12 @@
  * üretiyoruz. SSR yayını etkilenmez: Cloudflare Worker route'ları statik
  * fallback'ten önce gelir.
  *
- * Vite build çalışmadıysa (dist yoksa) sessizce çıkar — `cap sync` hatasını
- * postbuild patlamasıyla maskelememek için.
+ * Strateji:
+ *  1) dist/server içindeki TanStack Start manifestini bul, __root__ preloads
+ *     dizisini çıkar.
+ *  2) Bulunamazsa dist/client/assets içindeki `index-*.js` dosyalarını
+ *     entry olarak kullan (fallback — vite chunk adlandırma sözleşmesi).
+ *  3) Hiçbir entry bulunamazsa hata fırlat (sessiz başarısızlık yok).
  */
 import {
   existsSync,
@@ -24,42 +28,60 @@ const CLIENT = "dist/client";
 const SERVER = "dist/server";
 
 const log = (m) => console.log(`[cap-shell] ${m}`);
+const warn = (m) => console.warn(`[cap-shell] ${m}`);
 
-if (!existsSync(CLIENT) || !existsSync(SERVER)) {
-  log("dist yok, atlanıyor (vite build çalışmamış).");
-  process.exit(0);
-}
-
-const manifestFile = readdirSync(SERVER).find((f) =>
-  /^_tanstack-start-manifest_v-.*\.mjs$/.test(f),
-);
-if (!manifestFile) {
-  log("UYARI: TanStack Start manifesti bulunamadı, index.html üretilemedi.");
-  process.exit(0);
-}
-const manifestSrc = readFileSync(join(SERVER, manifestFile), "utf8");
-
-const rootMatch = manifestSrc.match(
-  /__root__:\s*\{[^}]*?preloads:\s*\[([^\]]+)\]/,
-);
-if (!rootMatch) {
-  log("UYARI: __root__ preloads çıkarılamadı, index.html üretilemedi.");
-  process.exit(0);
-}
-const entryScripts = [...rootMatch[1].matchAll(/"(\/assets\/[^"]+\.js)"/g)].map(
-  (m) => m[1],
-);
-if (entryScripts.length === 0) {
-  log("UYARI: __root__ preloads boş.");
+if (!existsSync(CLIENT)) {
+  warn("dist/client yok, atlanıyor (vite build çalışmamış).");
   process.exit(0);
 }
 
 const assetsDir = join(CLIENT, "assets");
-const cssFiles = existsSync(assetsDir)
-  ? readdirSync(assetsDir)
-      .filter((f) => f.endsWith(".css"))
-      .map((f) => `/assets/${f}`)
-  : [];
+const allClientAssets = existsSync(assetsDir) ? readdirSync(assetsDir) : [];
+
+function findEntriesFromManifest() {
+  if (!existsSync(SERVER)) return [];
+  const manifestFiles = readdirSync(SERVER).filter((f) =>
+    /tanstack-start-manifest.*\.mjs$/.test(f),
+  );
+  for (const file of manifestFiles) {
+    const src = readFileSync(join(SERVER, file), "utf8");
+    // __root__ bloğunda preloads dizisini yakala. children içinde `]` olabilir
+    // ama `}` olmaz; assets: void 0 da `}` içermez — `[^}]` güvenli.
+    const m = src.match(/__root__:\s*\{[^}]*?preloads:\s*\[([^\]]+)\]/);
+    if (!m) continue;
+    const scripts = [...m[1].matchAll(/"(\/assets\/[^"]+\.js)"/g)].map(
+      (x) => x[1],
+    );
+    if (scripts.length) {
+      log(`manifest: ${file}`);
+      return scripts;
+    }
+  }
+  return [];
+}
+
+function findEntriesFromAssets() {
+  // Vite root entry: assets/index-<hash>.js. Birden fazla varsa hepsini al.
+  const matches = allClientAssets
+    .filter((f) => /^index-[A-Za-z0-9_-]+\.js$/.test(f))
+    .map((f) => `/assets/${f}`);
+  if (matches.length) log(`fallback: assets/index-*.js (${matches.length})`);
+  return matches;
+}
+
+let entryScripts = findEntriesFromManifest();
+if (entryScripts.length === 0) entryScripts = findEntriesFromAssets();
+
+if (entryScripts.length === 0) {
+  console.error(
+    "[cap-shell] HATA: entry script bulunamadı. dist/client/assets içinde index-*.js dosyası ve dist/server içinde TanStack Start manifesti yok.",
+  );
+  process.exit(1);
+}
+
+const cssFiles = allClientAssets
+  .filter((f) => f.endsWith(".css"))
+  .map((f) => `/assets/${f}`);
 
 const scriptTags = entryScripts
   .map((src, i) =>
