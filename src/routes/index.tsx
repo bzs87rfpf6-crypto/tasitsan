@@ -12,6 +12,7 @@ import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics";
+import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 
 export const Route = createFileRoute("/")({
   head: () => ({
