@@ -117,6 +117,7 @@ function EditPartPage() {
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "",
   });
   const [oemCodes, setOemCodes] = useState<string[]>([]);
+  const [partType, setPartType] = useState<PartType | "">("");
   const [items, setItems] = useState<PhotoItem[]>([]);
   const [removedPhotos, setRemovedPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
