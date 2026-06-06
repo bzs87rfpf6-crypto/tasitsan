@@ -117,6 +117,7 @@ function SellPage() {
     if (files.length > 10) { toast.error("En fazla 10 fotoğraf yükleyebilirsin."); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli bir fiyat girin."); return; }
     if (oemCodes.length === 0) { toast.error("En az bir OEM numarası girin."); return; }
+    if (!partType) { toast.error("Parça tipi seçin."); return; }
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
