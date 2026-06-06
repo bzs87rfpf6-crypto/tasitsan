@@ -39,6 +39,7 @@ function SellPage() {
     title: "", description: "", brand: "", model: "", year: "", engine_code: "",
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "", whatsapp: "",
   });
+  const [partType, setPartType] = useState<PartType | "">("");
   const [oemCodes, setOemCodes] = useState<string[]>([]);
   
   const [files, setFiles] = useState<File[]>([]);
