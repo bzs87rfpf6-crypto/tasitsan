@@ -219,24 +219,28 @@ function EditPartPage() {
 
         <section className="space-y-2">
           <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
-            <span>Fotoğraflar (3-6)</span>
-            <span className={`text-[10px] ${totalPhotos >= 3 ? "text-emerald-400" : "text-muted-foreground"}`}>{totalPhotos}/3</span>
+            <span>Fotoğraflar (en az {MIN_PHOTOS}, en fazla {MAX_PHOTOS})</span>
+            <span className={`text-[10px] ${totalPhotos >= MIN_PHOTOS ? "text-emerald-400" : "text-muted-foreground"}`}>
+              {totalPhotos}/{MAX_PHOTOS}
+            </span>
           </label>
           {totalPhotos > 0 && (
             <div className="grid grid-cols-3 gap-2">
-              {existingPhotos.map((url, i) => (
+              {existingPhotos.map((url) => (
                 <div key={url} className="relative aspect-square rounded-lg overflow-hidden bg-card">
                   <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => setExistingPhotos(existingPhotos.filter((_, j) => j !== i))}
+                  <button type="button" onClick={() => removeExisting(url)}
+                    aria-label="Fotoğrafı kaldır"
                     className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
                     <X className="size-3.5" />
                   </button>
                 </div>
               ))}
               {newFiles.map((f, i) => (
-                <div key={`${f.name}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
+                <div key={`${f.name}-${f.lastModified}-${i}`} className="relative aspect-square rounded-lg overflow-hidden bg-card">
                   <img src={previews[i]} alt="" className="w-full h-full object-cover" />
                   <button type="button" onClick={() => setNewFiles(newFiles.filter((_, j) => j !== i))}
+                    aria-label="Fotoğrafı kaldır"
                     className="absolute top-1 right-1 size-6 rounded-full bg-background/80 grid place-items-center">
                     <X className="size-3.5" />
                   </button>
@@ -244,10 +248,14 @@ function EditPartPage() {
               ))}
             </div>
           )}
-          {totalPhotos < 6 && (
+          {totalPhotos < MAX_PHOTOS && (
             <PhotoPicker onFiles={(fl) => addFiles(fl)} />
           )}
+          <p className="text-[11px] text-muted-foreground">
+            Galeriden seçebilir veya kamerayla yeni fotoğraf çekebilirsiniz. JPG/PNG/WebP, en fazla 10MB.
+          </p>
         </section>
+
 
         <Input placeholder="Başlık" value={form.title} required maxLength={120}
           onChange={(e) => setForm({ ...form, title: e.target.value })} className="h-12 bg-card" />
