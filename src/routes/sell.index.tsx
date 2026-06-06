@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
+import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 import { recordBulkClick } from "@/lib/bulkNavTrace";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
