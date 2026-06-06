@@ -422,27 +422,37 @@ function PartDetail() {
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border safe-bottom">
         <div className="max-w-md mx-auto p-3 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <a href={contactPhone ? `tel:${contactPhone.replace(/\s/g, "")}` : undefined}
-              onClick={(e) => {
-                if (!contactPhone) { e.preventDefault(); toast.info("İletişim numarası yakında"); return; }
-                trackEvent("click_call", { from: "part_detail", part_id: part.id });
-              }}
-              className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
+          {!user ? (
+            <button
+              onClick={() => nav({ to: "/auth", search: { redirect: `/parts/${part.id}` } as any })}
+              className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-gold/40 font-semibold text-sm active:scale-[0.98] transition-transform"
+            >
               <Phone className="size-4 text-gold" />
-              Bizi Ara
-            </a>
-            <a href={contactPhone ? `https://wa.me/${contactPhone.replace(/\D/g, "")}` : undefined}
-              target="_blank" rel="noopener noreferrer"
-              onClick={(e) => {
-                if (!contactPhone) { e.preventDefault(); toast.info("WhatsApp hattı yakında"); return; }
-                trackEvent("click_whatsapp", { from: "part_detail", part_id: part.id });
-              }}
-              className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
-              <MessageCircle className="size-4 text-gold" />
-              WhatsApp
-            </a>
-          </div>
+              İletişim bilgilerini görmek için giriş yap
+            </button>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <a href={contactPhone ? `tel:${contactPhone.replace(/\s/g, "")}` : undefined}
+                onClick={(e) => {
+                  if (!contactPhone) { e.preventDefault(); toast.info("İletişim numarası yakında"); return; }
+                  trackEvent("click_call", { from: "part_detail", part_id: part.id });
+                }}
+                className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
+                <Phone className="size-4 text-gold" />
+                Bizi Ara
+              </a>
+              <a href={contactPhone ? `https://wa.me/${contactPhone.replace(/\D/g, "")}` : undefined}
+                target="_blank" rel="noopener noreferrer"
+                onClick={(e) => {
+                  if (!contactPhone) { e.preventDefault(); toast.info("WhatsApp hattı yakında"); return; }
+                  trackEvent("click_whatsapp", { from: "part_detail", part_id: part.id });
+                }}
+                className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
+                <MessageCircle className="size-4 text-gold" />
+                WhatsApp
+              </a>
+            </div>
+          )}
           <button onClick={openForm}
             className="w-full flex items-center justify-center gap-2 h-14 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold active:scale-[0.98] transition-transform">
             <Send className="size-5" />
@@ -450,6 +460,7 @@ function PartDetail() {
           </button>
         </div>
       </div>
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md bg-card border-border">
