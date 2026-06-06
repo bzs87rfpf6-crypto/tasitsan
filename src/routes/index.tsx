@@ -422,6 +422,7 @@ function Index() {
         initial={{ search_query: q, brand, model, year, oem, category: cat === "Tümü" ? "" : cat }}
       />
       <PhotoSearchDialog open={photoOpen} onOpenChange={setPhotoOpen} />
+      <AiExpertDialog open={aiExpertOpen} onOpenChange={setAiExpertOpen} />
     </div>
   );
 }
