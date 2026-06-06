@@ -143,13 +143,13 @@ function RequestsPage() {
     const [reqRes, quoteRes, statsRes] = await Promise.all([
       supabase.from("open_part_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("request_quotes").select("id,request_id,price,delivery_time,condition,status").eq("seller_id", user.id),
-      supabase.rpc("request_center_stats" as never),
+      (supabase.rpc as unknown as (fn: string) => Promise<{ data: unknown; error: unknown }>)("request_center_stats"),
     ]);
     if (reqRes.error) toast.error(reqRes.error.message);
     setRequests((reqRes.data ?? []) as OpenRequest[]);
     setMyQuotes((quoteRes.data ?? []) as MyQuote[]);
     if (!statsRes.error && statsRes.data) {
-      setStats(statsRes.data as unknown as CenterStats);
+      setStats(statsRes.data as CenterStats);
     }
     setLoading(false);
   };
