@@ -454,6 +454,7 @@ export type Database = {
           model: string | null
           oem_code: string | null
           oem_codes: string[]
+          part_type: string | null
           photos: string[]
           price: number | null
           reviewed_at: string | null
@@ -479,6 +480,7 @@ export type Database = {
           model?: string | null
           oem_code?: string | null
           oem_codes?: string[]
+          part_type?: string | null
           photos?: string[]
           price?: number | null
           reviewed_at?: string | null
@@ -504,6 +506,7 @@ export type Database = {
           model?: string | null
           oem_code?: string | null
           oem_codes?: string[]
+          part_type?: string | null
           photos?: string[]
           price?: number | null
           reviewed_at?: string | null
