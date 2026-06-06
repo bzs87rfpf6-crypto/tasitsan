@@ -112,6 +112,7 @@ interface PartFull {
   seller_id: string; created_at: string;
   oem_code: string | null; stock_quantity: number | null;
   oem_codes: string[] | null; engine_code: string | null;
+  part_type: string | null;
 }
 
 
