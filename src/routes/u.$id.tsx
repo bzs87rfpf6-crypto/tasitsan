@@ -87,7 +87,7 @@ function PublicProfilePage() {
     })();
     return () => { cancelled = true; };
 
-  }, [id]);
+  }, [id, user]);
 
   if (loading) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
