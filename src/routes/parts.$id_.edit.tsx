@@ -276,6 +276,7 @@ function EditPartPage() {
         engine_code: form.engine_code || null,
         category: form.category,
         condition: form.condition,
+        part_type: partType || null,
         price: form.price ? parseFloat(form.price) : null,
         stock_quantity: form.stock_quantity ? Math.max(0, parseInt(form.stock_quantity)) : 1,
         city: form.city || null,
