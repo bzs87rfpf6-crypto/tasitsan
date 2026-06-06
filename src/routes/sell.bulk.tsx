@@ -349,6 +349,7 @@ function BulkUploadPage() {
             oem_codes: r.oem,
             category: "Diğer",
             condition: "used",
+            part_type: r.partType,
             price: r.price,
             stock_quantity: r.qty,
             city: profile.city,
