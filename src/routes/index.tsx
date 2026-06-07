@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { PartCard, type Part } from "@/components/PartCard";
 import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
 import { AiExpertDialog } from "@/components/AiExpertDialog";
+import { AiExpertProDialog } from "@/components/AiExpertProDialog";
 import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ function Index() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [aiExpertOpen, setAiExpertOpen] = useState(false);
+  const [aiProOpen, setAiProOpen] = useState(false);
   const [contactPhone, setContactPhone] = useState("");
 
   useEffect(() => {
@@ -169,17 +171,25 @@ function Index() {
             )}
           </div>
 
+          <button
+            onClick={() => setAiProOpen(true)}
+            className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+          >
+            <Sparkles className="size-4" />
+            AI Parça Uzmanı 2.0 — OEM veya Fotoğraf
+          </button>
+
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setAiExpertOpen(true)}
-              className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+              className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
               <Sparkles className="size-4" />
               AI Parça Uzmanı
             </button>
             <button
               onClick={() => setPhotoOpen(true)}
-              className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 shadow-gold/30"
+              className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
               <Camera className="size-4" />
               Fotoğraftan Bul
@@ -425,6 +435,19 @@ function Index() {
       <AiExpertDialog
         open={aiExpertOpen}
         onOpenChange={setAiExpertOpen}
+        onCreateRequest={(init) => {
+          setQ(init.search_query);
+          setBrand(init.brand);
+          setModel(init.model);
+          setYear(init.year);
+          setOem(init.oem);
+          if (init.category) setCat(init.category);
+          setRequestOpen(true);
+        }}
+      />
+      <AiExpertProDialog
+        open={aiProOpen}
+        onOpenChange={setAiProOpen}
         onCreateRequest={(init) => {
           setQ(init.search_query);
           setBrand(init.brand);
