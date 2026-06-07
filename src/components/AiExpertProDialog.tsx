@@ -274,12 +274,28 @@ export function AiExpertProDialog({
         )}
 
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin text-gold" /> Geniş kaynaklarda araştırılıyor...
+          <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground bg-muted/40 border border-border rounded-xl">
+            <Loader2 className="size-3.5 animate-spin text-gold" />
+            {stage === "db" && "Taşıtsan stokları taranıyor..."}
+            {stage === "cache" && "Önbellek kontrol ediliyor..."}
+            {stage === "ai" && "AI geniş kaynaklarda araştırıyor..."}
           </div>
         )}
 
-        {result && !loading && (
+        {/* Quick DB matches (visible the instant they arrive, even before AI finishes) */}
+        {!result && matches.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center gap-1.5">
+              <Database className="size-3.5" /> Stoklarda hızlı eşleşmeler ({matches.length})
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {matches.map((p) => <PartCard key={p.id} part={p} />)}
+            </div>
+          </div>
+        )}
+
+        {result && (
+
           <div className="space-y-4">
             {/* Research card */}
             <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
