@@ -4,6 +4,7 @@ import { Sparkles, Loader2, Search, Camera, Upload, X, RefreshCw, PackageSearch,
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupCachedResearch, researchPart } from "@/lib/api/ai-expert-pro.functions";
+import { checkRateLimit } from "@/lib/security.functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ export function AiExpertProDialog({
 }) {
   const research = useServerFn(researchPart);
   const lookupCache = useServerFn(lookupCachedResearch);
+  const rateLimit = useServerFn(checkRateLimit);
   const fileRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<"text" | "photo">("text");
   const [query, setQuery] = useState("");
@@ -138,6 +140,14 @@ export function AiExpertProDialog({
 
       // STAGE 3 — AI fallback (only when cache misses or image input).
       setStage("ai");
+      // Rate limit AI queries: 20 per minute per user, 60 per 10 min per IP
+      const rl = await rateLimit({
+        data: { action: "ai-expert", max: 20, windowSeconds: 60, scope: "ip+user" },
+      });
+      if (!rl.allowed) {
+        toast.error(`AI uzmanı çok yoğun. ${rl.retry_after_seconds} sn sonra tekrar dene.`);
+        setStage("idle"); setLoading(false); return;
+      }
       const res = await research({
         data: {
           query: raw || undefined,
