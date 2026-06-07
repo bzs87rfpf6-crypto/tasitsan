@@ -87,6 +87,17 @@ function AuthPage() {
           setLoading(false);
           return;
         }
+
+        // Rate limit signup attempts per IP (5 / 10 minutes)
+        const rl = await rateLimit({
+          data: { action: "signup", max: 5, windowSeconds: 600, scope: "ip" },
+        });
+        if (!rl.allowed) {
+          toast.error(`Çok fazla kayıt denemesi. ${rl.retry_after_seconds} sn sonra tekrar dene.`);
+          setLoading(false);
+          return;
+        }
+
         const authEmail = phoneToAuthEmail(digits);
         const { data, error } = await supabase.auth.signUp({
           email: authEmail,
@@ -127,11 +138,36 @@ function AuthPage() {
           }
           authEmail = phoneToAuthEmail(digits);
         }
+
+        // Lockout check: 5+ failed attempts within 15 min for this identifier
+        const lock = await lockoutCheck({ data: { identifier: authEmail } });
+        if (lock.locked) {
+          toast.error("Hesap geçici olarak kilitlendi. 15 dakika sonra tekrar dene.");
+          setLoading(false);
+          return;
+        }
+
+        // Rate limit login attempts per IP (10 / minute)
+        const rl = await rateLimit({
+          data: { action: "login", max: 10, windowSeconds: 60, scope: "ip" },
+        });
+        if (!rl.allowed) {
+          toast.error(`Çok fazla deneme. ${rl.retry_after_seconds} sn bekle.`);
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
           email: authEmail,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          // Record failure for lockout tracking
+          recordFailure({ data: { identifier: authEmail, kind: isEmail ? "email" : "phone" } }).catch(() => {});
+          throw error;
+        }
+        // Successful login — clear failure counter
+        clearFailures({ data: { identifier: authEmail } }).catch(() => {});
         toast.success("Hoş geldin!");
         nav({ to: "/" });
       }
@@ -146,6 +182,7 @@ function AuthPage() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen">
