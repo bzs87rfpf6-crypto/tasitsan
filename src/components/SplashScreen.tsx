@@ -59,7 +59,7 @@ export function SplashScreen() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#0a0907",
+        backgroundColor: "#121212",
         color: "#f5f2eb",
         opacity: leaving ? 0 : 1,
         transition: "opacity 500ms ease",

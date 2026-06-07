@@ -157,7 +157,7 @@
   }
   body {
     /* Avoid iOS rubber-band background flash; hex fallback for legacy WebViews */
-    background-color: #0a0907;
+    background-color: #121212;
     background-color: var(--color-background);
   }
   /* Respect iOS safe area */
