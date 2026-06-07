@@ -49,6 +49,19 @@ function cacheKeyFor(query: string): string {
   return query.trim().toUpperCase().replace(/\s+/g, " ").slice(0, 200);
 }
 
+export type ResearchResult = {
+  part_name: string;
+  category: string;
+  primary_oem: string;
+  candidate_oems: string[];
+  equivalent_oems: string[];
+  compatible_vehicles: string[];
+  keywords: string[];
+  description: string;
+  confidence: number;
+};
+
+
 /**
  * Fast path: check the persistent research cache.
  * Returns null when no cached entry exists; AI is not invoked here.
@@ -65,7 +78,7 @@ export const lookupCachedResearch = createServerFn({ method: "POST" })
         return { ok: true as const, hit: false as const };
       }
       if (!row) return { ok: true as const, hit: false as const };
-      return { ok: true as const, hit: true as const, result: row as Record<string, unknown> };
+      return { ok: true as const, hit: true as const, result: row as ResearchResult };
     } catch (e) {
       console.error("lookupCachedResearch failed", e);
       return { ok: true as const, hit: false as const };
