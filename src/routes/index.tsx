@@ -117,16 +117,32 @@ function Index() {
         setParts(rows.map((r) => ({ ...r, seller_verified: verifiedSet.has(r.seller_id) })));
         setLoading(false);
         // Track searches (text or OEM) — only when there's a meaningful query.
-        if (q.trim().length >= 2) {
+        const hasQuery = q.trim().length >= 2;
+        const hasOem = oem.trim().length >= 2;
+        const hasFilter = !!(brand.trim() || model.trim() || year.trim());
+        if (hasQuery) {
           trackEvent("search", { query: q.trim(), category: cat, results: (data ?? []).length });
         }
-        if (oem.trim().length >= 2) {
+        if (hasOem) {
           const oemUp = oem.trim().toUpperCase();
           trackEvent("oem_search", { oem: oemUp, results: (data ?? []).length });
           supabase.from("oem_searches").insert({
             oem: oemUp,
             user_id: user?.id ?? null,
             results_count: (data ?? []).length,
+          }).then(() => { /* fire and forget */ });
+        }
+        // Anonymous structured search log
+        if (hasQuery || hasOem || hasFilter) {
+          supabase.from("search_logs").insert({
+            query: hasQuery ? q.trim() : null,
+            brand: brand.trim() || null,
+            model: model.trim() || null,
+            category: cat !== "Tümü" ? cat : null,
+            oem: hasOem ? oem.trim().toUpperCase() : null,
+            part_type: partType || null,
+            results_count: (data ?? []).length,
+            user_id: user?.id ?? null,
           }).then(() => { /* fire and forget */ });
         }
       }
