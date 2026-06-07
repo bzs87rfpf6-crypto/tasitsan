@@ -137,16 +137,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       }
     } catch (_) {}
   }
-  function showRecoveryScreen() {
-    if (document.getElementById('tasitsan-pwa-recovery')) return;
-    var root = document.createElement('div');
-    root.id = 'tasitsan-pwa-recovery';
-    root.setAttribute('role', 'alert');
-    root.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:24px;background:#14110e;color:#f5f2eb;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;text-align:center;';
-    root.innerHTML = '<div style="max-width:340px"><img src="/icon-192.png" alt="" width="96" height="96" style="width:96px;height:96px;margin:0 auto 18px;filter:drop-shadow(0 0 24px rgba(212,160,23,.38))"/><h1 style="margin:0 0 8px;color:#d4a017;font-size:24px;letter-spacing:.04em">Taşıtsan</h1><p style="margin:0 0 18px;color:#d8d0c2;font-size:14px;line-height:1.45">Uygulama açılışı tamamlanamadı. Bağlantıyı yenileyerek güvenli şekilde tekrar deneyin.</p><button type="button" style="border:0;border-radius:12px;background:#d4a017;color:#14110e;font-weight:700;padding:12px 18px;font-size:14px">Tekrar Aç</button></div>';
-    root.getElementsByTagName('button')[0].onclick = function(){ location.replace('/?pwa-retry=' + Date.now()); };
-    document.body.appendChild(root);
-  }
   window.addEventListener('error', function(event) {
     record('onerror', { message: event.message, filename: event.filename, lineno: event.lineno, colno: event.colno, stack: event.error && event.error.stack });
   });
@@ -164,7 +154,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       var hasApp = !!document.querySelector('main, header, nav, [data-pwa-ready="true"]');
       if (nativeLike && (!hydrated || (!hasApp && text.length < 20))) {
         record('blank_screen', { message: 'PWA standalone launch did not complete', path: location.href, userAgent: navigator.userAgent, hydrated: hydrated });
-        showRecoveryScreen();
       }
     } catch (_) {}
   }, 8000);
