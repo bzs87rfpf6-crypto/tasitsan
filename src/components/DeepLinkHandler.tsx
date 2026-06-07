@@ -10,9 +10,15 @@ import { useRouter } from "@tanstack/react-router";
  *  - tasitsan://...                (custom scheme)
  */
 export function DeepLinkHandler() {
+  console.log("[Taşıtsan Android Debug] DeepLinkHandler render");
   const router = useRouter();
 
   useEffect(() => {
+    if ((window as unknown as { Capacitor?: unknown }).Capacitor) {
+      console.log("[Taşıtsan Android Debug] DeepLinkHandler skipped in Capacitor");
+      return;
+    }
+    console.log("[Taşıtsan Android Debug] DeepLinkHandler useEffect start");
     let cleanup: (() => void) | undefined;
     let cancelled = false;
 

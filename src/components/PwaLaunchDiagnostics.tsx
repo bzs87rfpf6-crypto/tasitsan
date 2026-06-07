@@ -61,8 +61,15 @@ async function cleanupStaleAppShellWorkers() {
 }
 
 export function PwaLaunchDiagnostics() {
+  console.log("[Taşıtsan Android Debug] PwaLaunchDiagnostics render");
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if ((window as unknown as { Capacitor?: unknown }).Capacitor) {
+      console.log("[Taşıtsan Android Debug] PwaLaunchDiagnostics skipped in Capacitor");
+      return;
+    }
+
+    console.log("[Taşıtsan Android Debug] PwaLaunchDiagnostics useEffect start");
 
     document.documentElement.setAttribute("data-pwa-hydrated", "true");
 

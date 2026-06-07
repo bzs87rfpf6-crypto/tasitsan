@@ -14,11 +14,18 @@ const EMBLEM_URL = "/icon-192.png";
  *     (state hatası, animasyon takılması, vs. olsa bile).
  */
 export function SplashScreen() {
+  console.log("[Taşıtsan Android Debug] SplashScreen render");
   const [visible, setVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if ((window as unknown as { Capacitor?: unknown }).Capacitor) {
+      console.log("[Taşıtsan Android Debug] SplashScreen skipped in Capacitor");
+      return;
+    }
+
+    console.log("[Taşıtsan Android Debug] SplashScreen useEffect start");
 
     let shouldShow = false;
     try {
