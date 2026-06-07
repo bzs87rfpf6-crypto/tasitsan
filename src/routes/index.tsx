@@ -171,7 +171,6 @@ function Index() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setAiProOpen(true)}
             className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
