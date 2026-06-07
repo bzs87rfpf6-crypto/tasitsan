@@ -7,6 +7,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { checkAuthLockout, recordAuthFailure, clearAuthFailures, checkRateLimit } from "@/lib/security.functions";
+import { executeRecaptcha } from "@/lib/recaptcha";
+import { verifyRecaptcha } from "@/lib/recaptcha.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Giriş — Taşıtsan" }] }),
