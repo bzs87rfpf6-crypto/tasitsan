@@ -9,8 +9,8 @@
  * Capacitor ise webDir altında bir index.html bekler. Bu script vite build
  * sonrası TanStack Start manifestinden client entry script ve CSS'i bulup
  * dist/client/index.html SPA shell'ini sentezler. Uygulama Capacitor içinde
- * tamamen client-side hidrate olur; server function çağrıları
- * capacitor.config.ts'deki server.hostname'e gider (https://tasitsan.com.tr).
+ * tamamen client-side hidrate olur; remote-first Android/iOS kurulumunda
+ * WebView capacitor.config.ts'deki server.url'e gider (https://tasitsan.com.tr).
  */
 import { execSync } from "node:child_process";
 import {
