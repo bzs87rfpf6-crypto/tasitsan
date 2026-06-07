@@ -23,6 +23,7 @@ import { UrgentRequestsPanel } from "@/components/admin/UrgentRequestsPanel";
 import { AdminNotificationsPanel } from "@/components/admin/AdminNotificationsPanel";
 import { SystemHealthPanel } from "@/components/admin/SystemHealthPanel";
 import { SecurityEventsPanel } from "@/components/admin/SecurityEventsPanel";
+import { SearchAnalyticsPanel } from "@/components/admin/SearchAnalyticsPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
