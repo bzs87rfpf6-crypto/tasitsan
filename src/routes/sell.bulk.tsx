@@ -698,18 +698,43 @@ function BulkUploadPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-3 text-center">
                   <div className="text-2xl font-display text-emerald-400">{result.ok}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-emerald-400/80">Başarılı</div>
+                  <div className="text-[10px] uppercase tracking-wider text-emerald-400/80">İşlenen Kayıt</div>
                 </div>
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-center">
                   <div className="text-2xl font-display text-destructive">{result.fail}</div>
                   <div className="text-[10px] uppercase tracking-wider text-destructive/80">Hatalı</div>
                 </div>
+                <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 px-3 py-3 text-center">
+                  <div className="text-2xl font-display text-sky-300">{result.matchedPhotos}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-sky-300/80">Eşleşen Foto</div>
+                </div>
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-3 text-center">
+                  <div className="text-2xl font-display text-amber-300">{result.unusedZipFiles.length}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-amber-300/80">Kullanılmayan ZIP</div>
+                </div>
               </div>
             </div>
-            {result.details.length > 0 && (
-              <div className="rounded-xl border border-border bg-card px-3 py-3 max-h-60 overflow-auto text-[11px] space-y-1">
-                {result.details.map((d, i) => (
+            {result.errorDetails.length > 0 && (
+              <div className="rounded-xl border border-destructive/30 bg-card px-3 py-3 max-h-48 overflow-auto text-[11px] space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-destructive font-semibold mb-1">Hatalı Satırlar</div>
+                {result.errorDetails.map((d, i) => (
                   <div key={i} className="text-destructive">{d}</div>
+                ))}
+              </div>
+            )}
+            {result.unmatchedPhotos.length > 0 && (
+              <div className="rounded-xl border border-amber-500/30 bg-card px-3 py-3 max-h-48 overflow-auto text-[11px] space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-amber-300 font-semibold mb-1">Eşleşmeyen Fotoğraflar</div>
+                {result.unmatchedPhotos.map((d, i) => (
+                  <div key={i} className="text-amber-300/90">{d}</div>
+                ))}
+              </div>
+            )}
+            {result.unusedZipFiles.length > 0 && (
+              <div className="rounded-xl border border-border bg-card px-3 py-3 max-h-40 overflow-auto text-[11px] space-y-0.5">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">ZIP'te Kullanılmayan Dosyalar</div>
+                {result.unusedZipFiles.map((d, i) => (
+                  <div key={i} className="text-muted-foreground font-mono">{d}</div>
                 ))}
               </div>
             )}
