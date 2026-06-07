@@ -37,12 +37,12 @@ export const getSystemHealth = createServerFn({ method: "GET" })
     let latestWrite: string | null = null;
 
     for (const t of CRITICAL_TABLES) {
-      const { count } = await supabaseAdmin
+      const { count } = await (supabaseAdmin as any)
         .from(t.table)
         .select("*", { count: "exact", head: true });
       let latest: string | null = null;
       try {
-        const { data } = await supabaseAdmin
+        const { data } = await (supabaseAdmin as any)
           .from(t.table)
           .select("created_at")
           .order("created_at", { ascending: false })
