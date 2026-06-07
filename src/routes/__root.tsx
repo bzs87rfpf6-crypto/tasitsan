@@ -286,6 +286,9 @@ function RootComponent() {
         gaPageView(ga4Id, window.location.pathname);
       });
       return () => unsub();
+    }).catch((error) => {
+      console.error("[Taşıtsan Android Debug] analytics startup failed", error);
+      androidDebugLog("analytics startup failed", { message: error instanceof Error ? error.message : String(error) });
     });
   }, [router]);
 
