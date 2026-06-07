@@ -32,11 +32,10 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: "https",
     iosScheme: "https",
-    // Android siyah ekran teşhisi için geçici olarak paket içi dist/client/index.html yüklenir.
-    // Canlı siteye dönmek için test bitince url: "https://tasitsan.com.tr" tekrar eklenebilir.
-    // HTTPS olduğu için cleartext gerekmez, ama hata ayıklamada engellemesin.
+    // TanStack Start SSR-only: istemci window.$_TSR bekler, statik shell veremez
+    // → hydrate() "Invariant failed" fırlatır. WebView canlı SSR'a bağlanmalı.
+    url: "https://tasitsan.com.tr",
     cleartext: false,
-    // Tüm tasitsan.com.tr alt domainlerinde Capacitor köprüsü aktif kalsın.
     allowNavigation: [
       "tasitsan.com.tr",
       "*.tasitsan.com.tr",
