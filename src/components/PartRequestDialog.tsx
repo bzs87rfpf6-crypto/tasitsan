@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { createBrowserId } from "@/lib/browser-compat";
 
 const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
@@ -117,7 +118,7 @@ export function PartRequestDialog({
         const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
         // IMPORTANT: storage RLS requires first folder = auth.uid(). The path
         // MUST start with `${userId}/...` — never `requests/${userId}/...`.
-        const path = `${userId}/req-${crypto.randomUUID()}.${ext}`;
+        const path = `${userId}/${createBrowserId("req")}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("part-photos")
           .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
