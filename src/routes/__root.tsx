@@ -53,6 +53,7 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
+  androidDebugLog("Global error boundary", { message: error.message, stack: error.stack });
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -241,7 +242,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const isCapacitorRuntime = typeof window !== "undefined" && Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
-  console.log("[Taşıtsan Android Debug] RootComponent render start", {
+  androidDebugLog("RootComponent render başladı", {
     isCapacitorRuntime,
     userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "ssr",
   });
@@ -249,10 +250,10 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    console.log("[Taşıtsan Android Debug] RootComponent useEffect start", { isCapacitorRuntime });
+    androidDebugLog("RootComponent useEffect başladı", { isCapacitorRuntime });
     document.documentElement.setAttribute("data-pwa-hydrated", "true");
     if (isCapacitorRuntime) {
-      console.log("[Taşıtsan Android Debug] PWA-only helpers disabled in Capacitor");
+      androidDebugLog("PWA-only helpers disabled in Capacitor");
     } else {
       setEnablePwaHelpers(true);
     }
@@ -284,12 +285,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <AndroidDebugMarker label="AuthProvider render edildi" />
         {enablePwaHelpers && (
           <Suspense fallback={null}>
             <PwaLaunchDiagnostics />
           </Suspense>
         )}
         <div data-pwa-ready="true">
+          <AndroidDebugMarker label="Outlet render edildi" />
           <Outlet />
         </div>
         {enablePwaHelpers && (
