@@ -19,6 +19,23 @@ const DeepLinkHandler = lazy(() => import("@/components/DeepLinkHandler").then((
 const InstallPrompt = lazy(() => import("@/components/InstallPrompt").then((mod) => ({ default: mod.InstallPrompt })));
 const SplashScreen = lazy(() => import("@/components/SplashScreen").then((mod) => ({ default: mod.SplashScreen })));
 
+declare global {
+  interface Window {
+    __tasitsanAndroidDebugLog?: (message: string, payload?: unknown) => void;
+  }
+}
+
+function androidDebugLog(message: string, payload?: unknown) {
+  if (typeof window === "undefined") return;
+  console.log(`[Taşıtsan Android Debug] ${message}`, payload ?? "");
+  window.__tasitsanAndroidDebugLog?.(message, payload);
+}
+
+function AndroidDebugMarker({ label }: { label: string }) {
+  androidDebugLog(label);
+  return null;
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
