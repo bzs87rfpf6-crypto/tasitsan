@@ -14,6 +14,9 @@ import { parseOemList } from "@/lib/oem";
 import { parsePartTypeFromExcel, type PartType } from "@/lib/part-type";
 import { recordBulkArrival } from "@/lib/bulkNavTrace";
 import { createBrowserId } from "@/lib/browser-compat";
+import { useServerFn } from "@tanstack/react-start";
+import { executeRecaptcha } from "@/lib/recaptcha";
+import { verifyRecaptcha } from "@/lib/recaptcha.functions";
 
 export const Route = createFileRoute("/sell/bulk")({
   head: () => ({ meta: [{ title: "Toplu Parça Yükle — Taşıtsan" }] }),
@@ -160,6 +163,7 @@ function BulkUploadPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const verifyCaptcha = useServerFn(verifyRecaptcha);
   const [profile, setProfile] = useState<{ whatsapp: string; city: string | null; approved: boolean } | null>(null);
   const [result, setResult] = useState<{
     ok: number; fail: number;
@@ -376,6 +380,21 @@ function BulkUploadPage() {
       toast.error("Önce profilinize WhatsApp numarası ekleyin.");
       return;
     }
+
+    // reCAPTCHA v3 — bot/abuse koruması (toplu yükleme için tek seferlik)
+    if (mode === "insert") {
+      try {
+        const token = await executeRecaptcha("bulk_upload");
+        const vr = await verifyCaptcha({ data: { token, action: "bulk_upload", minScore: 0.5 } });
+        if (!vr.ok) {
+          toast.error("Bot/şüpheli aktivite tespit edildi. Lütfen tekrar dene.");
+          return;
+        }
+      } catch (e) {
+        console.warn("[sell.bulk] recaptcha unavailable:", e);
+      }
+    }
+
     setSubmitting(true);
     let ok = 0;
     let fail = 0;

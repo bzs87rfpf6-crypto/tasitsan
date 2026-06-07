@@ -14,6 +14,9 @@ import { OemInput } from "@/components/OemInput";
 import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 import { recordBulkClick } from "@/lib/bulkNavTrace";
 import { createBrowserId } from "@/lib/browser-compat";
+import { useServerFn } from "@tanstack/react-start";
+import { executeRecaptcha } from "@/lib/recaptcha";
+import { verifyRecaptcha } from "@/lib/recaptcha.functions";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
 // by <img>, and DNG files balloon memory enough to crash the tab into a reload.
@@ -45,6 +48,8 @@ function SellPage() {
   
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const verifyCaptcha = useServerFn(verifyRecaptcha);
+
 
   const openBulkUpload = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
@@ -121,6 +126,18 @@ function SellPage() {
     if (!partType) { toast.error("Parça tipi seçin."); return; }
     setSubmitting(true);
     try {
+      // reCAPTCHA v3 — bot/abuse koruması
+      try {
+        const token = await executeRecaptcha("create_listing");
+        const vr = await verifyCaptcha({ data: { token, action: "create_listing", minScore: 0.5 } });
+        if (!vr.ok) {
+          toast.error("Bot/şüpheli aktivite tespit edildi. Lütfen tekrar dene.");
+          setSubmitting(false);
+          return;
+        }
+      } catch (e) {
+        console.warn("[sell] recaptcha unavailable:", e);
+      }
       const photoUrls: string[] = [];
       const { validateFile } = await import("@/lib/file-upload-validation");
       for (let i = 0; i < files.length; i++) {
