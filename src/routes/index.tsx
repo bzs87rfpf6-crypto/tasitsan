@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { PartCard, type Part } from "@/components/PartCard";
 import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
 import { AiExpertDialog } from "@/components/AiExpertDialog";
+import { AiExpertProDialog } from "@/components/AiExpertProDialog";
 import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
