@@ -124,6 +124,7 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     const priceStr = get("FİYAT").replace(/[^\d.,]/g, "").replace(",", ".");
     const price = priceStr ? parseFloat(priceStr) : null;
     const partType = parsePartTypeFromExcel(get("PARÇA TİPİ"));
+    const condition = parseCondition(get("ÜRÜN DURUMU"));
     const description = get("AÇIKLAMA");
     const photosRaw = get("FOTOĞRAFLAR");
     const photoNames = photosRaw
@@ -144,7 +145,7 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     return {
       __index: i + 2,
       oem, title, brand, vehicleBrand, vehicleModel, year, qty, price: price ?? null,
-      partType, description, photoNames, errors, warnings,
+      partType, condition, description, photoNames, errors, warnings,
     };
   });
 }
