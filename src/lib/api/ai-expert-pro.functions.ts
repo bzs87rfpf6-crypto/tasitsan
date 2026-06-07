@@ -28,14 +28,14 @@ Kurallar:
 const ResultSchema = {
   type: "object",
   properties: {
-    part_name: { type: "string", description: "Parçanın Türkçe adı." },
+    part_name: { type: "string" },
     category: { type: "string", enum: [...CATEGORIES] },
-    primary_oem: { type: "string", description: "Birincil OEM kodu. Yoksa boş string." },
+    primary_oem: { type: "string" },
     candidate_oems: { type: "array", items: { type: "string" } },
     equivalent_oems: { type: "array", items: { type: "string" } },
     compatible_vehicles: { type: "array", items: { type: "string" } },
     keywords: { type: "array", items: { type: "string" } },
-    description: { type: "string", description: "Parça hakkında 2-4 cümlelik teknik açıklama." },
+    description: { type: "string" },
     confidence: { type: "integer", minimum: 0, maximum: 100 },
   },
   required: [
@@ -45,6 +45,50 @@ const ResultSchema = {
   additionalProperties: false,
 } as const;
 
+function cacheKeyFor(query: string): string {
+  return query.trim().toUpperCase().replace(/\s+/g, " ").slice(0, 200);
+}
+
+export type ResearchResult = {
+  part_name: string;
+  category: string;
+  primary_oem: string;
+  candidate_oems: string[];
+  equivalent_oems: string[];
+  compatible_vehicles: string[];
+  keywords: string[];
+  description: string;
+  confidence: number;
+};
+
+
+/**
+ * Fast path: check the persistent research cache.
+ * Returns null when no cached entry exists; AI is not invoked here.
+ */
+export const lookupCachedResearch = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ query: z.string().trim().min(2).max(400) }))
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const key = cacheKeyFor(data.query);
+      const { data: row, error } = await supabaseAdmin.rpc("get_oem_research", { _key: key });
+      if (error) {
+        console.error("lookupCachedResearch rpc error", error);
+        return { ok: true as const, hit: false as const };
+      }
+      if (!row) return { ok: true as const, hit: false as const };
+      return { ok: true as const, hit: true as const, result: row as ResearchResult };
+    } catch (e) {
+      console.error("lookupCachedResearch failed", e);
+      return { ok: true as const, hit: false as const };
+    }
+  });
+
+/**
+ * Slow path: ask the AI gateway, then persist the result to the cache for next time.
+ * Image queries skip the cache (no stable key).
+ */
 export const researchPart = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
@@ -90,11 +134,7 @@ export const researchPart = createServerFn({ method: "POST" })
           ],
           tools: [{
             type: "function",
-            function: {
-              name: "report_research",
-              description: "Parça araştırma sonucu.",
-              parameters: ResultSchema,
-            },
+            function: { name: "report_research", description: "Parça araştırma sonucu.", parameters: ResultSchema },
           }],
           tool_choice: { type: "function", function: { name: "report_research" } },
         }),
@@ -122,6 +162,29 @@ export const researchPart = createServerFn({ method: "POST" })
       parsed.primary_oem = parsed.primary_oem ? norm(parsed.primary_oem) : "";
       parsed.candidate_oems = Array.from(new Set((parsed.candidate_oems ?? []).map(norm).filter(Boolean)));
       parsed.equivalent_oems = Array.from(new Set((parsed.equivalent_oems ?? []).map(norm).filter(Boolean)));
+
+      // Persist to cache for next time (text queries only — images have no stable key).
+      if (data.query && parsed.confidence >= 40) {
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const key = cacheKeyFor(data.query);
+          await supabaseAdmin.rpc("save_oem_research", {
+            _key: key,
+            _query: data.query,
+            _result: parsed,
+          });
+          // Also save under the primary OEM as a key so different phrasings hit the same cache.
+          if (parsed.primary_oem && parsed.primary_oem !== key) {
+            await supabaseAdmin.rpc("save_oem_research", {
+              _key: parsed.primary_oem,
+              _query: data.query,
+              _result: parsed,
+            });
+          }
+        } catch (e) {
+          console.error("cache save failed", e);
+        }
+      }
 
       return { ok: true as const, result: parsed };
     } catch (e) {

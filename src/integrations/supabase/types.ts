@@ -261,6 +261,39 @@ export type Database = {
           },
         ]
       }
+      oem_research_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          hit_count: number
+          id: string
+          last_hit_at: string | null
+          query_text: string
+          result: Json
+          updated_at: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string | null
+          query_text: string
+          result: Json
+          updated_at?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string | null
+          query_text?: string
+          result?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       oem_searches: {
         Row: {
           created_at: string
@@ -924,6 +957,7 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      get_oem_research: { Args: { _key: string }; Returns: Json }
       get_public_site_settings: {
         Args: never
         Returns: {
@@ -978,6 +1012,10 @@ export type Database = {
         Returns: number
       }
       request_center_stats: { Args: never; Returns: Json }
+      save_oem_research: {
+        Args: { _key: string; _query: string; _result: Json }
+        Returns: undefined
+      }
       search_parts_by_oem: {
         Args: { _limit?: number; _oem: string }
         Returns: {

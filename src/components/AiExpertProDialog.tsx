@@ -1,13 +1,14 @@
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Sparkles, Loader2, Search, Camera, Upload, X, RefreshCw, PackageSearch, Globe2 } from "lucide-react";
+import { Sparkles, Loader2, Search, Camera, Upload, X, RefreshCw, PackageSearch, Globe2, Zap, Database } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { researchPart } from "@/lib/api/ai-expert-pro.functions";
+import { lookupCachedResearch, researchPart } from "@/lib/api/ai-expert-pro.functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PartCard, type Part } from "@/components/PartCard";
+
 
 type Research = {
   part_name: string;
@@ -60,38 +61,36 @@ export function AiExpertProDialog({
   onCreateRequest?: (initial: { search_query: string; brand: string; model: string; year: string; oem: string; category: string }) => void;
 }) {
   const research = useServerFn(researchPart);
+  const lookupCache = useServerFn(lookupCachedResearch);
   const fileRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<"text" | "photo">("text");
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState<"idle" | "db" | "cache" | "ai" | "done">("idle");
+  const [source, setSource] = useState<"cache" | "ai" | null>(null);
   const [result, setResult] = useState<Research | null>(null);
   const [matches, setMatches] = useState<Part[]>([]);
 
   const reset = () => {
     setQuery(""); setPreview(null); setResult(null); setMatches([]); setLoading(false);
+    setStage("idle"); setSource(null);
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const searchInternalDb = async (r: Research) => {
-    const allOems = Array.from(new Set([
-      r.primary_oem,
-      ...r.candidate_oems,
-      ...r.equivalent_oems,
-    ].filter(Boolean)));
-
+  const searchInternalDb = async (oems: string[], keywords: string[]) => {
+    const allOems = Array.from(new Set(oems.filter(Boolean)));
     const ors: string[] = [];
     for (const o of allOems.slice(0, 25)) {
       const safe = o.replace(/[%,(){}]/g, "");
       if (!safe) continue;
       ors.push(`oem_code.ilike.%${safe}%`, `oem_codes.cs.{${safe}}`);
     }
-    for (const k of (r.keywords ?? []).slice(0, 6)) {
+    for (const k of (keywords ?? []).slice(0, 6)) {
       const safe = k.replace(/[%,(){}]/g, "").trim();
       if (safe.length < 2) continue;
       ors.push(`title.ilike.%${safe}%`);
     }
-
     let q = supabase
       .from("parts")
       .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
@@ -99,26 +98,64 @@ export function AiExpertProDialog({
       .limit(30);
     if (ors.length) q = q.or(ors.join(","));
     const { data } = await q;
-    setMatches((data ?? []) as Part[]);
+    return (data ?? []) as Part[];
   };
 
   const run = async () => {
     if (tab === "text" && query.trim().length < 2) { toast.error("OEM kodu veya parça açıklaması girin."); return; }
     if (tab === "photo" && !preview) { toast.error("Önce bir görsel yükleyin."); return; }
-    setLoading(true); setResult(null); setMatches([]);
+    setLoading(true); setResult(null); setMatches([]); setSource(null);
+
     try {
+      const isText = tab === "text";
+      const raw = query.trim();
+
+      // STAGE 1 — Instant DB search on the raw query (no AI, no waiting).
+      if (isText) {
+        setStage("db");
+        const normalized = raw.toUpperCase().replace(/\s+/g, "");
+        const quickMatches = await searchInternalDb([normalized, raw], [raw]);
+        if (quickMatches.length > 0) setMatches(quickMatches);
+      }
+
+      // STAGE 2 — Cache lookup (text queries only; images have no stable key).
+      if (isText) {
+        setStage("cache");
+        const cached = await lookupCache({ data: { query: raw } });
+        if (cached.ok && cached.hit && cached.result) {
+          const r = cached.result as Research;
+          setResult(r); setSource("cache");
+          const fullMatches = await searchInternalDb(
+            [r.primary_oem, ...r.candidate_oems, ...r.equivalent_oems],
+            r.keywords,
+          );
+          setMatches(fullMatches);
+          setStage("done");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // STAGE 3 — AI fallback (only when cache misses or image input).
+      setStage("ai");
       const res = await research({
         data: {
-          query: query.trim() || undefined,
+          query: raw || undefined,
           imageDataUrl: tab === "photo" && preview ? preview : undefined,
         },
       });
-      if (!res.ok) { toast.error(res.error); setLoading(false); return; }
-      setResult(res.result);
-      await searchInternalDb(res.result);
+      if (!res.ok) { toast.error(res.error); setStage("idle"); setLoading(false); return; }
+      setResult(res.result); setSource("ai");
+      const finalMatches = await searchInternalDb(
+        [res.result.primary_oem, ...res.result.candidate_oems, ...res.result.equivalent_oems],
+        res.result.keywords,
+      );
+      setMatches(finalMatches);
+      setStage("done");
     } catch (e) {
       console.error(e);
       toast.error("Araştırma yapılamadı.");
+      setStage("idle");
     } finally {
       setLoading(false);
     }
@@ -130,6 +167,7 @@ export function AiExpertProDialog({
     const compressed = await fileToCompressedDataUrl(file);
     setPreview(compressed);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
@@ -236,18 +274,46 @@ export function AiExpertProDialog({
         )}
 
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin text-gold" /> Geniş kaynaklarda araştırılıyor...
+          <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground bg-muted/40 border border-border rounded-xl">
+            <Loader2 className="size-3.5 animate-spin text-gold" />
+            {stage === "db" && "Taşıtsan stokları taranıyor..."}
+            {stage === "cache" && "Önbellek kontrol ediliyor..."}
+            {stage === "ai" && "AI geniş kaynaklarda araştırıyor..."}
           </div>
         )}
 
-        {result && !loading && (
+        {/* Quick DB matches (visible the instant they arrive, even before AI finishes) */}
+        {!result && matches.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center gap-1.5">
+              <Database className="size-3.5" /> Stoklarda hızlı eşleşmeler ({matches.length})
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {matches.map((p) => <PartCard key={p.id} part={p} />)}
+            </div>
+          </div>
+        )}
+
+        {result && (
+
           <div className="space-y-4">
             {/* Research card */}
             <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
-                  <p className="text-[11px] uppercase tracking-wider text-gold font-semibold">Araştırma Sonucu</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[11px] uppercase tracking-wider text-gold font-semibold">Araştırma Sonucu</p>
+                    {source === "cache" && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                        <Zap className="size-2.5" /> Önbellekten · anında
+                      </span>
+                    )}
+                    {source === "ai" && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-gold/15 text-gold border border-gold/30">
+                        <Sparkles className="size-2.5" /> AI araştırması
+                      </span>
+                    )}
+                  </div>
                   <h3 className="font-display text-lg leading-tight">{result.part_name || "—"}</h3>
                   <p className="text-xs text-muted-foreground">{result.category}</p>
                 </div>
@@ -255,6 +321,7 @@ export function AiExpertProDialog({
                   %{result.confidence} güven
                 </div>
               </div>
+
 
               {result.description && (
                 <p className="text-xs text-muted-foreground leading-relaxed">{result.description}</p>
