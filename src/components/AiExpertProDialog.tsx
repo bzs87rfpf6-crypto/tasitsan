@@ -1,13 +1,14 @@
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Sparkles, Loader2, Search, Camera, Upload, X, RefreshCw, PackageSearch, Globe2 } from "lucide-react";
+import { Sparkles, Loader2, Search, Camera, Upload, X, RefreshCw, PackageSearch, Globe2, Zap, Database } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { researchPart } from "@/lib/api/ai-expert-pro.functions";
+import { lookupCachedResearch, researchPart } from "@/lib/api/ai-expert-pro.functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PartCard, type Part } from "@/components/PartCard";
+
 
 type Research = {
   part_name: string;
