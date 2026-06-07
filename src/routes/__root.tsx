@@ -106,6 +106,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       scripts: [
         {
           children: `(function(){
+  if (!Promise.allSettled) Promise.allSettled = function(promises) { return Promise.all(Array.prototype.map.call(promises, function(p) { return Promise.resolve(p).then(function(value) { return { status: 'fulfilled', value: value }; }, function(reason) { return { status: 'rejected', reason: reason }; }); })); };
+  if (!Array.prototype.flat) Array.prototype.flat = function(depth) { var d = depth === undefined ? 1 : Number(depth) || 0; var out = []; (function flat(arr, level) { for (var i = 0; i < arr.length; i += 1) { if (!(i in arr)) continue; var v = arr[i]; if (Array.isArray(v) && level > 0) flat(v, level - 1); else out.push(v); } })(this, d); return out; };
+  if (!Array.prototype.flatMap) Array.prototype.flatMap = function(callback, thisArg) { return Array.prototype.map.call(this, callback, thisArg).flat(); };
+  if (!Object.hasOwn) Object.hasOwn = function(obj, key) { return Object.prototype.hasOwnProperty.call(Object(obj), key); };
+  if (!String.prototype.replaceAll) String.prototype.replaceAll = function(search, replacement) { return this.split(search).join(replacement); };
+})();`,
+        },
+        {
+          children: `(function(){
   window.__tasitsanLaunchErrors = window.__tasitsanLaunchErrors || [];
   function record(type, payload) {
     var item = payload || {};
@@ -140,10 +149,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   setTimeout(function(){
     try {
       var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+      var nativeLike = standalone || /; wv\)|\bwv\b|Capacitor/i.test(navigator.userAgent || '') || !!window.Capacitor;
       var hydrated = document.documentElement.getAttribute('data-pwa-hydrated') === 'true';
       var text = (document.body && document.body.innerText || '').trim();
       var hasApp = !!document.querySelector('main, header, nav, [data-pwa-ready="true"]');
-      if (standalone && (!hydrated || (!hasApp && text.length < 20))) {
+      if (nativeLike && (!hydrated || (!hasApp && text.length < 20))) {
         record('blank_screen', { message: 'PWA standalone launch did not complete', path: location.href, userAgent: navigator.userAgent, hydrated: hydrated });
         showRecoveryScreen();
       }

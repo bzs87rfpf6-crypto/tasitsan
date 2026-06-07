@@ -10,18 +10,18 @@ export default defineConfig({
   vite: {
     build: {
       // Android 10 / early Huawei WebView can be Chromium 74-79. Keep the
-      // client bundle below ES2020 so optional chaining (?.), nullish
-      // coalescing (??), and newer class syntax are transpiled before APK sync.
-      target: ["chrome74", "safari13"],
-      cssTarget: "chrome74",
+      // client bundle at ES2017 so optional chaining (?.), nullish coalescing
+      // (??), optional catch binding, and private fields are removed before APK sync.
+      target: "es2017",
+      cssTarget: "chrome61",
       modulePreload: { polyfill: true },
     },
     esbuild: {
-      target: "chrome74",
+      target: "es2017",
     },
     optimizeDeps: {
       esbuildOptions: {
-        target: "chrome74",
+        target: "es2017",
       },
     },
   },
