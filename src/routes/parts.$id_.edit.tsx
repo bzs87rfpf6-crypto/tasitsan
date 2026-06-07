@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
 import { StockInsightsCard } from "@/components/StockInsightsCard";
 import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
+import { createBrowserId } from "@/lib/browser-compat";
 
 const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
@@ -199,7 +200,7 @@ function EditPartPage() {
     const remaining = Math.max(0, MAX_PHOTOS - items.length);
     if (remaining === 0) { toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz.`); return; }
     const next: PhotoItem[] = accepted.slice(0, remaining).map((file) => ({
-      id: `new-${crypto.randomUUID()}`,
+      id: createBrowserId("new"),
       kind: "new" as const,
       file,
       preview: URL.createObjectURL(file),
@@ -252,7 +253,7 @@ function EditPartPage() {
       for (const it of items) {
         if (it.kind !== "new") continue;
         const ext = (it.file.name.split(".").pop() ?? "jpg").toLowerCase();
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const path = `${user.id}/${createBrowserId("photo")}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("part-photos")
           .upload(path, it.file, { cacheControl: "3600", upsert: false, contentType: it.file.type || "image/jpeg" });
