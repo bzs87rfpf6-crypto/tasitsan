@@ -14,6 +14,9 @@ import { OemInput } from "@/components/OemInput";
 import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 import { recordBulkClick } from "@/lib/bulkNavTrace";
 import { createBrowserId } from "@/lib/browser-compat";
+import { useServerFn } from "@tanstack/react-start";
+import { executeRecaptcha } from "@/lib/recaptcha";
+import { verifyRecaptcha } from "@/lib/recaptcha.functions";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
 // by <img>, and DNG files balloon memory enough to crash the tab into a reload.
