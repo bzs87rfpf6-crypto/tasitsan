@@ -36,6 +36,13 @@ function AndroidDebugMarker({ label }: { label: string }) {
   return null;
 }
 
+function isAndroidCapacitorLikeRuntime() {
+  if (typeof window === "undefined") return false;
+  const hasCapacitor = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  return hasCapacitor || /; wv\)|\bwv\b|Capacitor/i.test(ua);
+}
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -241,7 +248,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const isCapacitorRuntime = typeof window !== "undefined" && Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
+  const isCapacitorRuntime = isAndroidCapacitorLikeRuntime();
   androidDebugLog("RootComponent render başladı", {
     isCapacitorRuntime,
     userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "ssr",
