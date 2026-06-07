@@ -9,9 +9,9 @@ export function AppHeader({ subtitle }: { subtitle?: string }) {
           <img
             src={logoAsset.url}
             alt="Taşıtsan Parça Borsası logosu"
-            width={68}
-            height={68}
-            className="h-16 w-16 sm:h-[4.4rem] sm:w-[4.4rem] object-contain drop-shadow-[0_2px_10px_rgba(212,175,55,0.45)]"
+            width={72}
+            height={72}
+            className="h-16 w-16 sm:h-[4.6rem] sm:w-[4.6rem] object-contain"
             loading="eager"
             decoding="async"
           />
