@@ -524,7 +524,7 @@ function BulkUploadPage() {
         </div>
 
         <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
-          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. İsteğe bağlı olarak bir ZIP içinde fotoğrafları yükleyin; Excel'deki <em>FOTOĞRAFLAR</em> sütununda yazan dosya adları (örn. <code>far1.jpg; far2.jpg</code>) ZIP içindeki dosyalarla eşleştirilir. İlan başına 1–10 fotoğraf.</>}
+          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. <em>ÜRÜN DURUMU</em> sütununa "Sıfır" veya "İkinci El" yazın (boşsa "İkinci El" varsayılır). İsteğe bağlı bir ZIP yükleyin: <em>FOTOĞRAFLAR</em> sütununda dosya adı belirtilmezse <strong>OEM numarası</strong> (örn. <code>329220K090.jpg</code>, <code>329220K090_1.jpg</code>) veya <strong>parça adı</strong> (örn. <code>Fren_Balatasi.jpg</code>) ile otomatik eşleştirilir. İlan başına 1–10 fotoğraf.</>}
           {mode === "update" && <><span className="text-gold font-semibold">Toplu Güncelle:</span> OEM numarasına göre kendi ilanlarınızı bulur ve başlık, fiyat, stok dahil tüm alanları günceller.</>}
           {mode === "stock" && <><span className="text-gold font-semibold">Stok Güncelle:</span> Yalnızca ADET sütunu kullanılır; OEM eşleşen ilanlarınızın stok adedi güncellenir.</>}
         </div>
