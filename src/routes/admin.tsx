@@ -514,6 +514,7 @@ function AdminPage() {
             ["stock", "Stok Analizi"],
             ["system", "🛡️ Yedekleme"],
             ["security", "🔒 Güvenlik"],
+            ["searches", "🔎 Aramalar"],
             ["settings", "Ayarlar"],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
