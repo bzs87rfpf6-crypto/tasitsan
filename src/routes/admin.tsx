@@ -22,6 +22,7 @@ import { StockEvaluationPanel } from "@/components/admin/StockEvaluationPanel";
 import { UrgentRequestsPanel } from "@/components/admin/UrgentRequestsPanel";
 import { AdminNotificationsPanel } from "@/components/admin/AdminNotificationsPanel";
 import { SystemHealthPanel } from "@/components/admin/SystemHealthPanel";
+import { SecurityEventsPanel } from "@/components/admin/SecurityEventsPanel";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/admin")({
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "notifications" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "system" | "settings";
+type Tab = "dashboard" | "notifications" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "system" | "security" | "settings";
 
 interface ProfileRow {
   id: string;
@@ -511,6 +512,7 @@ function AdminPage() {
             ["bots", "Bot Filtreleri"],
             ["stock", "Stok Analizi"],
             ["system", "🛡️ Yedekleme"],
+            ["security", "🔒 Güvenlik"],
             ["settings", "Ayarlar"],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
@@ -613,6 +615,8 @@ function AdminPage() {
           <StockEvaluationPanel />
         ) : tab === "system" ? (
           <SystemHealthPanel />
+        ) : tab === "security" ? (
+          <SecurityEventsPanel />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
