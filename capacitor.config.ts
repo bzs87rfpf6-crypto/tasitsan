@@ -32,8 +32,8 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: "https",
     iosScheme: "https",
-    // WebView doğrudan canlı yayını yükler — SSR + server fn'ler çalışır.
-    url: "https://tasitsan.com.tr",
+    // Android siyah ekran teşhisi için geçici olarak paket içi dist/client/index.html yüklenir.
+    // Canlı siteye dönmek için test bitince url: "https://tasitsan.com.tr" tekrar eklenebilir.
     // HTTPS olduğu için cleartext gerekmez, ama hata ayıklamada engellemesin.
     cleartext: false,
     // Tüm tasitsan.com.tr alt domainlerinde Capacitor köprüsü aktif kalsın.
