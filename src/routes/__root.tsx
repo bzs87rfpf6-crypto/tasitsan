@@ -19,68 +19,6 @@ const DeepLinkHandler = lazy(() => import("@/components/DeepLinkHandler").then((
 const InstallPrompt = lazy(() => import("@/components/InstallPrompt").then((mod) => ({ default: mod.InstallPrompt })));
 const SplashScreen = lazy(() => import("@/components/SplashScreen").then((mod) => ({ default: mod.SplashScreen })));
 
-declare global {
-  interface Window {
-    __tasitsanAndroidDebugLog?: (message: string, payload?: unknown) => void;
-  }
-}
-
-function androidDebugLog(message: string, payload?: unknown) {
-  if (typeof window === "undefined") return;
-  console.log(`[Taşıtsan Android Debug] ${message}`, payload ?? "");
-  window.__tasitsanAndroidDebugLog?.(message, payload);
-}
-
-function AndroidDebugMarker({ label }: { label: string }) {
-  androidDebugLog(label);
-  return null;
-}
-
-function AndroidCapacitorTestScreen() {
-  androidDebugLog("Taşıtsan Android Test Ekranı render edildi");
-  return (
-    <main
-      data-android-test-screen="true"
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "72px 20px 24px",
-        background: "#121212",
-        color: "#f5f2eb",
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
-        textAlign: "center",
-      }}
-    >
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 2147483647,
-          padding: "12px 14px calc(12px + env(safe-area-inset-top))",
-          background: "#d4a017",
-          color: "#14110e",
-          fontSize: 13,
-          fontWeight: 800,
-          letterSpacing: 0,
-          boxShadow: "0 8px 24px rgba(0,0,0,.35)",
-        }}
-      >
-        ANDROID DEBUG BUILD · React render çalışıyor
-      </div>
-      <section>
-        <h1 style={{ margin: 0, fontSize: 28, lineHeight: 1.15 }}>Taşıtsan Android Test Ekranı</h1>
-        <p style={{ margin: "14px auto 0", maxWidth: 320, color: "#d8d0c2", fontSize: 14, lineHeight: 1.5 }}>
-          Bu ekran Capacitor Android ortamında RootComponent render olduğunda gösterilir.
-        </p>
-      </section>
-    </main>
-  );
-}
-
 function isAndroidCapacitorLikeRuntime() {
   if (typeof window === "undefined") return false;
   const hasCapacitor = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
@@ -105,7 +43,6 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  androidDebugLog("Global error boundary", { message: error.message, stack: error.stack });
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
@@ -187,33 +124,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         {
           children: `(function(){
   window.__tasitsanLaunchErrors = window.__tasitsanLaunchErrors || [];
-  var isCapacitor = !!window.Capacitor || /; wv\)|\bwv\b|Capacitor/i.test(navigator.userAgent || '');
-  function ensureAndroidDebugPanel() {
-    if (!isCapacitor || !document.body) return null;
-    var existing = document.getElementById('tasitsan-android-debug');
-    if (existing) return existing;
-    var panel = document.createElement('pre');
-    panel.id = 'tasitsan-android-debug';
-    panel.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483647;max-height:45vh;overflow:auto;margin:0;padding:10px;border:1px solid rgba(212,160,23,.55);border-radius:10px;background:rgba(18,18,18,.94);color:#f5f2eb;font:12px/1.35 monospace;white-space:pre-wrap;text-align:left;direction:ltr;';
-    panel.textContent = '[Taşıtsan Android Debug] panel ready\\n';
-    document.body.appendChild(panel);
-    return panel;
-  }
-  function showAndroidDebug(message, payload) {
-    try {
-      var panel = ensureAndroidDebugPanel();
-      if (!panel) return;
-      var detail = payload ? ' ' + JSON.stringify(payload).slice(0, 900) : '';
-      panel.textContent += '[' + new Date().toLocaleTimeString() + '] ' + message + detail + '\\n';
-      panel.scrollTop = panel.scrollHeight;
-    } catch (_) {}
-  }
-  window.__tasitsanAndroidDebugLog = showAndroidDebug;
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ showAndroidDebug('DOMContentLoaded'); }, { once: true });
-  } else {
-    setTimeout(function(){ showAndroidDebug('document already ready'); }, 0);
-  }
   function record(type, payload) {
     var item = payload || {};
     item.type = type;
@@ -221,7 +131,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     window.__tasitsanLaunchErrors.push(item);
     if (window.__tasitsanLaunchErrors.length > 20) window.__tasitsanLaunchErrors.shift();
     try { console.error('[Taşıtsan PWA] startup ' + type, item); } catch (_) {}
-    showAndroidDebug('ERROR ' + type, item);
     try {
       if (window.__lovableEvents && window.__lovableEvents.captureException) {
         window.__lovableEvents.captureException(new Error(item.message || 'PWA startup error'), { source: 'pwa_early_boot', type: type, item: item }, { mechanism: type, handled: false, severity: 'error' });
@@ -247,10 +156,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   });
   setTimeout(function(){
     try {
-      if (window.Capacitor) {
-        try { console.log('[Taşıtsan Android Debug] PWA recovery watchdog skipped in Capacitor'); } catch (_) {}
-        return;
-      }
+      if (window.Capacitor) return;
       var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
       var nativeLike = standalone || /; wv\)|\bwv\b|Capacitor/i.test(navigator.userAgent || '') || !!window.Capacitor;
       var hydrated = document.documentElement.getAttribute('data-pwa-hydrated') === 'true';
@@ -294,25 +200,16 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const isCapacitorRuntime = isAndroidCapacitorLikeRuntime();
-  androidDebugLog("RootComponent render başladı", {
-    isCapacitorRuntime,
-    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "ssr",
-  });
   const [enablePwaHelpers, setEnablePwaHelpers] = useState(false);
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    androidDebugLog("RootComponent useEffect başladı", { isCapacitorRuntime });
     document.documentElement.setAttribute("data-pwa-hydrated", "true");
-    if (isCapacitorRuntime) {
-      androidDebugLog("PWA-only helpers disabled in Capacitor");
-    } else {
+    if (!isCapacitorRuntime) {
       setEnablePwaHelpers(true);
     }
-    // Lazy import to avoid SSR issues
     import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
       let ga4Id: string | null = null;
-      // Load GA4 id from site settings (public read).
       import("@/integrations/supabase/client").then(({ supabase }) => {
         supabase
           .rpc("get_public_site_settings")
@@ -320,7 +217,6 @@ function RootComponent() {
           .then(({ data }) => {
             ga4Id = ((data as any)?.ga4_measurement_id as string | null) ?? null;
             if (ga4Id) loadGa4(ga4Id);
-            // initial page view
             trackEvent("page_view");
             gaPageView(ga4Id, window.location.pathname);
           });
@@ -332,26 +228,19 @@ function RootComponent() {
       });
       return () => unsub();
     }).catch((error) => {
-      console.error("[Taşıtsan Android Debug] analytics startup failed", error);
-      androidDebugLog("analytics startup failed", { message: error instanceof Error ? error.message : String(error) });
+      console.error("[Taşıtsan] analytics startup failed", error);
     });
-  }, [router]);
-
-  // NOT: Eski Capacitor bypass ekranı kaldırıldı. WebView artık canlı SSR
-  // (https://tasitsan.com.tr) yüklüyor, normal uygulama render olmalı.
-
+  }, [router, isCapacitorRuntime]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AndroidDebugMarker label="AuthProvider render edildi" />
         {enablePwaHelpers && (
           <Suspense fallback={null}>
             <PwaLaunchDiagnostics />
           </Suspense>
         )}
         <div data-pwa-ready="true">
-          <AndroidDebugMarker label="Outlet render edildi" />
           <Outlet />
         </div>
         {enablePwaHelpers && (
