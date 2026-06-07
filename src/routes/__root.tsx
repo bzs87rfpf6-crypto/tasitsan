@@ -148,6 +148,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   });
   setTimeout(function(){
     try {
+      if (window.Capacitor) {
+        try { console.log('[Taşıtsan Android Debug] PWA recovery watchdog skipped in Capacitor'); } catch (_) {}
+        return;
+      }
       var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
       var nativeLike = standalone || /; wv\)|\bwv\b|Capacitor/i.test(navigator.userAgent || '') || !!window.Capacitor;
       var hydrated = document.documentElement.getAttribute('data-pwa-hydrated') === 'true';
