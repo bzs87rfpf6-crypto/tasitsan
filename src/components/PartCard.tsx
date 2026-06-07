@@ -52,7 +52,7 @@ export function PartCard({ part }: { part: Part }) {
           <FavoriteButton partId={part.id} size="sm" />
         </div>
       </div>
-      <div className="p-3 space-y-1.5">
+      <div className="p-3.5 space-y-2">
         <div className="flex items-start gap-1.5">
           <h3 className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] flex-1">{part.title}</h3>
           {part.seller_verified && <VerifiedBadge size={14} className="mt-0.5" />}
