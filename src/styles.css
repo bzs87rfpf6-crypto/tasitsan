@@ -120,7 +120,10 @@
   .text-gold { color: var(--color-gold); }
   .border-gold { border-color: var(--color-gold); }
   .bg-whatsapp { background-color: var(--whatsapp); }
-  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.75rem); }
+  .safe-bottom { padding-bottom: 0.75rem; }
+  @supports (padding-bottom: max(0px, env(safe-area-inset-bottom))) {
+    .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.75rem); }
+  }
 
   /* Unified gold hover + tap feedback for all interactive elements */
   .tap-gold {
@@ -160,9 +163,11 @@
     background-color: #121212;
     background-color: var(--color-background);
   }
-  /* Respect iOS safe area */
-  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-  .safe-top    { padding-top: env(safe-area-inset-top); }
+  /* Respect iOS/Android cutouts only in engines that parse env() reliably. */
+  .safe-top { padding-top: 0; }
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .safe-top { padding-top: env(safe-area-inset-top); }
+  }
 }
 
 @layer utilities {

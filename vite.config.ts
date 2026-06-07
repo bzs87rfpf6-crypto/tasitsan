@@ -7,6 +7,24 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    build: {
+      // Android 10 / early Huawei WebView can be Chromium 74-79. Keep the
+      // client bundle below ES2020 so optional chaining (?.), nullish
+      // coalescing (??), and newer class syntax are transpiled before APK sync.
+      target: ["chrome74", "safari13"],
+      cssTarget: "chrome74",
+      modulePreload: { polyfill: true },
+    },
+    esbuild: {
+      target: "chrome74",
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: "chrome74",
+      },
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

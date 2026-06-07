@@ -13,7 +13,6 @@ export function BottomNav() {
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur-xl safe-bottom"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="grid grid-cols-4 max-w-2xl mx-auto">
         {items.map(({ to, label, icon: Icon }) => {

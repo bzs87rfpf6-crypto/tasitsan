@@ -22,9 +22,10 @@ export function SplashScreen() {
 
     let shouldShow = false;
     try {
-      const isStandalone =
-        window.matchMedia?.("(display-mode: standalone)").matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      const standaloneMedia = typeof window.matchMedia === "function"
+        ? window.matchMedia("(display-mode: standalone)").matches
+        : false;
+      const isStandalone = standaloneMedia || (window.navigator as unknown as { standalone?: boolean }).standalone === true;
       const shown = sessionStorage.getItem("tasitsan_splash_shown");
       shouldShow = isStandalone || !shown;
       if (shouldShow) sessionStorage.setItem("tasitsan_splash_shown", "1");

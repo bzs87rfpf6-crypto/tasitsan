@@ -21,8 +21,11 @@ function recentlyDismissed(): boolean {
 
 function isStandalone(): boolean {
   if (typeof window === "undefined") return false;
+  const standaloneMedia = typeof window.matchMedia === "function"
+    ? window.matchMedia("(display-mode: standalone)").matches
+    : false;
   return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
+    standaloneMedia ||
     (window.navigator as unknown as { standalone?: boolean }).standalone === true
   );
 }
