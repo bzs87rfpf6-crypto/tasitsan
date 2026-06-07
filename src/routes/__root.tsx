@@ -7,16 +7,17 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
-import { SplashScreen } from "@/components/SplashScreen";
-import { InstallPrompt } from "@/components/InstallPrompt";
-import { DeepLinkHandler } from "@/components/DeepLinkHandler";
-import { PwaLaunchDiagnostics } from "@/components/PwaLaunchDiagnostics";
+
+const PwaLaunchDiagnostics = lazy(() => import("@/components/PwaLaunchDiagnostics").then((mod) => ({ default: mod.PwaLaunchDiagnostics })));
+const DeepLinkHandler = lazy(() => import("@/components/DeepLinkHandler").then((mod) => ({ default: mod.DeepLinkHandler })));
+const InstallPrompt = lazy(() => import("@/components/InstallPrompt").then((mod) => ({ default: mod.InstallPrompt })));
+const SplashScreen = lazy(() => import("@/components/SplashScreen").then((mod) => ({ default: mod.SplashScreen })));
 
 function NotFoundComponent() {
   return (
@@ -232,13 +233,21 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {!isCapacitorRuntime && <PwaLaunchDiagnostics />}
+        {!isCapacitorRuntime && (
+          <Suspense fallback={null}>
+            <PwaLaunchDiagnostics />
+          </Suspense>
+        )}
         <div data-pwa-ready="true">
           <Outlet />
         </div>
-        {!isCapacitorRuntime && <DeepLinkHandler />}
-        {!isCapacitorRuntime && <InstallPrompt />}
-        {!isCapacitorRuntime && <SplashScreen />}
+        {!isCapacitorRuntime && (
+          <Suspense fallback={null}>
+            <DeepLinkHandler />
+            <InstallPrompt />
+            <SplashScreen />
+          </Suspense>
+        )}
         <Toaster theme="dark" position="top-center" />
       </AuthProvider>
     </QueryClientProvider>
