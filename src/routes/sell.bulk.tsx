@@ -380,6 +380,21 @@ function BulkUploadPage() {
       toast.error("Önce profilinize WhatsApp numarası ekleyin.");
       return;
     }
+
+    // reCAPTCHA v3 — bot/abuse koruması (toplu yükleme için tek seferlik)
+    if (mode === "insert") {
+      try {
+        const token = await executeRecaptcha("bulk_upload");
+        const vr = await verifyCaptcha({ data: { token, action: "bulk_upload", minScore: 0.5 } });
+        if (!vr.ok) {
+          toast.error("Bot/şüpheli aktivite tespit edildi. Lütfen tekrar dene.");
+          return;
+        }
+      } catch (e) {
+        console.warn("[sell.bulk] recaptcha unavailable:", e);
+      }
+    }
+
     setSubmitting(true);
     let ok = 0;
     let fail = 0;
