@@ -73,6 +73,16 @@ const cssTags = cssFiles
   .map((href) => `    <link rel="stylesheet" crossorigin href="${href}" />`)
   .join("\n");
 
+const legacyWebViewPolyfills = `    <script>
+      (function(){
+        if (!Promise.allSettled) Promise.allSettled = function(promises) { return Promise.all(Array.prototype.map.call(promises, function(p) { return Promise.resolve(p).then(function(value) { return { status: 'fulfilled', value: value }; }, function(reason) { return { status: 'rejected', reason: reason }; }); })); };
+        if (!Array.prototype.flat) Array.prototype.flat = function(depth) { var d = depth === undefined ? 1 : Number(depth) || 0; var out = []; (function flat(arr, level) { for (var i = 0; i < arr.length; i += 1) { if (!(i in arr)) continue; var v = arr[i]; if (Array.isArray(v) && level > 0) flat(v, level - 1); else out.push(v); } })(this, d); return out; };
+        if (!Array.prototype.flatMap) Array.prototype.flatMap = function(callback, thisArg) { return Array.prototype.map.call(this, callback, thisArg).flat(); };
+        if (!Object.hasOwn) Object.hasOwn = function(obj, key) { return Object.prototype.hasOwnProperty.call(Object(obj), key); };
+        if (!String.prototype.replaceAll) String.prototype.replaceAll = function(search, replacement) { return this.split(search).join(replacement); };
+      })();
+    </script>`;
+
 const html = `<!doctype html>
 <html lang="tr">
   <head>
@@ -83,6 +93,7 @@ const html = `<!doctype html>
     <link rel="icon" href="/favicon.png" />
     <link rel="manifest" href="/manifest.json" />
 ${cssTags}
+${legacyWebViewPolyfills}
 ${scriptTags}
   </head>
   <body style="background:#121212;color:#f5f2eb;margin:0;">
