@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import logoAsset from "@/assets/tasitsan-logo-full.png.asset.json";
+import logoAsset from "@/assets/tasitsan-full.png.asset.json";
 
 export function AppHeader({ subtitle: _subtitle }: { subtitle?: string }) {
   return (
