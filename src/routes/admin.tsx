@@ -611,6 +611,8 @@ function AdminPage() {
           <BotFilterPanel />
         ) : tab === "stock" ? (
           <StockEvaluationPanel />
+        ) : tab === "system" ? (
+          <SystemHealthPanel />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
