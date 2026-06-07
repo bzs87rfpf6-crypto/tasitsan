@@ -7,16 +7,17 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
-import { SplashScreen } from "@/components/SplashScreen";
-import { InstallPrompt } from "@/components/InstallPrompt";
-import { DeepLinkHandler } from "@/components/DeepLinkHandler";
-import { PwaLaunchDiagnostics } from "@/components/PwaLaunchDiagnostics";
+
+const PwaLaunchDiagnostics = lazy(() => import("@/components/PwaLaunchDiagnostics").then((mod) => ({ default: mod.PwaLaunchDiagnostics })));
+const DeepLinkHandler = lazy(() => import("@/components/DeepLinkHandler").then((mod) => ({ default: mod.DeepLinkHandler })));
+const InstallPrompt = lazy(() => import("@/components/InstallPrompt").then((mod) => ({ default: mod.InstallPrompt })));
+const SplashScreen = lazy(() => import("@/components/SplashScreen").then((mod) => ({ default: mod.SplashScreen })));
 
 function NotFoundComponent() {
   return (
@@ -148,6 +149,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   });
   setTimeout(function(){
     try {
+      if (window.Capacitor) {
+        try { console.log('[Taşıtsan Android Debug] PWA recovery watchdog skipped in Capacitor'); } catch (_) {}
+        return;
+      }
       var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
       var nativeLike = standalone || /; wv\)|\bwv\b|Capacitor/i.test(navigator.userAgent || '') || !!window.Capacitor;
       var hydrated = document.documentElement.getAttribute('data-pwa-hydrated') === 'true';
@@ -190,9 +195,22 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  const isCapacitorRuntime = typeof window !== "undefined" && Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
+  console.log("[Taşıtsan Android Debug] RootComponent render start", {
+    isCapacitorRuntime,
+    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "ssr",
+  });
+  const [enablePwaHelpers, setEnablePwaHelpers] = useState(false);
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
+    console.log("[Taşıtsan Android Debug] RootComponent useEffect start", { isCapacitorRuntime });
+    document.documentElement.setAttribute("data-pwa-hydrated", "true");
+    if (isCapacitorRuntime) {
+      console.log("[Taşıtsan Android Debug] PWA-only helpers disabled in Capacitor");
+    } else {
+      setEnablePwaHelpers(true);
+    }
     // Lazy import to avoid SSR issues
     import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
       let ga4Id: string | null = null;
@@ -221,13 +239,21 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <PwaLaunchDiagnostics />
+        {enablePwaHelpers && (
+          <Suspense fallback={null}>
+            <PwaLaunchDiagnostics />
+          </Suspense>
+        )}
         <div data-pwa-ready="true">
           <Outlet />
         </div>
-        <DeepLinkHandler />
-        <InstallPrompt />
-        <SplashScreen />
+        {enablePwaHelpers && (
+          <Suspense fallback={null}>
+            <DeepLinkHandler />
+            <InstallPrompt />
+            <SplashScreen />
+          </Suspense>
+        )}
         <Toaster theme="dark" position="top-center" />
       </AuthProvider>
     </QueryClientProvider>
