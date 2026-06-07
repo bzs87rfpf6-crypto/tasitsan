@@ -80,6 +80,7 @@ interface Row {
   qty: number;
   price: number | null;
   partType: PartType | null;
+  condition: Condition;
   description: string;
   photoNames: string[];
   errors: string[];
