@@ -26,7 +26,7 @@ export function PartCard({ part }: { part: Part }) {
     <Link
       to="/parts/$id"
       params={{ id: part.id }}
-      className="group block rounded-xl overflow-hidden bg-card border border-border hover:border-gold transition-colors"
+      className="group block rounded-2xl overflow-hidden bg-card border border-border/60 shadow-card hover:border-gold/70 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)] transition-all"
     >
       <div className="aspect-square bg-secondary relative overflow-hidden">
         <SafePartImage
@@ -52,7 +52,7 @@ export function PartCard({ part }: { part: Part }) {
           <FavoriteButton partId={part.id} size="sm" />
         </div>
       </div>
-      <div className="p-3 space-y-1.5">
+      <div className="p-3.5 space-y-2">
         <div className="flex items-start gap-1.5">
           <h3 className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] flex-1">{part.title}</h3>
           {part.seller_verified && <VerifiedBadge size={14} className="mt-0.5" />}
