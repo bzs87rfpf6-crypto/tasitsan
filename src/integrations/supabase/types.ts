@@ -782,6 +782,48 @@ export type Database = {
           },
         ]
       }
+      search_logs: {
+        Row: {
+          brand: string | null
+          category: string | null
+          city: string | null
+          created_at: string
+          id: string
+          model: string | null
+          oem: string | null
+          part_type: string | null
+          query: string | null
+          results_count: number
+          user_id: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          model?: string | null
+          oem?: string | null
+          part_type?: string | null
+          query?: string | null
+          results_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          model?: string | null
+          oem?: string | null
+          part_type?: string | null
+          query?: string | null
+          results_count?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -1156,6 +1198,31 @@ export type Database = {
         Returns: {
           last_searched_at: string
           oem: string
+          search_count: number
+        }[]
+      }
+      top_search_brand_model: {
+        Args: { _limit?: number; _range?: string }
+        Returns: {
+          brand: string
+          last_searched_at: string
+          model: string
+          search_count: number
+        }[]
+      }
+      top_search_cities: {
+        Args: { _limit?: number; _range?: string }
+        Returns: {
+          city: string
+          last_searched_at: string
+          search_count: number
+        }[]
+      }
+      top_search_queries: {
+        Args: { _limit?: number; _range?: string }
+        Returns: {
+          last_searched_at: string
+          query: string
           search_count: number
         }[]
       }
