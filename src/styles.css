@@ -38,75 +38,43 @@
 :root {
   --radius: 0.875rem;
 
-  /* Taşıtsan — Modern Anthracite & Gold. Lighter, more readable surfaces. */
-  --background: #121212;
-  --foreground: #f5f2eb;
-  --card: #1e1e1e;
-  --card-foreground: #f5f2eb;
-  --popover: #1e1e1e;
-  --popover-foreground: #f5f2eb;
+  /* Taşıtsan — Light Corporate. Off-white surfaces, white cards, dark gray text, gold accent. */
+  --background: #f4f5f7;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
   --primary: #d4a017;
   --primary-foreground: #14110e;
   --gold: #d4a017;
   --gold-foreground: #14110e;
-  --gold-muted: #8a7028;
-  --secondary: #262626;
-  --secondary-foreground: #f5f2eb;
-  --muted: #262626;
-  --muted-foreground: #b8b2a3;
+  --gold-muted: #b8861a;
+  --secondary: #eceef2;
+  --secondary-foreground: #1f2937;
+  --muted: #eceef2;
+  --muted-foreground: #5b6472;
   --accent: #d4a017;
   --accent-foreground: #14110e;
   --destructive: #c83a1f;
-  --destructive-foreground: #faf6ef;
-  --border: #2f2f2f;
-  --input: #2a2a2a;
+  --destructive-foreground: #ffffff;
+  --border: #e2e5ea;
+  --input: #ffffff;
   --ring: #d4a017;
   --whatsapp: #25d366;
   --gradient-gold: linear-gradient(135deg, #e6b53a, #b8861a);
   --shadow-gold: 0 8px 30px -10px rgba(212, 160, 23, 0.45);
-  --shadow-card: 0 4px 14px -6px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 4px 14px -6px rgba(15, 23, 42, 0.10), 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
-/* Modern color upgrade only when the browser explicitly supports oklch(). */
-@supports (color: oklch(0.5 0 0)) {
-  :root {
-    --background: oklch(0.205 0 0);
-    --foreground: oklch(0.97 0.01 80);
-    --card: oklch(0.245 0 0);
-    --card-foreground: oklch(0.97 0.01 80);
-    --popover: oklch(0.245 0 0);
-    --popover-foreground: oklch(0.97 0.01 80);
-    --primary: oklch(0.82 0.16 86);
-    --primary-foreground: oklch(0.18 0 0);
-    --gold: oklch(0.82 0.16 86);
-    --gold-foreground: oklch(0.18 0 0);
-    --gold-muted: oklch(0.55 0.10 86);
-    --secondary: oklch(0.285 0 0);
-    --secondary-foreground: oklch(0.97 0.01 80);
-    --muted: oklch(0.285 0 0);
-    --muted-foreground: oklch(0.76 0.012 80);
-    --accent: oklch(0.82 0.16 86);
-    --accent-foreground: oklch(0.18 0 0);
-    --destructive: oklch(0.62 0.22 25);
-    --destructive-foreground: oklch(0.98 0.01 80);
-    --border: oklch(0.32 0 0);
-    --input: oklch(0.29 0 0);
-    --ring: oklch(0.82 0.16 86);
-    --whatsapp: oklch(0.68 0.18 145);
-    --gradient-gold: linear-gradient(135deg, oklch(0.88 0.14 90), oklch(0.72 0.18 75));
-    --shadow-gold: 0 8px 30px -10px oklch(0.82 0.16 86 / 0.45);
-  }
-}
-
-.dark { /* same — app is dark-only */ }
+.dark { /* light corporate theme only — dark class is a no-op */ }
 
 @layer base {
   * { border-color: var(--color-border); }
   html, body {
-    /* Hard hex fallback first so legacy WebViews never end up with a black/blank canvas */
-    background-color: #121212;
+    background-color: #f4f5f7;
     background-color: var(--color-background);
-    color: #f5f2eb;
+    color: #1f2937;
     color: var(--color-foreground);
   }
   body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
@@ -159,8 +127,7 @@
     overscroll-behavior-y: none;
   }
   body {
-    /* Avoid iOS rubber-band background flash; hex fallback for legacy WebViews */
-    background-color: #121212;
+    background-color: #f4f5f7;
     background-color: var(--color-background);
   }
   /* Respect iOS/Android cutouts only in engines that parse env() reliably. */
