@@ -39,6 +39,12 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const lockoutCheck = useServerFn(checkAuthLockout);
+  const recordFailure = useServerFn(recordAuthFailure);
+  const clearFailures = useServerFn(clearAuthFailures);
+  const rateLimit = useServerFn(checkRateLimit);
+
+
   const sendReset = async () => {
     const target = email.trim();
     if (!target) {
