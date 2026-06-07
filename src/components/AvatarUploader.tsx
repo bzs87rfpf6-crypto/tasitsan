@@ -21,12 +21,10 @@ export function AvatarUploader({ userId, displayName, avatarUrl, onChange }: Pro
   const [busy, setBusy] = useState(false);
 
   const upload = async (file: File) => {
-    if (!ALLOWED.includes(file.type) && !file.type.startsWith("image/")) {
-      toast.error("Sadece görsel dosyalar kabul edilir.");
-      return;
-    }
-    if (file.size > MAX_BYTES) {
-      toast.error("Görsel boyutu en fazla 5MB olabilir.");
+    const { validateFile, FILE_LIMITS } = await import("@/lib/file-upload-validation");
+    const v = await validateFile(file, "image", { maxBytes: FILE_LIMITS.avatar });
+    if (!v.ok) {
+      toast.error(v.reason);
       return;
     }
     setBusy(true);
