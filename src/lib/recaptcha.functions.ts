@@ -64,7 +64,7 @@ export const verifyRecaptcha = createServerFn({ method: "POST" })
         await supabaseAdmin.from("security_events").insert({
           event_type: "recaptcha_failed",
           severity: score > 0 && score < minScore ? "warn" : "critical",
-          ip_address: ip,
+          ip,
           details: {
             action: data.action,
             expected_action: data.action,
