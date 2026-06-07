@@ -445,6 +445,19 @@ function Index() {
           setRequestOpen(true);
         }}
       />
+      <AiExpertProDialog
+        open={aiProOpen}
+        onOpenChange={setAiProOpen}
+        onCreateRequest={(init) => {
+          setQ(init.search_query);
+          setBrand(init.brand);
+          setModel(init.model);
+          setYear(init.year);
+          setOem(init.oem);
+          if (init.category) setCat(init.category);
+          setRequestOpen(true);
+        }}
+      />
     </div>
   );
 }
