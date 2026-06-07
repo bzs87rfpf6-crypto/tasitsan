@@ -619,6 +619,8 @@ function AdminPage() {
           <SystemHealthPanel />
         ) : tab === "security" ? (
           <SecurityEventsPanel />
+        ) : tab === "searches" ? (
+          <SearchAnalyticsPanel />
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
