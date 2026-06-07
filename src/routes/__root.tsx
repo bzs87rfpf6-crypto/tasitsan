@@ -337,9 +337,9 @@ function RootComponent() {
     });
   }, [router]);
 
-  if (isCapacitorRuntime) {
-    return <AndroidCapacitorTestScreen />;
-  }
+  // NOT: Eski Capacitor bypass ekranı kaldırıldı. WebView artık canlı SSR
+  // (https://tasitsan.com.tr) yüklüyor, normal uygulama render olmalı.
+
 
   return (
     <QueryClientProvider client={queryClient}>
