@@ -134,6 +134,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         {
           children: `(function(){
   window.__tasitsanLaunchErrors = window.__tasitsanLaunchErrors || [];
+  var isCapacitor = !!window.Capacitor || /; wv\)|\bwv\b|Capacitor/i.test(navigator.userAgent || '');
+  function ensureAndroidDebugPanel() {
+    if (!isCapacitor || !document.body) return null;
+    var existing = document.getElementById('tasitsan-android-debug');
+    if (existing) return existing;
+    var panel = document.createElement('pre');
+    panel.id = 'tasitsan-android-debug';
+    panel.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483647;max-height:45vh;overflow:auto;margin:0;padding:10px;border:1px solid rgba(212,160,23,.55);border-radius:10px;background:rgba(18,18,18,.94);color:#f5f2eb;font:12px/1.35 monospace;white-space:pre-wrap;text-align:left;direction:ltr;';
+    panel.textContent = '[Taşıtsan Android Debug] panel ready\\n';
+    document.body.appendChild(panel);
+    return panel;
+  }
+  function showAndroidDebug(message, payload) {
+    try {
+      var panel = ensureAndroidDebugPanel();
+      if (!panel) return;
+      var detail = payload ? ' ' + JSON.stringify(payload).slice(0, 900) : '';
+      panel.textContent += '[' + new Date().toLocaleTimeString() + '] ' + message + detail + '\\n';
+      panel.scrollTop = panel.scrollHeight;
+    } catch (_) {}
+  }
+  window.__tasitsanAndroidDebugLog = showAndroidDebug;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ showAndroidDebug('DOMContentLoaded'); }, { once: true });
+  } else {
+    setTimeout(function(){ showAndroidDebug('document already ready'); }, 0);
+  }
   function record(type, payload) {
     var item = payload || {};
     item.type = type;
@@ -141,6 +168,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     window.__tasitsanLaunchErrors.push(item);
     if (window.__tasitsanLaunchErrors.length > 20) window.__tasitsanLaunchErrors.shift();
     try { console.error('[Taşıtsan PWA] startup ' + type, item); } catch (_) {}
+    showAndroidDebug('ERROR ' + type, item);
     try {
       if (window.__lovableEvents && window.__lovableEvents.captureException) {
         window.__lovableEvents.captureException(new Error(item.message || 'PWA startup error'), { source: 'pwa_early_boot', type: type, item: item }, { mechanism: type, handled: false, severity: 'error' });
