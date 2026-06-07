@@ -160,7 +160,11 @@ function BulkUploadPage() {
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState<{ whatsapp: string; city: string | null; approved: boolean } | null>(null);
-  const [result, setResult] = useState<{ ok: number; fail: number; details: string[] } | null>(null);
+  const [result, setResult] = useState<{
+    ok: number; fail: number;
+    matchedPhotos: number; unmatchedPhotos: string[]; unusedZipFiles: string[];
+    errorDetails: string[];
+  } | null>(null);
   const [zipName, setZipName] = useState("");
   // filename (lowercased basename) -> File
   const [zipFiles, setZipFiles] = useState<Map<string, File>>(new Map());
