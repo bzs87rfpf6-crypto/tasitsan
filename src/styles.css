@@ -36,60 +36,61 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 
-  /* Taşıtsan — Black & Gold. sRGB defaults keep standalone PWA safe on old WebViews. */
-  --background: #0a0907;
+  /* Taşıtsan — Modern Anthracite & Gold. Lighter, more readable surfaces. */
+  --background: #121212;
   --foreground: #f5f2eb;
-  --card: #161310;
+  --card: #1e1e1e;
   --card-foreground: #f5f2eb;
-  --popover: #161310;
+  --popover: #1e1e1e;
   --popover-foreground: #f5f2eb;
   --primary: #d4a017;
   --primary-foreground: #14110e;
   --gold: #d4a017;
   --gold-foreground: #14110e;
   --gold-muted: #8a7028;
-  --secondary: #1d1a16;
+  --secondary: #262626;
   --secondary-foreground: #f5f2eb;
-  --muted: #1d1a16;
-  --muted-foreground: #aaa292;
+  --muted: #262626;
+  --muted-foreground: #b8b2a3;
   --accent: #d4a017;
   --accent-foreground: #14110e;
   --destructive: #c83a1f;
   --destructive-foreground: #faf6ef;
-  --border: #3a342c;
-  --input: #2a2620;
+  --border: #2f2f2f;
+  --input: #2a2a2a;
   --ring: #d4a017;
   --whatsapp: #25d366;
   --gradient-gold: linear-gradient(135deg, #e6b53a, #b8861a);
   --shadow-gold: 0 8px 30px -10px rgba(212, 160, 23, 0.45);
+  --shadow-card: 0 4px 14px -6px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 /* Modern color upgrade only when the browser explicitly supports oklch(). */
 @supports (color: oklch(0.5 0 0)) {
   :root {
-    --background: oklch(0.14 0.005 60);
+    --background: oklch(0.205 0 0);
     --foreground: oklch(0.97 0.01 80);
-    --card: oklch(0.18 0.008 60);
+    --card: oklch(0.245 0 0);
     --card-foreground: oklch(0.97 0.01 80);
-    --popover: oklch(0.18 0.008 60);
+    --popover: oklch(0.245 0 0);
     --popover-foreground: oklch(0.97 0.01 80);
     --primary: oklch(0.82 0.16 86);
-    --primary-foreground: oklch(0.16 0.005 60);
+    --primary-foreground: oklch(0.18 0 0);
     --gold: oklch(0.82 0.16 86);
-    --gold-foreground: oklch(0.16 0.005 60);
+    --gold-foreground: oklch(0.18 0 0);
     --gold-muted: oklch(0.55 0.10 86);
-    --secondary: oklch(0.22 0.008 60);
+    --secondary: oklch(0.285 0 0);
     --secondary-foreground: oklch(0.97 0.01 80);
-    --muted: oklch(0.22 0.008 60);
-    --muted-foreground: oklch(0.7 0.015 80);
+    --muted: oklch(0.285 0 0);
+    --muted-foreground: oklch(0.76 0.012 80);
     --accent: oklch(0.82 0.16 86);
-    --accent-foreground: oklch(0.16 0.005 60);
+    --accent-foreground: oklch(0.18 0 0);
     --destructive: oklch(0.62 0.22 25);
     --destructive-foreground: oklch(0.98 0.01 80);
-    --border: oklch(0.28 0.01 70);
-    --input: oklch(0.22 0.01 70);
+    --border: oklch(0.32 0 0);
+    --input: oklch(0.29 0 0);
     --ring: oklch(0.82 0.16 86);
     --whatsapp: oklch(0.68 0.18 145);
     --gradient-gold: linear-gradient(135deg, oklch(0.88 0.14 90), oklch(0.72 0.18 75));
