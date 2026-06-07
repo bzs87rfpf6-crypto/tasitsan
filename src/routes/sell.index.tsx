@@ -48,6 +48,8 @@ function SellPage() {
   
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const verifyCaptcha = useServerFn(verifyRecaptcha);
+
 
   const openBulkUpload = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
