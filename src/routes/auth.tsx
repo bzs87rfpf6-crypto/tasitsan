@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { checkAuthLockout, recordAuthFailure, clearAuthFailures, checkRateLimit } from "@/lib/security.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Giriş — Taşıtsan" }] }),
