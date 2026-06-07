@@ -126,6 +126,18 @@ function SellPage() {
     if (!partType) { toast.error("Parça tipi seçin."); return; }
     setSubmitting(true);
     try {
+      // reCAPTCHA v3 — bot/abuse koruması
+      try {
+        const token = await executeRecaptcha("create_listing");
+        const vr = await verifyCaptcha({ data: { token, action: "create_listing", minScore: 0.5 } });
+        if (!vr.ok) {
+          toast.error("Bot/şüpheli aktivite tespit edildi. Lütfen tekrar dene.");
+          setSubmitting(false);
+          return;
+        }
+      } catch (e) {
+        console.warn("[sell] recaptcha unavailable:", e);
+      }
       const photoUrls: string[] = [];
       const { validateFile } = await import("@/lib/file-upload-validation");
       for (let i = 0; i < files.length; i++) {
