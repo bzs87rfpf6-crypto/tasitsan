@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -200,11 +200,17 @@ function RootComponent() {
     isCapacitorRuntime,
     userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "ssr",
   });
+  const [enablePwaHelpers, setEnablePwaHelpers] = useState(false);
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
     console.log("[Taşıtsan Android Debug] RootComponent useEffect start", { isCapacitorRuntime });
     document.documentElement.setAttribute("data-pwa-hydrated", "true");
+    if (isCapacitorRuntime) {
+      console.log("[Taşıtsan Android Debug] PWA-only helpers disabled in Capacitor");
+    } else {
+      setEnablePwaHelpers(true);
+    }
     // Lazy import to avoid SSR issues
     import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
       let ga4Id: string | null = null;
@@ -233,7 +239,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {!isCapacitorRuntime && (
+        {enablePwaHelpers && (
           <Suspense fallback={null}>
             <PwaLaunchDiagnostics />
           </Suspense>
@@ -241,7 +247,7 @@ function RootComponent() {
         <div data-pwa-ready="true">
           <Outlet />
         </div>
-        {!isCapacitorRuntime && (
+        {enablePwaHelpers && (
           <Suspense fallback={null}>
             <DeepLinkHandler />
             <InstallPrompt />
