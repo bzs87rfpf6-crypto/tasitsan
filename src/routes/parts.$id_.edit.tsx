@@ -252,6 +252,9 @@ function EditPartPage() {
       const uploadedUrls = new Map<string, string>();
       for (const it of items) {
         if (it.kind !== "new") continue;
+        const { validateFile } = await import("@/lib/file-upload-validation");
+        const v = await validateFile(it.file, "image");
+        if (!v.ok) throw new Error(`Fotoğraf reddedildi: ${v.reason}`);
         const ext = (it.file.name.split(".").pop() ?? "jpg").toLowerCase();
         const path = `${user.id}/${createBrowserId("photo")}.${ext}`;
         const { error: upErr } = await supabase.storage

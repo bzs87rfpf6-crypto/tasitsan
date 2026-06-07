@@ -149,6 +149,27 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_failures: {
+        Row: {
+          created_at: string
+          id: string
+          identifier: string
+          kind: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identifier: string
+          kind: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identifier?: string
+          kind?: string
+        }
+        Relationships: []
+      }
       bot_filter_rules: {
         Row: {
           created_at: string
@@ -674,6 +695,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_buckets: {
+        Row: {
+          bucket_key: string
+          count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket_key: string
+          count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          bucket_key?: string
+          count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       request_quotes: {
         Row: {
           admin_notes: string | null
@@ -739,6 +781,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+          ip: string | null
+          route: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+          ip?: string | null
+          route?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+          ip?: string | null
+          route?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       seller_verifications: {
         Row: {
@@ -921,6 +999,12 @@ export type Database = {
       }
     }
     Functions: {
+      check_auth_lockout: { Args: { _identifier: string }; Returns: Json }
+      check_rate_limit: {
+        Args: { _key: string; _max: number; _window_seconds: number }
+        Returns: Json
+      }
+      clear_auth_failures: { Args: { _identifier: string }; Returns: undefined }
       evaluate_part_stock: { Args: { _part_id: string }; Returns: Json }
       find_equivalent_parts: {
         Args: { _limit?: number; _part_id: string }
@@ -1006,6 +1090,10 @@ export type Database = {
           part_name: string
           year: number
         }[]
+      }
+      record_auth_failure: {
+        Args: { _identifier: string; _kind: string }
+        Returns: undefined
       }
       record_part_view: {
         Args: { _part_id: string; _viewer_key: string }

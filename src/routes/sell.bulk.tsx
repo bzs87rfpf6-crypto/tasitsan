@@ -433,6 +433,9 @@ function BulkUploadPage() {
           for (const key of zipKeys) {
             const f = zipFiles.get(key);
             if (!f) continue;
+            const { validateFile } = await import("@/lib/file-upload-validation");
+            const v = await validateFile(f, "image");
+            if (!v.ok) { missing.push(`${key} (${v.reason})`); continue; }
             const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
             const path = `${user.id}/${createBrowserId("photo")}.${ext}`;
             const { error: upErr } = await supabase.storage

@@ -122,8 +122,13 @@ function SellPage() {
     setSubmitting(true);
     try {
       const photoUrls: string[] = [];
+      const { validateFile } = await import("@/lib/file-upload-validation");
       for (let i = 0; i < files.length; i++) {
         const f = files[i];
+        const v = await validateFile(f, "image");
+        if (!v.ok) {
+          throw new Error(`Fotoğraf ${i + 1} reddedildi: ${v.reason}`);
+        }
         const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
         const path = `${user.id}/${createBrowserId("photo")}.${ext}`;
         const { data: upData, error: upErr } = await supabase.storage
