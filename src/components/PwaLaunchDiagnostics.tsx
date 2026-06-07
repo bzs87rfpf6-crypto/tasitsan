@@ -20,14 +20,21 @@ declare global {
 }
 
 function isStandaloneLaunch() {
+  const hasStandaloneMedia = typeof window.matchMedia === "function"
+    ? window.matchMedia("(display-mode: standalone)").matches
+    : false;
   return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
+    hasStandaloneMedia ||
     (window.navigator as unknown as { standalone?: boolean }).standalone === true
   );
 }
 
+function settleAll(promises: Array<Promise<unknown>>) {
+  return Promise.all(promises.map((promise) => promise.catch(() => undefined)));
+}
+
 function isBlankLaunchFrame() {
-  const appText = (document.body?.innerText ?? "").trim();
+  const appText = ((document.body && document.body.innerText) || "").trim();
   const appRoot = document.querySelector("main, header, nav, [data-pwa-ready='true']");
   const hasEnoughText = appText.length > 20;
   return !appRoot && !hasEnoughText;
@@ -37,17 +44,20 @@ async function cleanupStaleAppShellCaches() {
   if (!("caches" in window)) return;
   const cacheNames = await caches.keys();
   const staleCaches = cacheNames.filter((name) => /(^|-)precache-v\d+-|(^|-)runtime-|(^|-)googleAnalytics-/.test(name));
-  await Promise.allSettled(staleCaches.map((name) => caches.delete(name)));
+  await settleAll(staleCaches.map((name) => caches.delete(name)));
 }
 
 async function cleanupStaleAppShellWorkers() {
   if (!("serviceWorker" in navigator)) return;
   const registrations = await navigator.serviceWorker.getRegistrations();
   const staleWorkers = registrations.filter((registration) => {
-    const scriptURL = registration.active?.scriptURL ?? registration.installing?.scriptURL ?? registration.waiting?.scriptURL ?? "";
+    const activeURL = registration.active ? registration.active.scriptURL : "";
+    const installingURL = registration.installing ? registration.installing.scriptURL : "";
+    const waitingURL = registration.waiting ? registration.waiting.scriptURL : "";
+    const scriptURL = activeURL || installingURL || waitingURL;
     return scriptURL.endsWith("/sw.js") || scriptURL.endsWith("/service-worker.js");
   });
-  await Promise.allSettled(staleWorkers.map((registration) => registration.unregister()));
+  await settleAll(staleWorkers.map((registration) => registration.unregister()));
 }
 
 export function PwaLaunchDiagnostics() {
@@ -83,7 +93,7 @@ export function PwaLaunchDiagnostics() {
       const error = new Error("PWA standalone launch rendered a blank screen");
       console.error("[Taşıtsan PWA] blank screen detected", {
         path: window.location.href,
-        bodyTextLength: (document.body?.innerText ?? "").trim().length,
+        bodyTextLength: ((document.body && document.body.innerText) || "").trim().length,
         userAgent: navigator.userAgent,
       });
       reportLovableError(error, {
