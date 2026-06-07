@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { parseOemList } from "@/lib/oem";
 import { parsePartTypeFromExcel, type PartType } from "@/lib/part-type";
 import { recordBulkArrival } from "@/lib/bulkNavTrace";
+import { createBrowserId } from "@/lib/browser-compat";
 
 export const Route = createFileRoute("/sell/bulk")({
   head: () => ({ meta: [{ title: "Toplu Parça Yükle — Taşıtsan" }] }),
@@ -213,7 +214,7 @@ function BulkUploadPage() {
 
     // db duplicate detection
     if (!user) return;
-    const allOems = Array.from(new Set(rows.flatMap((r) => r.oem)));
+    const allOems = Array.from(new Set(rows.reduce<string[]>((acc, r) => acc.concat(r.oem), [])));
     if (allOems.length === 0) return;
     (async () => {
       const { data } = await supabase
@@ -221,7 +222,7 @@ function BulkUploadPage() {
         .select("oem_codes")
         .eq("seller_id", user.id)
         .overlaps("oem_codes", allOems);
-      const dbOems = new Set((data ?? []).flatMap((p) => p.oem_codes ?? []));
+      const dbOems = new Set((data ?? []).reduce<string[]>((acc, p) => acc.concat(p.oem_codes ?? []), []));
       setRows((prev) =>
         prev.map((r) => {
           const dupLocal = r.oem.some((c) => localDupOems.has(c));
@@ -433,7 +434,7 @@ function BulkUploadPage() {
             const f = zipFiles.get(key);
             if (!f) continue;
             const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
-            const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+            const path = `${user.id}/${createBrowserId("photo")}.${ext}`;
             const { error: upErr } = await supabase.storage
               .from("part-photos")
               .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
