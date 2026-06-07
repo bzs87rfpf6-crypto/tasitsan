@@ -146,7 +146,7 @@ function Index() {
 
       {/* HERO SEARCH */}
       <section className="bg-gradient-to-b from-gold/10 via-background to-background border-b border-border">
-        <div className="max-w-3xl mx-auto px-4 pt-6 pb-5 space-y-4">
+        <div className="max-w-5xl mx-auto px-3 sm:px-5 pt-6 pb-5 space-y-4">
           <div className="text-center space-y-1.5">
             <h1 className="font-display text-2xl sm:text-3xl tracking-wide">Aradığın parça bir tıkla</h1>
             <p className="text-xs sm:text-sm text-muted-foreground">
@@ -188,7 +188,7 @@ function Index() {
 
 
 
-          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
+          <div className="flex gap-2 overflow-x-auto -mx-3 px-3 sm:-mx-5 sm:px-5 pb-1 scrollbar-none">
             <button
               onClick={() => setShowFilters((v) => !v)}
               className={`tap-gold shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border flex items-center gap-1.5 ${
@@ -215,7 +215,7 @@ function Index() {
             ))}
           </div>
 
-          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
+          <div className="flex gap-2 overflow-x-auto -mx-3 px-3 sm:-mx-5 sm:px-5 pb-1 scrollbar-none">
             <button
               onClick={() => setPartType("")}
               className={`tap-gold shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${
@@ -283,7 +283,7 @@ function Index() {
       </section>
 
       {/* 🚨 Acil Parça Talebi CTA */}
-      <section className="max-w-3xl mx-auto px-4 pt-5">
+      <section className="max-w-5xl mx-auto px-3 sm:px-5 pt-5">
         <Link
           to="/urgent/new"
           className="tap-gold relative w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-destructive/25 via-destructive/10 to-background border-2 border-destructive/60 text-left shadow-lg overflow-hidden no-underline animate-pulse"
@@ -304,7 +304,7 @@ function Index() {
       </section>
 
       {/* Akıllı Talep Havuzu CTA — vurgulu */}
-      <section className="max-w-3xl mx-auto px-4 pt-4">
+      <section className="max-w-5xl mx-auto px-3 sm:px-5 pt-4">
         <button
           onClick={() => setRequestOpen(true)}
           className="tap-gold relative w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-gold/25 via-gold/10 to-background border-2 animate-gold-pulse-border text-left shadow-gold overflow-hidden"
@@ -327,7 +327,7 @@ function Index() {
         </button>
       </section>
 
-      <div className="max-w-3xl mx-auto px-4 pt-5">
+      <div className="max-w-5xl mx-auto px-3 sm:px-5 pt-5">
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
