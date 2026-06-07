@@ -51,6 +51,7 @@ function Index() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [aiExpertOpen, setAiExpertOpen] = useState(false);
+  const [aiProOpen, setAiProOpen] = useState(false);
   const [contactPhone, setContactPhone] = useState("");
 
   useEffect(() => {
