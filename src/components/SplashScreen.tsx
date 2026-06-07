@@ -20,7 +20,9 @@ export function SplashScreen() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if ((window as unknown as { Capacitor?: unknown }).Capacitor) {
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
+    if (isCapacitorLike) {
       console.log("[Taşıtsan Android Debug] SplashScreen skipped in Capacitor");
       return;
     }

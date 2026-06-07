@@ -45,7 +45,9 @@ export function InstallPrompt() {
   const [showIos, setShowIos] = useState(false);
 
   useEffect(() => {
-    if ((window as unknown as { Capacitor?: unknown }).Capacitor) {
+    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
+    if (isCapacitorLike) {
       console.log("[Taşıtsan Android Debug] InstallPrompt skipped in Capacitor");
       return;
     }

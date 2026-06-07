@@ -29,6 +29,11 @@ function isStandaloneLaunch() {
   );
 }
 
+function isCapacitorLikeRuntime() {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  return Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
+}
+
 function settleAll(promises: Array<Promise<unknown>>) {
   return Promise.all(promises.map((promise) => promise.catch(() => undefined)));
 }
@@ -64,7 +69,7 @@ export function PwaLaunchDiagnostics() {
   console.log("[Taşıtsan Android Debug] PwaLaunchDiagnostics render");
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if ((window as unknown as { Capacitor?: unknown }).Capacitor) {
+    if (isCapacitorLikeRuntime()) {
       console.log("[Taşıtsan Android Debug] PwaLaunchDiagnostics skipped in Capacitor");
       return;
     }
