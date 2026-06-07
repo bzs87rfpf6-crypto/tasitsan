@@ -23,16 +23,16 @@ function loadScript(): Promise<void> {
   if (window.grecaptcha) return Promise.resolve();
   if (loadingPromise) return loadingPromise;
   loadingPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      'script[data-recaptcha="v3"]',
-    );
+    const existing = document.querySelector<HTMLScriptElement>('script[data-recaptcha="v3"]');
     const onReady = () => {
       if (window.grecaptcha) window.grecaptcha.ready(() => resolve());
       else reject(new Error("recaptcha-not-loaded"));
     };
     if (existing) {
       existing.addEventListener("load", onReady, { once: true });
-      existing.addEventListener("error", () => reject(new Error("recaptcha-script-error")), { once: true });
+      existing.addEventListener("error", () => reject(new Error("recaptcha-script-error")), {
+        once: true,
+      });
       return;
     }
     const s = document.createElement("script");
