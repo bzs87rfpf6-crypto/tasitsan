@@ -301,7 +301,19 @@ export function AiExpertProDialog({
             <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 space-y-1">
-                  <p className="text-[11px] uppercase tracking-wider text-gold font-semibold">Araştırma Sonucu</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[11px] uppercase tracking-wider text-gold font-semibold">Araştırma Sonucu</p>
+                    {source === "cache" && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                        <Zap className="size-2.5" /> Önbellekten · anında
+                      </span>
+                    )}
+                    {source === "ai" && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-gold/15 text-gold border border-gold/30">
+                        <Sparkles className="size-2.5" /> AI araştırması
+                      </span>
+                    )}
+                  </div>
                   <h3 className="font-display text-lg leading-tight">{result.part_name || "—"}</h3>
                   <p className="text-xs text-muted-foreground">{result.category}</p>
                 </div>
@@ -309,6 +321,7 @@ export function AiExpertProDialog({
                   %{result.confidence} güven
                 </div>
               </div>
+
 
               {result.description && (
                 <p className="text-xs text-muted-foreground leading-relaxed">{result.description}</p>
