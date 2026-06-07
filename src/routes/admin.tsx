@@ -33,7 +33,7 @@ export const Route = createFileRoute("/admin")({
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "notifications" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "system" | "security" | "settings";
+type Tab = "dashboard" | "notifications" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "system" | "security" | "searches" | "settings";
 
 interface ProfileRow {
   id: string;
