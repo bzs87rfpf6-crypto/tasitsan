@@ -36,6 +36,51 @@ function AndroidDebugMarker({ label }: { label: string }) {
   return null;
 }
 
+function AndroidCapacitorTestScreen() {
+  androidDebugLog("Taşıtsan Android Test Ekranı render edildi");
+  return (
+    <main
+      data-android-test-screen="true"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "72px 20px 24px",
+        background: "#121212",
+        color: "#f5f2eb",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 2147483647,
+          padding: "12px 14px calc(12px + env(safe-area-inset-top))",
+          background: "#d4a017",
+          color: "#14110e",
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: 0,
+          boxShadow: "0 8px 24px rgba(0,0,0,.35)",
+        }}
+      >
+        ANDROID DEBUG BUILD · React render çalışıyor
+      </div>
+      <section>
+        <h1 style={{ margin: 0, fontSize: 28, lineHeight: 1.15 }}>Taşıtsan Android Test Ekranı</h1>
+        <p style={{ margin: "14px auto 0", maxWidth: 320, color: "#d8d0c2", fontSize: 14, lineHeight: 1.5 }}>
+          Bu ekran Capacitor Android ortamında RootComponent render olduğunda gösterilir.
+        </p>
+      </section>
+    </main>
+  );
+}
+
 function isAndroidCapacitorLikeRuntime() {
   if (typeof window === "undefined") return false;
   const hasCapacitor = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
@@ -291,6 +336,10 @@ function RootComponent() {
       androidDebugLog("analytics startup failed", { message: error instanceof Error ? error.message : String(error) });
     });
   }, [router]);
+
+  if (isCapacitorRuntime) {
+    return <AndroidCapacitorTestScreen />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
