@@ -104,34 +104,6 @@ const legacyWebViewPolyfills = `    <script>
       })();
     </script>`;
 
-const androidDebugFallback = `    <script>
-      (function(){
-        function isCapacitorLike() {
-          return !!window.Capacitor || /; wv\\)|\\bwv\\b|Capacitor/i.test(navigator.userAgent || '');
-        }
-        function show(message) {
-          if (!document.body) return;
-          var banner = document.getElementById('tasitsan-android-top-debug-banner');
-          if (!banner) {
-            banner = document.createElement('div');
-            banner.id = 'tasitsan-android-top-debug-banner';
-            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;padding:12px 14px;background:#d4a017;color:#14110e;font:800 13px system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35);';
-            document.body.appendChild(banner);
-          }
-          banner.textContent = message;
-        }
-        window.__tasitsanAndroidDebugLog = function(message){ show('ANDROID DEBUG BUILD · ' + message); };
-        document.addEventListener('DOMContentLoaded', function(){
-          if (!isCapacitorLike()) return;
-          show('ANDROID DEBUG BUILD · HTML yüklendi');
-          var root = document.getElementById('root');
-          if (root) {
-            root.innerHTML = '<main style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:72px 20px 24px;background:#121212;color:#f5f2eb;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;text-align:center"><section><h1 style="margin:0;font-size:28px;line-height:1.15">Taşıtsan Android Test Ekranı</h1><p style="margin:14px auto 0;max-width:320px;color:#d8d0c2;font-size:14px;line-height:1.5">Bu HTML fallback ekranıdır; React başlamazsa bile görünür.</p></section></main>';
-          }
-        });
-      })();
-    </script>`;
-
 const html = `<!doctype html>
 <html lang="tr">
   <head>
@@ -143,12 +115,10 @@ const html = `<!doctype html>
     <link rel="manifest" href="/manifest.json" />
 ${cssTags}
 ${legacyWebViewPolyfills}
-${androidDebugFallback}
 ${scriptTags}
   </head>
   <body style="background:#121212;color:#f5f2eb;margin:0;">
-    <div id="tasitsan-android-top-debug-banner" style="position:fixed;top:0;left:0;right:0;z-index:2147483647;padding:12px 14px;background:#d4a017;color:#14110e;font:800 13px system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35);">ANDROID DEBUG BUILD · index.html paket içinde</div>
-    <div id="root"><main style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:72px 20px 24px;background:#121212;color:#f5f2eb;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;text-align:center"><section><h1 style="margin:0;font-size:28px;line-height:1.15">Taşıtsan Android Test Ekranı</h1><p style="margin:14px auto 0;max-width:320px;color:#d8d0c2;font-size:14px;line-height:1.5">Bu ekran Capacitor paketindeki statik index.html içinden gelir.</p></section></main></div>
+    <div id="root"></div>
   </body>
 </html>
 `;

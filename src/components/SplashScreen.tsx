@@ -14,7 +14,6 @@ const EMBLEM_URL = "/icon-192.png";
  *     (state hatası, animasyon takılması, vs. olsa bile).
  */
 export function SplashScreen() {
-  console.log("[Taşıtsan Android Debug] SplashScreen render");
   const [visible, setVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -23,11 +22,8 @@ export function SplashScreen() {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
     const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
     if (isCapacitorLike) {
-      console.log("[Taşıtsan Android Debug] SplashScreen skipped in Capacitor");
       return;
     }
-
-    console.log("[Taşıtsan Android Debug] SplashScreen useEffect start");
 
     let shouldShow = false;
     try {

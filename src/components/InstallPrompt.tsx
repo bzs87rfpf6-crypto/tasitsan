@@ -40,7 +40,6 @@ function isIosSafari(): boolean {
 }
 
 export function InstallPrompt() {
-  console.log("[Taşıtsan Android Debug] InstallPrompt render");
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIos, setShowIos] = useState(false);
 
@@ -48,10 +47,8 @@ export function InstallPrompt() {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
     const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
     if (isCapacitorLike) {
-      console.log("[Taşıtsan Android Debug] InstallPrompt skipped in Capacitor");
       return;
     }
-    console.log("[Taşıtsan Android Debug] InstallPrompt useEffect start");
     if (isStandalone() || recentlyDismissed()) return;
 
     const handler = (e: Event) => {

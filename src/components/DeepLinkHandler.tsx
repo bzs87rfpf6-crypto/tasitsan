@@ -10,17 +10,14 @@ import { useRouter } from "@tanstack/react-router";
  *  - tasitsan://...                (custom scheme)
  */
 export function DeepLinkHandler() {
-  console.log("[Taşıtsan Android Debug] DeepLinkHandler render");
   const router = useRouter();
 
   useEffect(() => {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
     const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
     if (isCapacitorLike) {
-      console.log("[Taşıtsan Android Debug] DeepLinkHandler skipped in Capacitor");
       return;
     }
-    console.log("[Taşıtsan Android Debug] DeepLinkHandler useEffect start");
     let cleanup: (() => void) | undefined;
     let cancelled = false;
 
