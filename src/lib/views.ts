@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { createBrowserId } from "@/lib/browser-compat";
 
 const ANON_KEY = "tasitsan_anon_id";
 const VIEWED_PREFIX = "tasitsan_viewed_";
@@ -9,7 +10,7 @@ function getAnonId(): string {
   try {
     let id = localStorage.getItem(ANON_KEY);
     if (!id) {
-      id = `anon_${crypto.randomUUID()}`;
+      id = createBrowserId("anon");
       localStorage.setItem(ANON_KEY, id);
     }
     return id;
