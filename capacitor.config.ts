@@ -5,42 +5,64 @@ import type { CapacitorConfig } from "@capacitor/cli";
  *
  * Lovable sandbox APK/IPA derleyemez (Android Studio + JDK / Xcode + CocoaPods gerekir).
  * Üretim adımları için MOBILE_BUILD.md dosyasına bakın.
+ *
+ * NEDEN server.url = https://tasitsan.com.tr?
+ *   Bu proje TanStack Start (SSR) üzerinde çalışıyor. Üretim HTML'i ve tüm
+ *   server function çağrıları (/_serverFn/...) Cloudflare Worker SSR
+ *   tarafından her istekte üretiliyor. Capacitor'a yalnız `dist/client` SPA
+ *   shell'i paketleyip `server.hostname` ile sunarsak server fn istekleri
+ *   local bundle'da aranır ve 404 döner → ilk render server fn'e bağlı
+ *   olduğu için uygulama tamamen siyah/boş kalır.
+ *
+ *   Çözüm: WebView'i doğrudan canlı domain'e bağla. Böylece üretim
+ *   sunucusundaki SSR + auth + server fn'ler aynen mobile içinde çalışır.
+ *   Bu, Capacitor için "remote first" + offline fallback paterni.
  */
 const config: CapacitorConfig = {
   appId: "com.tasitsan.app",
   appName: "Taşıtsan",
-  // dist/client → `bun run build:capacitor` tarafından üretilen statik SPA
-  // bundle'ı. .output/public içinde index.html olmadığı için doğrudan SSR
-  // çıktısına bağlanamıyoruz. Detay: scripts/build-capacitor.mjs
+  // Offline fallback ve cap sync için statik shell hâlâ gerekli; ancak
+  // server.url verildiği için aktif olarak canlı URL yüklenir.
   webDir: "dist/client",
-  backgroundColor: "#0a0907",
+  backgroundColor: "#121212",
 
   // Deep link & Universal Link / App Link doğrulaması:
   //  - Android: https://tasitsan.com.tr/.well-known/assetlinks.json
   //  - iOS:     https://tasitsan.com.tr/.well-known/apple-app-site-association
-  // server.url'i prod'da BOŞ bırak — uygulama paketlenmiş web bundle'ı kullanır.
-  // Hot-reload geliştirme için yerelde server.url = "http://<lan-ip>:8080" yapabilirsin.
   server: {
     androidScheme: "https",
     iosScheme: "https",
-    hostname: "tasitsan.com.tr",
+    // WebView doğrudan canlı yayını yükler — SSR + server fn'ler çalışır.
+    url: "https://tasitsan.com.tr",
+    // HTTPS olduğu için cleartext gerekmez, ama hata ayıklamada engellemesin.
+    cleartext: false,
+    // Tüm tasitsan.com.tr alt domainlerinde Capacitor köprüsü aktif kalsın.
+    allowNavigation: [
+      "tasitsan.com.tr",
+      "*.tasitsan.com.tr",
+      "*.lovable.app",
+      "*.supabase.co",
+    ],
   },
 
   ios: {
     contentInset: "automatic",
-    backgroundColor: "#0a0907",
+    backgroundColor: "#121212",
     limitsNavigationsToAppBoundDomains: false,
   },
   android: {
-    backgroundColor: "#0a0907",
+    backgroundColor: "#121212",
     allowMixedContent: false,
+    // WebView debug aç — Chrome DevTools üzerinden chrome://inspect ile
+    // kara ekran tespitinde gerçek konsol/network görülebilsin.
+    webContentsDebuggingEnabled: true,
   },
 
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1200,
+      launchShowDuration: 1500,
       launchAutoHide: true,
-      backgroundColor: "#0a0907",
+      backgroundColor: "#121212",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
       splashFullScreen: true,
@@ -51,7 +73,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: "DARK",
-      backgroundColor: "#0a0907",
+      backgroundColor: "#121212",
       overlaysWebView: false,
     },
     Keyboard: {
@@ -59,7 +81,6 @@ const config: CapacitorConfig = {
       resizeOnFullScreen: true,
     },
     Camera: {
-      // izin metinleri Info.plist / AndroidManifest'e yazılır
       androidImagePickerCompressionQuality: 85,
       iosImagePickerCompressionQuality: 85,
     },

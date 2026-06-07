@@ -39,10 +39,10 @@ Bu `android/` ve `ios/` klasörlerini oluşturur. Bu klasörler git'e commit edi
 
 ```bash
 bunx @capacitor/assets generate \
-  --iconBackgroundColor "#0a0907" \
-  --iconBackgroundColorDark "#0a0907" \
-  --splashBackgroundColor "#0a0907" \
-  --splashBackgroundColorDark "#0a0907"
+  --iconBackgroundColor "#121212" \
+  --iconBackgroundColorDark "#121212" \
+  --splashBackgroundColor "#121212" \
+  --splashBackgroundColorDark "#121212"
 ```
 
 Veya yüksek kalite kaynak vermek için `resources/icon.png` (1024x1024) ve `resources/splash.png` (2732x2732) ekle, sonra yukarıdaki komutu çalıştır.
