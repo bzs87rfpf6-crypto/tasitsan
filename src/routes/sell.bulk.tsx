@@ -163,6 +163,7 @@ function BulkUploadPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const verifyCaptcha = useServerFn(verifyRecaptcha);
   const [profile, setProfile] = useState<{ whatsapp: string; city: string | null; approved: boolean } | null>(null);
   const [result, setResult] = useState<{
     ok: number; fail: number;
