@@ -190,9 +190,15 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  const isCapacitorRuntime = typeof window !== "undefined" && Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
+  console.log("[Taşıtsan Android Debug] RootComponent render start", {
+    isCapacitorRuntime,
+    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "ssr",
+  });
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
+    console.log("[Taşıtsan Android Debug] RootComponent useEffect start", { isCapacitorRuntime });
     // Lazy import to avoid SSR issues
     import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
       let ga4Id: string | null = null;
@@ -221,13 +227,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <PwaLaunchDiagnostics />
+        {!isCapacitorRuntime && <PwaLaunchDiagnostics />}
         <div data-pwa-ready="true">
           <Outlet />
         </div>
-        <DeepLinkHandler />
-        <InstallPrompt />
-        <SplashScreen />
+        {!isCapacitorRuntime && <DeepLinkHandler />}
+        {!isCapacitorRuntime && <InstallPrompt />}
+        {!isCapacitorRuntime && <SplashScreen />}
         <Toaster theme="dark" position="top-center" />
       </AuthProvider>
     </QueryClientProvider>
