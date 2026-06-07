@@ -199,6 +199,7 @@ function RootComponent() {
   const router = useRouter();
   useEffect(() => {
     console.log("[Taşıtsan Android Debug] RootComponent useEffect start", { isCapacitorRuntime });
+    document.documentElement.setAttribute("data-pwa-hydrated", "true");
     // Lazy import to avoid SSR issues
     import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
       let ga4Id: string | null = null;
