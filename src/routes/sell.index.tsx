@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
 import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 import { recordBulkClick } from "@/lib/bulkNavTrace";
+import { createBrowserId } from "@/lib/browser-compat";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
 // by <img>, and DNG files balloon memory enough to crash the tab into a reload.
@@ -124,7 +125,7 @@ function SellPage() {
       for (let i = 0; i < files.length; i++) {
         const f = files[i];
         const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const path = `${user.id}/${createBrowserId("photo")}.${ext}`;
         const { data: upData, error: upErr } = await supabase.storage
           .from("part-photos")
           .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
