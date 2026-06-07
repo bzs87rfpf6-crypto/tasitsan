@@ -31,6 +31,7 @@ const HEADERS = [
   "ADET",
   "FİYAT",
   "PARÇA TİPİ",
+  "ÜRÜN DURUMU",
   "AÇIKLAMA",
   "FOTOĞRAFLAR",
 ] as const;
@@ -45,10 +46,28 @@ const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
   "adet": "ADET", "stok": "ADET", "stock": "ADET", "quantity": "ADET",
   "fiyat": "FİYAT", "price": "FİYAT", "tutar": "FİYAT",
   "parça tipi": "PARÇA TİPİ", "parca tipi": "PARÇA TİPİ", "tip": "PARÇA TİPİ", "tür": "PARÇA TİPİ", "tur": "PARÇA TİPİ", "part_type": "PARÇA TİPİ",
+  "ürün durumu": "ÜRÜN DURUMU", "urun durumu": "ÜRÜN DURUMU", "durum": "ÜRÜN DURUMU", "condition": "ÜRÜN DURUMU", "kondisyon": "ÜRÜN DURUMU",
   "açıklama": "AÇIKLAMA", "aciklama": "AÇIKLAMA", "description": "AÇIKLAMA", "not": "AÇIKLAMA",
   "fotoğraflar": "FOTOĞRAFLAR", "fotograflar": "FOTOĞRAFLAR", "foto": "FOTOĞRAFLAR", "fotos": "FOTOĞRAFLAR",
   "photos": "FOTOĞRAFLAR", "photo": "FOTOĞRAFLAR", "resimler": "FOTOĞRAFLAR", "images": "FOTOĞRAFLAR",
 };
+
+type Condition = "new" | "used";
+
+function parseCondition(raw: string): Condition {
+  const k = raw.trim().toLowerCase();
+  if (!k) return "used";
+  if (/(sıfır|sifir|0|new|yeni)/.test(k)) return "new";
+  return "used";
+}
+
+function slugify(s: string): string {
+  return s.toLowerCase()
+    .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
+    .replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
 interface Row {
   __index: number;
@@ -61,6 +80,7 @@ interface Row {
   qty: number;
   price: number | null;
   partType: PartType | null;
+  condition: Condition;
   description: string;
   photoNames: string[];
   errors: string[];
@@ -104,6 +124,7 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     const priceStr = get("FİYAT").replace(/[^\d.,]/g, "").replace(",", ".");
     const price = priceStr ? parseFloat(priceStr) : null;
     const partType = parsePartTypeFromExcel(get("PARÇA TİPİ"));
+    const condition = parseCondition(get("ÜRÜN DURUMU"));
     const description = get("AÇIKLAMA");
     const photosRaw = get("FOTOĞRAFLAR");
     const photoNames = photosRaw
@@ -124,7 +145,7 @@ function parseRows(raw: Record<string, unknown>[]): Row[] {
     return {
       __index: i + 2,
       oem, title, brand, vehicleBrand, vehicleModel, year, qty, price: price ?? null,
-      partType, description, photoNames, errors, warnings,
+      partType, condition, description, photoNames, errors, warnings,
     };
   });
 }
@@ -139,7 +160,11 @@ function BulkUploadPage() {
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState<{ whatsapp: string; city: string | null; approved: boolean } | null>(null);
-  const [result, setResult] = useState<{ ok: number; fail: number; details: string[] } | null>(null);
+  const [result, setResult] = useState<{
+    ok: number; fail: number;
+    matchedPhotos: number; unmatchedPhotos: string[]; unusedZipFiles: string[];
+    errorDetails: string[];
+  } | null>(null);
   const [zipName, setZipName] = useState("");
   // filename (lowercased basename) -> File
   const [zipFiles, setZipFiles] = useState<Map<string, File>>(new Map());
@@ -265,8 +290,9 @@ function BulkUploadPage() {
   const downloadTemplate = () => {
     const data: (string | number)[][] = [
       [...HEADERS],
-      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Orijinal", "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
-      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Yan Sanayi", "Hafif boyalı", "camurluk-1.jpg"],
+      ["A1234567890", "Sağ Far Komple", "Hella", "Mercedes", "W211", 2008, 1, 4500, "Orijinal", "İkinci El", "Çıkma, çiziksiz", "far1.jpg; far2.jpg"],
+      ["B9876543210", "Sol Ön Çamurluk", "Orijinal", "BMW", "F30", 2015, 2, 2750, "Yan Sanayi", "Sıfır", "Yeni ürün", "camurluk-1.jpg"],
+      ["329220K090", "Fren Balatası", "Bosch", "Toyota", "Hilux", 2018, 5, 850, "Eşdeğer", "Sıfır", "ZIP içindeki 329220K090.jpg otomatik eşleşir", ""],
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws["!cols"] = HEADERS.map(() => ({ wch: 18 }));
@@ -316,29 +342,73 @@ function BulkUploadPage() {
     setSubmitting(true);
     let ok = 0;
     let fail = 0;
-    const details: string[] = [];
+    let matchedPhotos = 0;
+    const unmatchedPhotos: string[] = [];
+    const errorDetails: string[] = [];
+    const usedZipKeys = new Set<string>();
+
+    // Pre-compute lookup maps from ZIP for OEM/title auto-matching.
+    // Strategy: for each zip filename, derive its "stem" (basename without ext, lowercased,
+    // suffix _\d+ stripped) — matches `329220K090.jpg`, `329220K090_1.jpg`, `Fren_Balatasi.jpg`.
+    const zipByStem = new Map<string, string[]>(); // stem -> [zip keys] preserving order
+    for (const key of zipFiles.keys()) {
+      const base = key.replace(/\.[^.]+$/, "");
+      const stem = base.replace(/[_-]?\d+$/, "");
+      const norm = stem.toLowerCase();
+      const arr = zipByStem.get(norm) ?? [];
+      arr.push(key);
+      zipByStem.set(norm, arr);
+    }
+    // Sort each bucket by filename so _1, _2 come in order.
+    zipByStem.forEach((arr) => arr.sort());
+
+    const resolveAutoMatches = (r: Row): string[] => {
+      const keys: string[] = [];
+      const tryStems: string[] = [];
+      for (const oem of r.oem) tryStems.push(oem.toLowerCase());
+      if (r.title) tryStems.push(slugify(r.title));
+      for (const stem of tryStems) {
+        const bucket = zipByStem.get(stem);
+        if (bucket) {
+          for (const k of bucket) if (!keys.includes(k)) keys.push(k);
+        }
+      }
+      return keys.slice(0, 10);
+    };
 
     for (const r of valid) {
       try {
         if (mode === "insert") {
-          // Upload matching photos from ZIP, if any
+          // Resolve photo source: explicit FOTOĞRAFLAR names take precedence; otherwise auto-match.
           const photoUrls: string[] = [];
           const missing: string[] = [];
-          for (const name of r.photoNames.slice(0, 10)) {
-            const f = zipFiles.get(name.toLowerCase());
-            if (!f) { missing.push(name); continue; }
+          let zipKeys: string[] = [];
+          if (r.photoNames.length > 0) {
+            for (const name of r.photoNames.slice(0, 10)) {
+              const key = name.toLowerCase();
+              if (zipFiles.has(key)) zipKeys.push(key);
+              else missing.push(name);
+            }
+          } else if (zipFiles.size > 0) {
+            zipKeys = resolveAutoMatches(r);
+          }
+
+          for (const key of zipKeys) {
+            const f = zipFiles.get(key);
+            if (!f) continue;
             const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
             const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
             const { error: upErr } = await supabase.storage
               .from("part-photos")
               .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
-            if (upErr) { missing.push(`${name} (upload err)`); continue; }
+            if (upErr) { missing.push(`${key} (upload err)`); continue; }
             const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
             photoUrls.push(pub.publicUrl);
+            usedZipKeys.add(key);
+            matchedPhotos++;
           }
-          if (missing.length > 0) {
-            details.push(`Satır ${r.__index}: eksik foto ${missing.join(", ")}`);
-          }
+          if (missing.length > 0) unmatchedPhotos.push(`Satır ${r.__index}: ${missing.join(", ")}`);
+
           const { error } = await supabase.from("parts").insert({
             seller_id: user.id,
             title: r.title,
@@ -348,7 +418,7 @@ function BulkUploadPage() {
             year: r.year,
             oem_codes: r.oem,
             category: "Diğer",
-            condition: "used",
+            condition: r.condition,
             part_type: r.partType,
             price: r.price,
             stock_quantity: r.qty,
@@ -360,7 +430,6 @@ function BulkUploadPage() {
           if (error) throw error;
           ok++;
         } else {
-          // update or stock — find user's part by any matching OEM
           const { data: found } = await supabase
             .from("parts")
             .select("id")
@@ -370,7 +439,7 @@ function BulkUploadPage() {
             .maybeSingle();
           if (!found) {
             fail++;
-            details.push(`Satır ${r.__index}: ${r.oem[0]} ile eşleşen ilan bulunamadı`);
+            errorDetails.push(`Satır ${r.__index}: ${r.oem[0]} ile eşleşen ilan bulunamadı`);
             continue;
           }
           const patch = mode === "stock"
@@ -382,6 +451,7 @@ function BulkUploadPage() {
                 model: r.vehicleModel || null,
                 year: r.year,
                 price: r.price,
+                condition: r.condition,
                 stock_quantity: r.qty,
               };
           const { error } = await supabase.from("parts").update(patch).eq("id", found.id);
@@ -390,11 +460,12 @@ function BulkUploadPage() {
         }
       } catch (e: any) {
         fail++;
-        details.push(`Satır ${r.__index}: ${e?.message ?? "bilinmeyen hata"}`);
+        errorDetails.push(`Satır ${r.__index}: ${e?.message ?? "bilinmeyen hata"}`);
       }
     }
 
-    setResult({ ok, fail, details });
+    const unusedZipFiles = Array.from(zipFiles.keys()).filter((k) => !usedZipKeys.has(k));
+    setResult({ ok, fail, matchedPhotos, unmatchedPhotos, unusedZipFiles, errorDetails });
     setSubmitting(false);
     if (ok > 0) toast.success(`${ok} kayıt işlendi.`);
     if (fail > 0) toast.error(`${fail} kayıt başarısız.`);
@@ -453,7 +524,7 @@ function BulkUploadPage() {
         </div>
 
         <div className="rounded-xl border border-gold/30 bg-gold/5 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
-          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. İsteğe bağlı olarak bir ZIP içinde fotoğrafları yükleyin; Excel'deki <em>FOTOĞRAFLAR</em> sütununda yazan dosya adları (örn. <code>far1.jpg; far2.jpg</code>) ZIP içindeki dosyalarla eşleştirilir. İlan başına 1–10 fotoğraf.</>}
+          {mode === "insert" && <><span className="text-gold font-semibold">Yeni İlan modu:</span> Her satır admin onayı için bekleyen yeni ilan olarak eklenir. <em>ÜRÜN DURUMU</em> sütununa "Sıfır" veya "İkinci El" yazın (boşsa "İkinci El" varsayılır). İsteğe bağlı bir ZIP yükleyin: <em>FOTOĞRAFLAR</em> sütununda dosya adı belirtilmezse <strong>OEM numarası</strong> (örn. <code>329220K090.jpg</code>, <code>329220K090_1.jpg</code>) veya <strong>parça adı</strong> (örn. <code>Fren_Balatasi.jpg</code>) ile otomatik eşleştirilir. İlan başına 1–10 fotoğraf.</>}
           {mode === "update" && <><span className="text-gold font-semibold">Toplu Güncelle:</span> OEM numarasına göre kendi ilanlarınızı bulur ve başlık, fiyat, stok dahil tüm alanları günceller.</>}
           {mode === "stock" && <><span className="text-gold font-semibold">Stok Güncelle:</span> Yalnızca ADET sütunu kullanılır; OEM eşleşen ilanlarınızın stok adedi güncellenir.</>}
         </div>
@@ -627,18 +698,43 @@ function BulkUploadPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-3 text-center">
                   <div className="text-2xl font-display text-emerald-400">{result.ok}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-emerald-400/80">Başarılı</div>
+                  <div className="text-[10px] uppercase tracking-wider text-emerald-400/80">İşlenen Kayıt</div>
                 </div>
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-center">
                   <div className="text-2xl font-display text-destructive">{result.fail}</div>
                   <div className="text-[10px] uppercase tracking-wider text-destructive/80">Hatalı</div>
                 </div>
+                <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 px-3 py-3 text-center">
+                  <div className="text-2xl font-display text-sky-300">{result.matchedPhotos}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-sky-300/80">Eşleşen Foto</div>
+                </div>
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-3 text-center">
+                  <div className="text-2xl font-display text-amber-300">{result.unusedZipFiles.length}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-amber-300/80">Kullanılmayan ZIP</div>
+                </div>
               </div>
             </div>
-            {result.details.length > 0 && (
-              <div className="rounded-xl border border-border bg-card px-3 py-3 max-h-60 overflow-auto text-[11px] space-y-1">
-                {result.details.map((d, i) => (
+            {result.errorDetails.length > 0 && (
+              <div className="rounded-xl border border-destructive/30 bg-card px-3 py-3 max-h-48 overflow-auto text-[11px] space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-destructive font-semibold mb-1">Hatalı Satırlar</div>
+                {result.errorDetails.map((d, i) => (
                   <div key={i} className="text-destructive">{d}</div>
+                ))}
+              </div>
+            )}
+            {result.unmatchedPhotos.length > 0 && (
+              <div className="rounded-xl border border-amber-500/30 bg-card px-3 py-3 max-h-48 overflow-auto text-[11px] space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-amber-300 font-semibold mb-1">Eşleşmeyen Fotoğraflar</div>
+                {result.unmatchedPhotos.map((d, i) => (
+                  <div key={i} className="text-amber-300/90">{d}</div>
+                ))}
+              </div>
+            )}
+            {result.unusedZipFiles.length > 0 && (
+              <div className="rounded-xl border border-border bg-card px-3 py-3 max-h-40 overflow-auto text-[11px] space-y-0.5">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">ZIP'te Kullanılmayan Dosyalar</div>
+                {result.unusedZipFiles.map((d, i) => (
+                  <div key={i} className="text-muted-foreground font-mono">{d}</div>
                 ))}
               </div>
             )}
