@@ -342,29 +342,73 @@ function BulkUploadPage() {
     setSubmitting(true);
     let ok = 0;
     let fail = 0;
-    const details: string[] = [];
+    let matchedPhotos = 0;
+    const unmatchedPhotos: string[] = [];
+    const errorDetails: string[] = [];
+    const usedZipKeys = new Set<string>();
+
+    // Pre-compute lookup maps from ZIP for OEM/title auto-matching.
+    // Strategy: for each zip filename, derive its "stem" (basename without ext, lowercased,
+    // suffix _\d+ stripped) — matches `329220K090.jpg`, `329220K090_1.jpg`, `Fren_Balatasi.jpg`.
+    const zipByStem = new Map<string, string[]>(); // stem -> [zip keys] preserving order
+    for (const key of zipFiles.keys()) {
+      const base = key.replace(/\.[^.]+$/, "");
+      const stem = base.replace(/[_-]?\d+$/, "");
+      const norm = stem.toLowerCase();
+      const arr = zipByStem.get(norm) ?? [];
+      arr.push(key);
+      zipByStem.set(norm, arr);
+    }
+    // Sort each bucket by filename so _1, _2 come in order.
+    zipByStem.forEach((arr) => arr.sort());
+
+    const resolveAutoMatches = (r: Row): string[] => {
+      const keys: string[] = [];
+      const tryStems: string[] = [];
+      for (const oem of r.oem) tryStems.push(oem.toLowerCase());
+      if (r.title) tryStems.push(slugify(r.title));
+      for (const stem of tryStems) {
+        const bucket = zipByStem.get(stem);
+        if (bucket) {
+          for (const k of bucket) if (!keys.includes(k)) keys.push(k);
+        }
+      }
+      return keys.slice(0, 10);
+    };
 
     for (const r of valid) {
       try {
         if (mode === "insert") {
-          // Upload matching photos from ZIP, if any
+          // Resolve photo source: explicit FOTOĞRAFLAR names take precedence; otherwise auto-match.
           const photoUrls: string[] = [];
           const missing: string[] = [];
-          for (const name of r.photoNames.slice(0, 10)) {
-            const f = zipFiles.get(name.toLowerCase());
-            if (!f) { missing.push(name); continue; }
+          let zipKeys: string[] = [];
+          if (r.photoNames.length > 0) {
+            for (const name of r.photoNames.slice(0, 10)) {
+              const key = name.toLowerCase();
+              if (zipFiles.has(key)) zipKeys.push(key);
+              else missing.push(name);
+            }
+          } else if (zipFiles.size > 0) {
+            zipKeys = resolveAutoMatches(r);
+          }
+
+          for (const key of zipKeys) {
+            const f = zipFiles.get(key);
+            if (!f) continue;
             const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase();
             const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
             const { error: upErr } = await supabase.storage
               .from("part-photos")
               .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type || "image/jpeg" });
-            if (upErr) { missing.push(`${name} (upload err)`); continue; }
+            if (upErr) { missing.push(`${key} (upload err)`); continue; }
             const { data: pub } = supabase.storage.from("part-photos").getPublicUrl(path);
             photoUrls.push(pub.publicUrl);
+            usedZipKeys.add(key);
+            matchedPhotos++;
           }
-          if (missing.length > 0) {
-            details.push(`Satır ${r.__index}: eksik foto ${missing.join(", ")}`);
-          }
+          if (missing.length > 0) unmatchedPhotos.push(`Satır ${r.__index}: ${missing.join(", ")}`);
+
           const { error } = await supabase.from("parts").insert({
             seller_id: user.id,
             title: r.title,
@@ -374,7 +418,7 @@ function BulkUploadPage() {
             year: r.year,
             oem_codes: r.oem,
             category: "Diğer",
-            condition: "used",
+            condition: r.condition,
             part_type: r.partType,
             price: r.price,
             stock_quantity: r.qty,
@@ -386,7 +430,6 @@ function BulkUploadPage() {
           if (error) throw error;
           ok++;
         } else {
-          // update or stock — find user's part by any matching OEM
           const { data: found } = await supabase
             .from("parts")
             .select("id")
@@ -396,7 +439,7 @@ function BulkUploadPage() {
             .maybeSingle();
           if (!found) {
             fail++;
-            details.push(`Satır ${r.__index}: ${r.oem[0]} ile eşleşen ilan bulunamadı`);
+            errorDetails.push(`Satır ${r.__index}: ${r.oem[0]} ile eşleşen ilan bulunamadı`);
             continue;
           }
           const patch = mode === "stock"
@@ -408,6 +451,7 @@ function BulkUploadPage() {
                 model: r.vehicleModel || null,
                 year: r.year,
                 price: r.price,
+                condition: r.condition,
                 stock_quantity: r.qty,
               };
           const { error } = await supabase.from("parts").update(patch).eq("id", found.id);
@@ -416,11 +460,12 @@ function BulkUploadPage() {
         }
       } catch (e: any) {
         fail++;
-        details.push(`Satır ${r.__index}: ${e?.message ?? "bilinmeyen hata"}`);
+        errorDetails.push(`Satır ${r.__index}: ${e?.message ?? "bilinmeyen hata"}`);
       }
     }
 
-    setResult({ ok, fail, details });
+    const unusedZipFiles = Array.from(zipFiles.keys()).filter((k) => !usedZipKeys.has(k));
+    setResult({ ok, fail, matchedPhotos, unmatchedPhotos, unusedZipFiles, errorDetails });
     setSubmitting(false);
     if (ok > 0) toast.success(`${ok} kayıt işlendi.`);
     if (fail > 0) toast.error(`${fail} kayıt başarısız.`);
