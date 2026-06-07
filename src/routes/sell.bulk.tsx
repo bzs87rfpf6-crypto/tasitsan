@@ -295,7 +295,43 @@ function BulkUploadPage() {
       ["329220K090", "Fren Balatası", "Bosch", "Toyota", "Hilux", 2018, 5, 850, "Eşdeğer", "Sıfır", "ZIP içindeki 329220K090.jpg otomatik eşleşir", ""],
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
-    ws["!cols"] = HEADERS.map(() => ({ wch: 18 }));
+    ws["!cols"] = [
+      { wch: 16 },  // A: OEM NO
+      { wch: 22 },  // B: PARÇA ADI
+      { wch: 14 },  // C: MARKA
+      { wch: 16 },  // D: ARAÇ MARKASI
+      { wch: 16 },  // E: ARAÇ MODELİ
+      { wch: 12 },  // F: MODEL YILI
+      { wch: 8 },   // G: ADET
+      { wch: 10 },  // H: FİYAT
+      { wch: 14 },  // I: PARÇA TİPİ
+      { wch: 14 },  // J: ÜRÜN DURUMU
+      { wch: 30 },  // K: AÇIKLAMA
+      { wch: 28 },  // L: FOTOĞRAFLAR
+    ];
+
+    // Data validation dropdowns
+    (ws as any)["!dataValidation"] = [
+      {
+        sqref: "I2:I1000",
+        type: "list",
+        formula1: '"Orijinal,Eşdeğer,Yan Sanayi,Çıkma,Revizyonlu"',
+        allowBlank: true,
+        showDropDown: false,
+        prompt: "Parça tipini seçiniz",
+        promptTitle: "Parça Tipi",
+      },
+      {
+        sqref: "J2:J1000",
+        type: "list",
+        formula1: '"Sıfır,İkinci El"',
+        allowBlank: true,
+        showDropDown: false,
+        prompt: "Ürün durumunu seçiniz",
+        promptTitle: "Ürün Durumu",
+      },
+    ];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Parçalar");
 
