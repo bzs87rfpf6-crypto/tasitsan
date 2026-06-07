@@ -12,6 +12,12 @@ declare global {
 
 let loadingPromise: Promise<void> | null = null;
 
+function shouldSkipRecaptcha(): boolean {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return host.endsWith(".lovableproject.com") || host.startsWith("id-preview--");
+}
+
 function loadScript(): Promise<void> {
   if (typeof window === "undefined") return Promise.reject(new Error("ssr"));
   if (window.grecaptcha) return Promise.resolve();
@@ -43,6 +49,7 @@ function loadScript(): Promise<void> {
 
 /** Returns a fresh reCAPTCHA v3 token for the given action. Throws on failure. */
 export async function executeRecaptcha(action: string): Promise<string> {
+  if (shouldSkipRecaptcha()) throw new Error("recaptcha-skipped-on-preview");
   await loadScript();
   if (!window.grecaptcha) throw new Error("recaptcha-unavailable");
   return window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
