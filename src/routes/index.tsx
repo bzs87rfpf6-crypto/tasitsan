@@ -250,7 +250,7 @@ function Index() {
                   <button onClick={clearFilters} className="text-[11px] text-muted-foreground hover:text-foreground">Temizle</button>
                 )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                 <Input placeholder="Marka" value={brand} onChange={(e) => setBrand(e.target.value)} className="h-10 bg-background" />
                 <Input placeholder="Model" value={model} onChange={(e) => setModel(e.target.value)} className="h-10 bg-background" />
                 <Input
@@ -330,7 +330,7 @@ function Index() {
       <div className="max-w-5xl mx-auto px-3 sm:px-5 pt-5">
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="aspect-[3/4] rounded-xl bg-card animate-pulse" />
             ))}
@@ -371,7 +371,7 @@ function Index() {
                 />
               )}
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {parts.map((p) => <PartCard key={p.id} part={p} />)}
             </div>
             <div className="pt-6 text-center text-xs text-muted-foreground border-t border-border mt-6">
