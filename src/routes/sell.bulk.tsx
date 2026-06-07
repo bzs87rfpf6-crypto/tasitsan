@@ -31,6 +31,7 @@ const HEADERS = [
   "ADET",
   "FİYAT",
   "PARÇA TİPİ",
+  "ÜRÜN DURUMU",
   "AÇIKLAMA",
   "FOTOĞRAFLAR",
 ] as const;
@@ -45,10 +46,28 @@ const HEADER_ALIASES: Record<string, (typeof HEADERS)[number]> = {
   "adet": "ADET", "stok": "ADET", "stock": "ADET", "quantity": "ADET",
   "fiyat": "FİYAT", "price": "FİYAT", "tutar": "FİYAT",
   "parça tipi": "PARÇA TİPİ", "parca tipi": "PARÇA TİPİ", "tip": "PARÇA TİPİ", "tür": "PARÇA TİPİ", "tur": "PARÇA TİPİ", "part_type": "PARÇA TİPİ",
+  "ürün durumu": "ÜRÜN DURUMU", "urun durumu": "ÜRÜN DURUMU", "durum": "ÜRÜN DURUMU", "condition": "ÜRÜN DURUMU", "kondisyon": "ÜRÜN DURUMU",
   "açıklama": "AÇIKLAMA", "aciklama": "AÇIKLAMA", "description": "AÇIKLAMA", "not": "AÇIKLAMA",
   "fotoğraflar": "FOTOĞRAFLAR", "fotograflar": "FOTOĞRAFLAR", "foto": "FOTOĞRAFLAR", "fotos": "FOTOĞRAFLAR",
   "photos": "FOTOĞRAFLAR", "photo": "FOTOĞRAFLAR", "resimler": "FOTOĞRAFLAR", "images": "FOTOĞRAFLAR",
 };
+
+type Condition = "new" | "used";
+
+function parseCondition(raw: string): Condition {
+  const k = raw.trim().toLowerCase();
+  if (!k) return "used";
+  if (/(sıfır|sifir|0|new|yeni)/.test(k)) return "new";
+  return "used";
+}
+
+function slugify(s: string): string {
+  return s.toLowerCase()
+    .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g")
+    .replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
 interface Row {
   __index: number;
