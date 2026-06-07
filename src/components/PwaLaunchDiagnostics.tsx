@@ -48,14 +48,14 @@ async function cleanupStaleAppShellCaches() {
 }
 
 async function cleanupStaleAppShellWorkers() {
-  if (!("serviceWorker" in navigator)) return;
+  if (!("serviceWorker" in navigator) || typeof navigator.serviceWorker.getRegistrations !== "function") return;
   const registrations = await navigator.serviceWorker.getRegistrations();
   const staleWorkers = registrations.filter((registration) => {
     const activeURL = registration.active ? registration.active.scriptURL : "";
     const installingURL = registration.installing ? registration.installing.scriptURL : "";
     const waitingURL = registration.waiting ? registration.waiting.scriptURL : "";
     const scriptURL = activeURL || installingURL || waitingURL;
-    return scriptURL.endsWith("/sw.js") || scriptURL.endsWith("/service-worker.js");
+    return scriptURL.endsWith("/service-worker.js");
   });
   await settleAll(staleWorkers.map((registration) => registration.unregister()));
 }
