@@ -61,38 +61,36 @@ export function AiExpertProDialog({
   onCreateRequest?: (initial: { search_query: string; brand: string; model: string; year: string; oem: string; category: string }) => void;
 }) {
   const research = useServerFn(researchPart);
+  const lookupCache = useServerFn(lookupCachedResearch);
   const fileRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<"text" | "photo">("text");
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState<"idle" | "db" | "cache" | "ai" | "done">("idle");
+  const [source, setSource] = useState<"cache" | "ai" | null>(null);
   const [result, setResult] = useState<Research | null>(null);
   const [matches, setMatches] = useState<Part[]>([]);
 
   const reset = () => {
     setQuery(""); setPreview(null); setResult(null); setMatches([]); setLoading(false);
+    setStage("idle"); setSource(null);
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const searchInternalDb = async (r: Research) => {
-    const allOems = Array.from(new Set([
-      r.primary_oem,
-      ...r.candidate_oems,
-      ...r.equivalent_oems,
-    ].filter(Boolean)));
-
+  const searchInternalDb = async (oems: string[], keywords: string[]) => {
+    const allOems = Array.from(new Set(oems.filter(Boolean)));
     const ors: string[] = [];
     for (const o of allOems.slice(0, 25)) {
       const safe = o.replace(/[%,(){}]/g, "");
       if (!safe) continue;
       ors.push(`oem_code.ilike.%${safe}%`, `oem_codes.cs.{${safe}}`);
     }
-    for (const k of (r.keywords ?? []).slice(0, 6)) {
+    for (const k of (keywords ?? []).slice(0, 6)) {
       const safe = k.replace(/[%,(){}]/g, "").trim();
       if (safe.length < 2) continue;
       ors.push(`title.ilike.%${safe}%`);
     }
-
     let q = supabase
       .from("parts")
       .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
@@ -100,26 +98,64 @@ export function AiExpertProDialog({
       .limit(30);
     if (ors.length) q = q.or(ors.join(","));
     const { data } = await q;
-    setMatches((data ?? []) as Part[]);
+    return (data ?? []) as Part[];
   };
 
   const run = async () => {
     if (tab === "text" && query.trim().length < 2) { toast.error("OEM kodu veya parça açıklaması girin."); return; }
     if (tab === "photo" && !preview) { toast.error("Önce bir görsel yükleyin."); return; }
-    setLoading(true); setResult(null); setMatches([]);
+    setLoading(true); setResult(null); setMatches([]); setSource(null);
+
     try {
+      const isText = tab === "text";
+      const raw = query.trim();
+
+      // STAGE 1 — Instant DB search on the raw query (no AI, no waiting).
+      if (isText) {
+        setStage("db");
+        const normalized = raw.toUpperCase().replace(/\s+/g, "");
+        const quickMatches = await searchInternalDb([normalized, raw], [raw]);
+        if (quickMatches.length > 0) setMatches(quickMatches);
+      }
+
+      // STAGE 2 — Cache lookup (text queries only; images have no stable key).
+      if (isText) {
+        setStage("cache");
+        const cached = await lookupCache({ data: { query: raw } });
+        if (cached.ok && cached.hit && cached.result) {
+          const r = cached.result as Research;
+          setResult(r); setSource("cache");
+          const fullMatches = await searchInternalDb(
+            [r.primary_oem, ...r.candidate_oems, ...r.equivalent_oems],
+            r.keywords,
+          );
+          setMatches(fullMatches);
+          setStage("done");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // STAGE 3 — AI fallback (only when cache misses or image input).
+      setStage("ai");
       const res = await research({
         data: {
-          query: query.trim() || undefined,
+          query: raw || undefined,
           imageDataUrl: tab === "photo" && preview ? preview : undefined,
         },
       });
-      if (!res.ok) { toast.error(res.error); setLoading(false); return; }
-      setResult(res.result);
-      await searchInternalDb(res.result);
+      if (!res.ok) { toast.error(res.error); setStage("idle"); setLoading(false); return; }
+      setResult(res.result); setSource("ai");
+      const finalMatches = await searchInternalDb(
+        [res.result.primary_oem, ...res.result.candidate_oems, ...res.result.equivalent_oems],
+        res.result.keywords,
+      );
+      setMatches(finalMatches);
+      setStage("done");
     } catch (e) {
       console.error(e);
       toast.error("Araştırma yapılamadı.");
+      setStage("idle");
     } finally {
       setLoading(false);
     }
@@ -131,6 +167,7 @@ export function AiExpertProDialog({
     const compressed = await fileToCompressedDataUrl(file);
     setPreview(compressed);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
