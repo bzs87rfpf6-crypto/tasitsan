@@ -172,16 +172,25 @@ function Index() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setAiProOpen(true)}
+            className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+          >
+            <Sparkles className="size-4" />
+            AI Parça Uzmanı 2.0 — OEM veya Fotoğraf
+          </button>
+
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setAiExpertOpen(true)}
-              className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+              className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
               <Sparkles className="size-4" />
               AI Parça Uzmanı
             </button>
             <button
               onClick={() => setPhotoOpen(true)}
-              className="tap-gold w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-sm hover:bg-gold/10 shadow-gold/30"
+              className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
               <Camera className="size-4" />
               Fotoğraftan Bul
