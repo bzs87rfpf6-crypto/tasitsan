@@ -130,7 +130,7 @@ export function AdminAdvancedDashboard() {
 
         <section>
           <h3 className="text-xs uppercase tracking-wider text-gold font-semibold mb-2 flex items-center gap-1.5">
-            <Search className="size-3.5" /> En Çok Aranan Ürün
+            <Search className="size-3.5" /> En Çok Aranan Ürün (ham)
           </h3>
           {data.top_searches.length === 0 ? (
             <p className="text-xs text-muted-foreground py-3">Veri yok.</p>
@@ -146,6 +146,49 @@ export function AdminAdvancedDashboard() {
           )}
         </section>
       </div>
+
+      <section>
+        <h3 className="text-xs uppercase tracking-wider text-gold font-semibold mb-2 flex items-center gap-1.5">
+          <Search className="size-3.5" /> Birleştirilmiş Arama Grupları
+        </h3>
+        {data.top_searches_grouped?.length ? (
+          <ul className="bg-card border border-border rounded-xl divide-y divide-border text-xs">
+            {data.top_searches_grouped.map((g) => (
+              <li key={g.stem} className="flex items-center gap-2 px-3 py-2">
+                <span className="flex-1 min-w-0">
+                  <span className="block truncate">{g.sample}</span>
+                  <span className="block text-[10px] text-muted-foreground truncate">grup: {g.stem}</span>
+                </span>
+                <span className="text-gold font-bold">{g.search_count}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground py-3">Henüz birleştirilebilir veri yok.</p>
+        )}
+      </section>
+
+      <section>
+        <h3 className="text-xs uppercase tracking-wider text-destructive font-semibold mb-2 flex items-center gap-1.5">
+          <Search className="size-3.5" /> Sonuç Bulunamayan Aramalar
+        </h3>
+        <p className="text-[11px] text-muted-foreground mb-2">
+          Bu aramalar hangi ürünlerin eksik olduğunu gösterir — satıcılara öneri olarak iletilebilir.
+        </p>
+        {data.no_result_searches?.length ? (
+          <ul className="bg-card border border-border rounded-xl divide-y divide-border text-xs">
+            {data.no_result_searches.map((r) => (
+              <li key={r.term} className="flex items-center gap-2 px-3 py-2">
+                <span className="flex-1 truncate">{r.term}</span>
+                <span className="text-destructive font-bold">{r.search_count}×</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground py-3">Henüz sonuçsuz arama yok.</p>
+        )}
+      </section>
     </div>
   );
 }
+

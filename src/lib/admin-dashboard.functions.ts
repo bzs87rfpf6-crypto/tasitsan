@@ -33,6 +33,8 @@ export type AdminDashboardOverview = {
   viewed_firms: ViewedFirm[];
   top_oem: { oem: string; search_count: number; listing_count: number }[];
   top_searches: { query: string; search_count: number }[];
+  top_searches_grouped: { stem: string; sample: string; search_count: number }[];
+  no_result_searches: { term: string; search_count: number; last_at: string }[];
 };
 
 export const getAdminDashboardOverview = createServerFn({ method: "GET" })
