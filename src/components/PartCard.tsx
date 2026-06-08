@@ -34,6 +34,10 @@ export function PartCard({ part }: { part: Part }) {
           alt={part.title}
           width={420}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          brand={part.brand}
+          title={part.title}
+          oemCode={part.oem_code}
+          placeholderSize="md"
         />
         <span className="absolute top-2 left-2 text-[10px] uppercase tracking-wider bg-background/80 text-gold px-2 py-0.5 rounded-full border border-gold/30">
           {part.condition === "new" ? "Sıfır" : part.condition === "refurbished" ? "Yenilenmiş" : "2.El"}
