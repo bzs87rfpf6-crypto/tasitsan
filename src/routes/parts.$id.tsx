@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getSafePartPhotos } from "@/lib/part-images";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PartImageLightbox } from "@/components/PartImageLightbox";
+import { BrandPlaceholder } from "@/components/BrandPlaceholder";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -280,10 +281,12 @@ function PartDetail() {
             />
           </button>
         ) : (
-          <div className="w-full h-full grid place-items-center text-muted-foreground flex-col gap-2">
-            <ImageOff className="size-10" />
-            <span className="text-xs">Bu ilan için görsel yok</span>
-          </div>
+          <BrandPlaceholder
+            brand={part.brand}
+            title={part.title}
+            oemCode={part.oem_code}
+            size="lg"
+          />
         )}
         <Link to="/" className="absolute top-4 left-4 size-10 rounded-full bg-background/70 backdrop-blur grid place-items-center z-10">
           <ArrowLeft className="size-5" />

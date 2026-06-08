@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ImageOff } from "lucide-react";
 import { getSafePartPhotos } from "@/lib/part-images";
+import { BrandPlaceholder } from "@/components/BrandPlaceholder";
 
 interface SafePartImageProps {
   images: unknown;
@@ -8,16 +8,30 @@ interface SafePartImageProps {
   width?: number;
   className?: string;
   fallbackClassName?: string;
+  brand?: string | null;
+  title?: string | null;
+  oemCode?: string | null;
+  placeholderSize?: "sm" | "md" | "lg";
 }
 
-export function SafePartImage({ images, alt, width = 640, className = "w-full h-full object-cover", fallbackClassName = "w-full h-full" }: SafePartImageProps) {
+export function SafePartImage({
+  images,
+  alt,
+  width = 640,
+  className = "w-full h-full object-cover",
+  fallbackClassName = "w-full h-full",
+  brand,
+  title,
+  oemCode,
+  placeholderSize = "sm",
+}: SafePartImageProps) {
   const [brokenPhotos, setBrokenPhotos] = useState<Set<string>>(new Set());
   const photo = getSafePartPhotos(images, brokenPhotos, width)[0];
 
   if (!photo) {
     return (
-      <div className={`${fallbackClassName} grid place-items-center text-muted-foreground bg-secondary`}>
-        <ImageOff className="size-5" />
+      <div className={fallbackClassName}>
+        <BrandPlaceholder brand={brand} title={title ?? alt} oemCode={oemCode} size={placeholderSize} />
       </div>
     );
   }
