@@ -24,36 +24,38 @@ export function BrandPlaceholder({ brand, title, oemCode, size = "sm", className
 
   return (
     <div
-      className={`w-full h-full flex flex-col items-center justify-center text-center bg-gradient-to-br from-secondary via-background to-secondary ${sizes.padding} ${className}`}
+      className={`w-full h-full flex flex-col items-center text-center bg-gradient-to-br from-secondary via-background to-secondary ${sizes.padding} ${className}`}
     >
-      {showBrand ? (
-        <img
-          src={logoUrl}
-          alt={brand ?? ""}
-          loading="lazy"
-          decoding="async"
-          onError={() => setLogoBroken(true)}
-          className={`${sizes.logo} w-auto object-contain opacity-90 drop-shadow-sm`}
-        />
-      ) : (
-        <img
-          src={tasitsanLogo.url}
-          alt="Taşıtsan"
-          loading="lazy"
-          decoding="async"
-          className={`${sizes.logo} w-auto object-contain opacity-60`}
-        />
-      )}
-      {title && (
-        <p className={`${sizes.title} font-semibold text-foreground line-clamp-2 leading-tight`}>
-          {title}
-        </p>
-      )}
-      {oemCode && (
-        <p className={`${sizes.oem} font-mono text-muted-foreground tracking-wider uppercase line-clamp-1`}>
-          OEM: {oemCode}
-        </p>
-      )}
+      <div className="flex-1 flex flex-col items-center justify-center min-h-0 w-full">
+        {showBrand ? (
+          <img
+            src={logoUrl}
+            alt={brand ?? ""}
+            loading="lazy"
+            decoding="async"
+            onError={() => setLogoBroken(true)}
+            className={`${sizes.logo} w-auto max-w-[80%] object-contain opacity-90 drop-shadow-sm shrink-0`}
+          />
+        ) : (
+          <img
+            src={tasitsanLogo.url}
+            alt="Taşıtsan"
+            loading="lazy"
+            decoding="async"
+            className={`${sizes.logo} w-auto max-w-[80%] object-contain opacity-60 shrink-0`}
+          />
+        )}
+        {title && (
+          <p className={`${sizes.title} font-semibold text-foreground ${sizes.textWrap} leading-tight mt-1`}>
+            {title}
+          </p>
+        )}
+        {oemCode && (
+          <p className={`${sizes.oem} font-mono text-muted-foreground tracking-wider uppercase line-clamp-1 mt-0.5`}>
+            OEM: {oemCode}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
