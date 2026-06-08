@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Search, Plus, SlidersHorizontal, X, PackageSearch, Camera, Sparkles, Phone, MessageCircle, BellPlus } from "lucide-react";
+import { Search, Plus, SlidersHorizontal, X, PackageSearch, Sparkles, Phone, MessageCircle, BellPlus, Map as MapIcon, ScanSearch } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { PartCard, type Part } from "@/components/PartCard";
-import { PhotoSearchDialog } from "@/components/PhotoSearchDialog";
-import { AiExpertDialog } from "@/components/AiExpertDialog";
+import { StockMapDialog } from "@/components/StockMapDialog";
+import { OemQueryDialog } from "@/components/OemQueryDialog";
 import { AiExpertProDialog } from "@/components/AiExpertProDialog";
 import { PartRequestDialog } from "@/components/PartRequestDialog";
 import { Input } from "@/components/ui/input";
@@ -49,8 +49,8 @@ function Index() {
   const [parts, setParts] = useState<Part[]>([]);
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
-  const [photoOpen, setPhotoOpen] = useState(false);
-  const [aiExpertOpen, setAiExpertOpen] = useState(false);
+  const [stockMapOpen, setStockMapOpen] = useState(false);
+  const [oemQueryOpen, setOemQueryOpen] = useState(false);
   const [aiProOpen, setAiProOpen] = useState(false);
   const [contactPhone, setContactPhone] = useState("");
 
@@ -197,18 +197,18 @@ function Index() {
 
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => setAiExpertOpen(true)}
+              onClick={() => setStockMapOpen(true)}
               className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
-              <Sparkles className="size-4" />
-              AI Parça Uzmanı
+              <MapIcon className="size-4" />
+              🗺️ Stok Haritası
             </button>
             <button
-              onClick={() => setPhotoOpen(true)}
+              onClick={() => setOemQueryOpen(true)}
               className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
-              <Camera className="size-4" />
-              Fotoğraftan Bul
+              <ScanSearch className="size-4" />
+              🔎 OEM Sorgula
             </button>
           </div>
 
@@ -447,20 +447,8 @@ function Index() {
         userId={user?.id ?? null}
         initial={{ search_query: q, brand, model, year, oem, category: cat === "Tümü" ? "" : cat }}
       />
-      <PhotoSearchDialog open={photoOpen} onOpenChange={setPhotoOpen} />
-      <AiExpertDialog
-        open={aiExpertOpen}
-        onOpenChange={setAiExpertOpen}
-        onCreateRequest={(init) => {
-          setQ(init.search_query);
-          setBrand(init.brand);
-          setModel(init.model);
-          setYear(init.year);
-          setOem(init.oem);
-          if (init.category) setCat(init.category);
-          setRequestOpen(true);
-        }}
-      />
+      <StockMapDialog open={stockMapOpen} onOpenChange={setStockMapOpen} />
+      <OemQueryDialog open={oemQueryOpen} onOpenChange={setOemQueryOpen} />
       <AiExpertProDialog
         open={aiProOpen}
         onOpenChange={setAiProOpen}
