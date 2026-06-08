@@ -68,16 +68,18 @@ export function AiExpertProDialog({
 }) {
   const research = useServerFn(researchPart);
   const lookupCache = useServerFn(lookupCachedResearch);
+  const analyze = useServerFn(analyzePartImage);
   const rateLimit = useServerFn(checkRateLimit);
   const fileRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<"text" | "photo">("text");
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [stage, setStage] = useState<"idle" | "db" | "cache" | "ai" | "done">("idle");
-  const [source, setSource] = useState<"cache" | "ai" | null>(null);
+  const [stage, setStage] = useState<"idle" | "db" | "vision" | "cache" | "ai" | "done">("idle");
+  const [source, setSource] = useState<"db" | "vision" | "cache" | "ai" | null>(null);
   const [result, setResult] = useState<Research | null>(null);
   const [matches, setMatches] = useState<Part[]>([]);
+
 
   const reset = () => {
     setQuery(""); setPreview(null); setResult(null); setMatches([]); setLoading(false);
