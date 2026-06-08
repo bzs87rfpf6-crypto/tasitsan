@@ -56,17 +56,17 @@ export function PartCard({ part }: { part: Part }) {
           <FavoriteButton partId={part.id} size="sm" />
         </div>
       </div>
-      <div className="p-3.5 space-y-2">
+      <div className="p-3.5 space-y-1.5">
         <div className="flex items-start gap-1.5">
-          <h3 className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] flex-1">{part.title}</h3>
-          {part.seller_verified && <VerifiedBadge size={14} className="mt-0.5" />}
+          <h3 className="text-sm font-semibold leading-tight line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] flex-1">{part.title}</h3>
+          {part.seller_verified && <VerifiedBadge size={14} className="mt-0.5 shrink-0" />}
         </div>
         {(part.brand || part.model) && (
           <p className="text-xs text-muted-foreground line-clamp-1">
             {[part.brand, part.model, part.year].filter(Boolean).join(" • ")}
           </p>
         )}
-        {part.oem_code && (
+        {part.oem_code && part.photos && part.photos.length > 0 && (
           <p className="text-[10px] text-muted-foreground/80 font-mono truncate">OEM: {part.oem_code}</p>
         )}
         <div className="flex items-end justify-between pt-1">
@@ -74,7 +74,7 @@ export function PartCard({ part }: { part: Part }) {
             {part.price != null ? `₺${Number(part.price).toLocaleString("tr-TR")}` : "Fiyat sor"}
           </div>
           {part.city && (
-            <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-0.5 text-[10px] text-muted-foreground shrink-0">
               <MapPin className="size-3" />
               {part.city}
             </div>
