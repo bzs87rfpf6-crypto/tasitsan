@@ -10,6 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
 import { adminGetPartRequests, adminGetUsersFull, adminGetSellerContacts, adminGetPartsWithWhatsapp, adminGetSiteSettings, adminSaveSiteSettings } from "@/lib/admin-data.functions";
 import { StatCard } from "@/components/admin/StatCard";
@@ -180,6 +186,12 @@ function AdminPage() {
   const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", is_approved: false });
   const [savingEdit, setSavingEdit] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<null | { kind: "approve" | "reject" | "delete"; ids: string[] }>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+
+  useEffect(() => { setSelectedPartIds(new Set()); }, [tab, filter]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -317,6 +329,51 @@ function AdminPage() {
     setParts((prev) => prev.filter((p) => p.id !== id));
     toast.success("İlan silindi");
   };
+
+  const runBulkPartAction = async (kind: "approve" | "reject" | "delete", ids: string[]) => {
+    if (!ids.length) return;
+    setBulkBusy(true);
+    setBulkProgress({ done: 0, total: ids.length });
+    const BATCH = 200;
+    let failed = 0;
+    const idSet = new Set<string>();
+    const reviewer = user?.id ?? null;
+    const reviewedAt = new Date().toISOString();
+    for (let i = 0; i < ids.length; i += BATCH) {
+      const chunk = ids.slice(i, i + BATCH);
+      let error: any = null;
+      if (kind === "delete") {
+        ({ error } = await supabase.from("parts").delete().in("id", chunk));
+      } else {
+        const status: PartStatus = kind === "approve" ? "approved" : "rejected";
+        ({ error } = await supabase.from("parts")
+          .update({ status, reviewed_at: reviewedAt, reviewed_by: reviewer })
+          .in("id", chunk));
+      }
+      if (error) {
+        failed += chunk.length;
+        toast.error(`Toplu işlem hatası: ${error.message}`);
+      } else {
+        chunk.forEach((id) => idSet.add(id));
+      }
+      setBulkProgress({ done: Math.min(i + BATCH, ids.length), total: ids.length });
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    setParts((prev) => {
+      if (kind === "delete") return prev.filter((p) => !idSet.has(p.id));
+      const status: PartStatus = kind === "approve" ? "approved" : "rejected";
+      return prev.map((p) => (idSet.has(p.id) ? { ...p, status } : p));
+    });
+    setSelectedPartIds(new Set());
+    setBulkBusy(false);
+    setBulkAction(null);
+    const ok = ids.length - failed;
+    if (ok > 0) {
+      const label = kind === "approve" ? "onaylandı" : kind === "reject" ? "reddedildi" : "silindi";
+      toast.success(`${ok} ilan ${label}${failed ? ` (${failed} başarısız)` : ""}`);
+    }
+  };
+
 
   const handleDeleteUser = async (u: ProfileRow) => {
     if (!confirm(`${u.display_name ?? "Kullanıcı"} kalıcı olarak silinsin mi?`)) return;
@@ -624,15 +681,101 @@ function AdminPage() {
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
-          filteredParts.length === 0 ? (
-            <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
-          ) : filteredParts.map((p) => (
+          <>
+            {filteredParts.length > 0 && (() => {
+              const pageIds = filteredParts.map((p) => p.id);
+              const allIds = parts.map((p) => p.id);
+              const pageSelected = pageIds.filter((id) => selectedPartIds.has(id)).length;
+              const allPageSelected = pageSelected === pageIds.length;
+              const selectedCount = selectedPartIds.size;
+              return (
+                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border border-border rounded-xl p-3 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                      <Checkbox
+                        checked={allPageSelected && pageIds.length > 0}
+                        onCheckedChange={(v) => {
+                          setSelectedPartIds((prev) => {
+                            const next = new Set(prev);
+                            if (v) pageIds.forEach((id) => next.add(id));
+                            else pageIds.forEach((id) => next.delete(id));
+                            return next;
+                          });
+                        }}
+                      />
+                      Sayfadakileri seç ({pageIds.length})
+                    </label>
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]"
+                      onClick={() => setSelectedPartIds(new Set(pageIds))}>
+                      Filtrelenenleri seç ({pageIds.length})
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]"
+                      onClick={() => setSelectedPartIds(new Set(allIds))}>
+                      Tümünü seç ({allIds.length})
+                    </Button>
+                    {selectedCount > 0 && (
+                      <Button size="sm" variant="ghost" className="h-7 text-[11px]"
+                        onClick={() => setSelectedPartIds(new Set())}>
+                        Temizle
+                      </Button>
+                    )}
+                    <span className="ml-auto text-[11px] text-muted-foreground">
+                      {selectedCount} seçili
+                    </span>
+                  </div>
+                  {selectedCount > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button size="sm" disabled={bulkBusy}
+                        onClick={() => setBulkAction({ kind: "approve", ids: Array.from(selectedPartIds) })}
+                        className="h-8 text-xs bg-emerald-500/90 hover:bg-emerald-500 text-white">
+                        <Check className="size-3.5 mr-1" /> Onayla
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={bulkBusy}
+                        onClick={() => setBulkAction({ kind: "reject", ids: Array.from(selectedPartIds) })}
+                        className="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                        <XIcon className="size-3.5 mr-1" /> Reddet
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={bulkBusy}
+                        onClick={() => setBulkAction({ kind: "delete", ids: Array.from(selectedPartIds) })}
+                        className="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                        <Trash2 className="size-3.5 mr-1" /> Sil
+                      </Button>
+                    </div>
+                  )}
+                  {bulkBusy && bulkProgress.total > 0 && (
+                    <div className="space-y-1">
+                      <Progress value={(bulkProgress.done / bulkProgress.total) * 100} className="h-1.5" />
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        {bulkProgress.done} / {bulkProgress.total}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            {filteredParts.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
+            ) : filteredParts.map((p) => (
             <article key={p.id} className={`bg-card rounded-xl border p-3 sm:p-4 space-y-3 transition-shadow ${
-              p.status === "pending"
+              selectedPartIds.has(p.id)
+                ? "border-primary/60 shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
+                : p.status === "pending"
                 ? "border-gold/60 shadow-[0_0_0_1px_rgba(201,168,76,0.15)]"
                 : "border-border"
             }`}>
               <div className="flex gap-3">
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedPartIds.has(p.id)}
+                    onCheckedChange={(v) => {
+                      setSelectedPartIds((prev) => {
+                        const next = new Set(prev);
+                        if (v) next.add(p.id); else next.delete(p.id);
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
                 <div className="size-20 sm:size-24 rounded-lg overflow-hidden bg-secondary shrink-0">
                   <SafePartImage images={p.photos} alt={p.title} width={320} />
                 </div>
@@ -705,7 +848,8 @@ function AdminPage() {
                 <Trash2 className="size-3.5 mr-1" /> İlanı Sil
               </Button>
             </article>
-          ))
+          ))}
+          </>
         ) : tab === "inquiries" ? (
           filteredInquiries.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
@@ -867,6 +1011,48 @@ function AdminPage() {
           })
         )}
       </main>
+
+      <AlertDialog open={!!bulkAction} onOpenChange={(v) => { if (!v && !bulkBusy) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkAction?.kind === "approve" && "Seçilenleri onayla"}
+              {bulkAction?.kind === "reject" && "Seçilenleri reddet"}
+              {bulkAction?.kind === "delete" && "Seçilenleri sil"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction ? `${bulkAction.ids.length} ilan ` : ""}
+              {bulkAction?.kind === "approve" && "onaylanacak ve yayına alınacak."}
+              {bulkAction?.kind === "reject" && "reddedilecek. Satıcı bilgilendirilebilir."}
+              {bulkAction?.kind === "delete" && "kalıcı olarak silinecek. Bu işlem geri alınamaz."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {bulkBusy && bulkProgress.total > 0 && (
+            <div className="space-y-1.5">
+              <Progress value={(bulkProgress.done / bulkProgress.total) * 100} className="h-2" />
+              <p className="text-xs text-muted-foreground text-center">
+                {bulkProgress.done} / {bulkProgress.total} işlendi
+              </p>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkBusy}>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={bulkBusy}
+              onClick={(e) => {
+                e.preventDefault();
+                if (bulkAction) void runBulkPartAction(bulkAction.kind, bulkAction.ids);
+              }}
+              className={bulkAction?.kind === "approve"
+                ? "bg-emerald-500 hover:bg-emerald-500/90 text-white"
+                : "bg-destructive hover:bg-destructive/90 text-destructive-foreground"}
+            >
+              {bulkBusy ? "İşleniyor..." : "Onayla"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <EditPartDialog
         part={editing}
