@@ -447,20 +447,8 @@ function Index() {
         userId={user?.id ?? null}
         initial={{ search_query: q, brand, model, year, oem, category: cat === "Tümü" ? "" : cat }}
       />
-      <PhotoSearchDialog open={photoOpen} onOpenChange={setPhotoOpen} />
-      <AiExpertDialog
-        open={aiExpertOpen}
-        onOpenChange={setAiExpertOpen}
-        onCreateRequest={(init) => {
-          setQ(init.search_query);
-          setBrand(init.brand);
-          setModel(init.model);
-          setYear(init.year);
-          setOem(init.oem);
-          if (init.category) setCat(init.category);
-          setRequestOpen(true);
-        }}
-      />
+      <StockMapDialog open={stockMapOpen} onOpenChange={setStockMapOpen} />
+      <OemQueryDialog open={oemQueryOpen} onOpenChange={setOemQueryOpen} />
       <AiExpertProDialog
         open={aiProOpen}
         onOpenChange={setAiProOpen}
