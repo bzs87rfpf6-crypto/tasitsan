@@ -1133,6 +1133,7 @@ export type Database = {
           year: number
         }[]
       }
+      normalize_oem: { Args: { code: string }; Returns: string }
       record_auth_failure: {
         Args: { _identifier: string; _kind: string }
         Returns: undefined
@@ -1146,24 +1147,60 @@ export type Database = {
         Args: { _key: string; _query: string; _result: Json }
         Returns: undefined
       }
-      search_parts_by_oem: {
-        Args: { _limit?: number; _oem: string }
-        Returns: {
-          brand: string
-          city: string
-          condition: string
-          id: string
-          match_kind: string
-          model: string
-          oem_code: string
-          oem_codes: string[]
-          photos: string[]
-          price: number
-          stock_quantity: number
-          title: string
-          year: number
-        }[]
-      }
+      search_parts_by_oem:
+        | {
+            Args: { _oem: string }
+            Returns: {
+              admin_notes: string | null
+              brand: string | null
+              category: string | null
+              city: string | null
+              condition: string
+              created_at: string
+              description: string | null
+              engine_code: string | null
+              id: string
+              model: string | null
+              oem_code: string | null
+              oem_codes: string[]
+              part_type: string | null
+              photos: string[]
+              price: number | null
+              reviewed_at: string | null
+              reviewed_by: string | null
+              seller_id: string
+              status: string
+              stock_quantity: number
+              title: string
+              updated_at: string
+              whatsapp: string
+              year: number | null
+            }[]
+            SetofOptions: {
+              from: "*"
+              to: "parts"
+              isOneToOne: false
+              isSetofReturn: true
+            }
+          }
+        | {
+            Args: { _limit?: number; _oem: string }
+            Returns: {
+              brand: string
+              city: string
+              condition: string
+              id: string
+              match_kind: string
+              model: string
+              oem_code: string
+              oem_codes: string[]
+              photos: string[]
+              price: number
+              stock_quantity: number
+              title: string
+              year: number
+            }[]
+          }
       seller_demand_insights: {
         Args: { _range?: string }
         Returns: {
