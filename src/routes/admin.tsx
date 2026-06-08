@@ -1012,6 +1012,48 @@ function AdminPage() {
         )}
       </main>
 
+      <AlertDialog open={!!bulkAction} onOpenChange={(v) => { if (!v && !bulkBusy) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkAction?.kind === "approve" && "Seçilenleri onayla"}
+              {bulkAction?.kind === "reject" && "Seçilenleri reddet"}
+              {bulkAction?.kind === "delete" && "Seçilenleri sil"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction ? `${bulkAction.ids.length} ilan ` : ""}
+              {bulkAction?.kind === "approve" && "onaylanacak ve yayına alınacak."}
+              {bulkAction?.kind === "reject" && "reddedilecek. Satıcı bilgilendirilebilir."}
+              {bulkAction?.kind === "delete" && "kalıcı olarak silinecek. Bu işlem geri alınamaz."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {bulkBusy && bulkProgress.total > 0 && (
+            <div className="space-y-1.5">
+              <Progress value={(bulkProgress.done / bulkProgress.total) * 100} className="h-2" />
+              <p className="text-xs text-muted-foreground text-center">
+                {bulkProgress.done} / {bulkProgress.total} işlendi
+              </p>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkBusy}>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={bulkBusy}
+              onClick={(e) => {
+                e.preventDefault();
+                if (bulkAction) void runBulkPartAction(bulkAction.kind, bulkAction.ids);
+              }}
+              className={bulkAction?.kind === "approve"
+                ? "bg-emerald-500 hover:bg-emerald-500/90 text-white"
+                : "bg-destructive hover:bg-destructive/90 text-destructive-foreground"}
+            >
+              {bulkBusy ? "İşleniyor..." : "Onayla"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       <EditPartDialog
         part={editing}
         onClose={() => setEditing(null)}
