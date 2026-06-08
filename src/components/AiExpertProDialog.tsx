@@ -404,6 +404,7 @@ export function AiExpertProDialog({
         {loading && (
           <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground bg-muted/40 border border-border rounded-xl">
             <Loader2 className="size-3.5 animate-spin text-gold" />
+            {stage === "vision" && "Görsel analiz ediliyor..."}
             {stage === "db" && "Taşıtsan stokları taranıyor..."}
             {stage === "cache" && "Önbellek kontrol ediliyor..."}
             {stage === "ai" && "AI geniş kaynaklarda araştırıyor..."}
