@@ -191,6 +191,8 @@ function AdminPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
 
+  useEffect(() => { setSelectedPartIds(new Set()); }, [tab, filter]);
+
   useEffect(() => {
     if (!isAdmin) return;
     const refresh = async () => {
