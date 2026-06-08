@@ -85,6 +85,9 @@ function PublicProfilePage() {
       setProfile(merged);
       setParts((ps ?? []) as PartCard[]);
       setLoading(false);
+      if (merged && merged.id !== user?.id) {
+        trackEvent("profile_view", { seller_id: merged.id, name: merged.display_name });
+      }
     })();
     return () => { cancelled = true; };
 
