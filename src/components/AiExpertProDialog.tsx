@@ -117,29 +117,30 @@ export function AiExpertProDialog({
     return (data ?? []) as Part[];
   };
 
-  // OEM-only DB scan (strict). Used to short-circuit AI when a known code matches.
+  // OEM-only DB scan (strict). Uses a Postgres RPC that normalizes BOTH sides
+  // (strips spaces/dashes/dots/slashes, upper-cases) so stored values like
+  // "90366-T0061" match user input "90366T0061" or "90366 t0061".
   const searchByOem = async (oems: string[]) => {
-    const oemSet = new Set<string>();
-    for (const o of oems.filter(Boolean)) {
-      const upper = o.toUpperCase().trim();
-      if (upper) oemSet.add(upper);
-      const norm = normalizeOemCode(o);
-      if (norm) oemSet.add(norm);
+    const seen = new Set<string>();
+    const out: Part[] = [];
+    const normalized = Array.from(
+      new Set(oems.map((o) => normalizeOemCode(o)).filter((o) => o.length >= 3)),
+    ).slice(0, 10);
+    for (const norm of normalized) {
+      const { data, error } = await supabase.rpc("search_parts_by_oem", { _oem: norm });
+      if (error) {
+        console.warn("search_parts_by_oem failed", error);
+        continue;
+      }
+      for (const row of (data ?? []) as Part[]) {
+        if (!seen.has(row.id)) {
+          seen.add(row.id);
+          out.push(row);
+        }
+      }
+      if (out.length >= 30) break;
     }
-    if (oemSet.size === 0) return [] as Part[];
-    const ors: string[] = [];
-    for (const o of Array.from(oemSet).slice(0, 25)) {
-      const safe = o.replace(/[%,(){}]/g, "");
-      if (!safe) continue;
-      ors.push(`oem_code.ilike.%${safe}%`, `oem_codes.cs.{${safe}}`);
-    }
-    const { data } = await supabase
-      .from("parts")
-      .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
-      .eq("status", "approved")
-      .or(ors.join(","))
-      .limit(30);
-    return (data ?? []) as Part[];
+    return out;
   };
 
   const run = async () => {
