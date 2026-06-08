@@ -681,15 +681,101 @@ function AdminPage() {
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
-          filteredParts.length === 0 ? (
-            <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
-          ) : filteredParts.map((p) => (
+          <>
+            {filteredParts.length > 0 && (() => {
+              const pageIds = filteredParts.map((p) => p.id);
+              const allIds = parts.map((p) => p.id);
+              const pageSelected = pageIds.filter((id) => selectedPartIds.has(id)).length;
+              const allPageSelected = pageSelected === pageIds.length;
+              const selectedCount = selectedPartIds.size;
+              return (
+                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border border-border rounded-xl p-3 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                      <Checkbox
+                        checked={allPageSelected && pageIds.length > 0}
+                        onCheckedChange={(v) => {
+                          setSelectedPartIds((prev) => {
+                            const next = new Set(prev);
+                            if (v) pageIds.forEach((id) => next.add(id));
+                            else pageIds.forEach((id) => next.delete(id));
+                            return next;
+                          });
+                        }}
+                      />
+                      Sayfadakileri seç ({pageIds.length})
+                    </label>
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]"
+                      onClick={() => setSelectedPartIds(new Set(pageIds))}>
+                      Filtrelenenleri seç ({pageIds.length})
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]"
+                      onClick={() => setSelectedPartIds(new Set(allIds))}>
+                      Tümünü seç ({allIds.length})
+                    </Button>
+                    {selectedCount > 0 && (
+                      <Button size="sm" variant="ghost" className="h-7 text-[11px]"
+                        onClick={() => setSelectedPartIds(new Set())}>
+                        Temizle
+                      </Button>
+                    )}
+                    <span className="ml-auto text-[11px] text-muted-foreground">
+                      {selectedCount} seçili
+                    </span>
+                  </div>
+                  {selectedCount > 0 && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button size="sm" disabled={bulkBusy}
+                        onClick={() => setBulkAction({ kind: "approve", ids: Array.from(selectedPartIds) })}
+                        className="h-8 text-xs bg-emerald-500/90 hover:bg-emerald-500 text-white">
+                        <Check className="size-3.5 mr-1" /> Onayla
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={bulkBusy}
+                        onClick={() => setBulkAction({ kind: "reject", ids: Array.from(selectedPartIds) })}
+                        className="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                        <XIcon className="size-3.5 mr-1" /> Reddet
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={bulkBusy}
+                        onClick={() => setBulkAction({ kind: "delete", ids: Array.from(selectedPartIds) })}
+                        className="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                        <Trash2 className="size-3.5 mr-1" /> Sil
+                      </Button>
+                    </div>
+                  )}
+                  {bulkBusy && bulkProgress.total > 0 && (
+                    <div className="space-y-1">
+                      <Progress value={(bulkProgress.done / bulkProgress.total) * 100} className="h-1.5" />
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        {bulkProgress.done} / {bulkProgress.total}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            {filteredParts.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
+            ) : filteredParts.map((p) => (
             <article key={p.id} className={`bg-card rounded-xl border p-3 sm:p-4 space-y-3 transition-shadow ${
-              p.status === "pending"
+              selectedPartIds.has(p.id)
+                ? "border-primary/60 shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
+                : p.status === "pending"
                 ? "border-gold/60 shadow-[0_0_0_1px_rgba(201,168,76,0.15)]"
                 : "border-border"
             }`}>
               <div className="flex gap-3">
+                <div className="pt-1">
+                  <Checkbox
+                    checked={selectedPartIds.has(p.id)}
+                    onCheckedChange={(v) => {
+                      setSelectedPartIds((prev) => {
+                        const next = new Set(prev);
+                        if (v) next.add(p.id); else next.delete(p.id);
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
                 <div className="size-20 sm:size-24 rounded-lg overflow-hidden bg-secondary shrink-0">
                   <SafePartImage images={p.photos} alt={p.title} width={320} />
                 </div>
