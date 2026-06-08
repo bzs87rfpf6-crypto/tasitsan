@@ -43,16 +43,6 @@ function AuthPage() {
   const recordFailure = useServerFn(recordAuthFailure);
   const clearFailures = useServerFn(clearAuthFailures);
   const rateLimit = useServerFn(checkRateLimit);
-  const verifyCaptcha = useServerFn(verifyRecaptcha);
-
-  async function getRecaptchaToken(action: string): Promise<string | null> {
-    try {
-      return await executeRecaptcha(action);
-    } catch (e) {
-      console.warn("[auth] recaptcha unavailable:", e);
-      return null;
-    }
-  }
 
 
   const sendReset = async () => {
