@@ -8,6 +8,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { SafePartImage } from "@/components/SafePartImage";
 import { useAuth } from "@/hooks/use-auth";
+import { trackEvent } from "@/lib/analytics";
 
 
 export const Route = createFileRoute("/u/$id")({

@@ -464,7 +464,7 @@ function PartDetail() {
               <a href={contactPhone ? `tel:${contactPhone.replace(/\s/g, "")}` : undefined}
                 onClick={(e) => {
                   if (!contactPhone) { e.preventDefault(); toast.info("İletişim numarası yakında"); return; }
-                  trackEvent("click_call", { from: "part_detail", part_id: part.id });
+                  trackEvent("click_call", { from: "part_detail", part_id: part.id, seller_id: part.seller_id });
                 }}
                 className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
                 <Phone className="size-4 text-gold" />
@@ -474,7 +474,7 @@ function PartDetail() {
                 target="_blank" rel="noopener noreferrer"
                 onClick={(e) => {
                   if (!contactPhone) { e.preventDefault(); toast.info("WhatsApp hattı yakında"); return; }
-                  trackEvent("click_whatsapp", { from: "part_detail", part_id: part.id });
+                  trackEvent("click_whatsapp", { from: "part_detail", part_id: part.id, seller_id: part.seller_id });
                 }}
                 className="flex items-center justify-center gap-2 h-12 rounded-xl bg-card border border-border font-semibold text-sm active:scale-[0.98] transition-transform">
                 <MessageCircle className="size-4 text-gold" />
