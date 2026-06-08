@@ -848,7 +848,8 @@ function AdminPage() {
                 <Trash2 className="size-3.5 mr-1" /> İlanı Sil
               </Button>
             </article>
-          ))
+          ))}
+          </>
         ) : tab === "inquiries" ? (
           filteredInquiries.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-8">Kayıt yok.</p>
