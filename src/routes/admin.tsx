@@ -186,6 +186,10 @@ function AdminPage() {
   const [editForm, setEditForm] = useState({ display_name: "", whatsapp: "", is_approved: false });
   const [savingEdit, setSavingEdit] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<null | { kind: "approve" | "reject" | "delete"; ids: string[] }>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
 
   useEffect(() => {
     if (!isAdmin) return;
