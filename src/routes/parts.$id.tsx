@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getSafePartPhotos } from "@/lib/part-images";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PartImageLightbox } from "@/components/PartImageLightbox";
+import { BrandPlaceholder } from "@/components/BrandPlaceholder";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
