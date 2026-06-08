@@ -98,17 +98,6 @@ function AuthPage() {
           return;
         }
 
-        // reCAPTCHA v3 — bot/abuse koruması
-        const captchaToken = await getRecaptchaToken("signup");
-        if (captchaToken) {
-          const vr = await verifyCaptcha({ data: { token: captchaToken, action: "signup", minScore: 0.5 } });
-          if (!vr.ok) {
-            toast.error("Bot/şüpheli aktivite tespit edildi. Lütfen tekrar dene.");
-            setLoading(false);
-            return;
-          }
-        }
-
         const authEmail = phoneToAuthEmail(digits);
         const { data, error } = await supabase.auth.signUp({
           email: authEmail,
