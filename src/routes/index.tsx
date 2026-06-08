@@ -49,8 +49,8 @@ function Index() {
   const [parts, setParts] = useState<Part[]>([]);
   const [loading, setLoading] = useState(true);
   const [requestOpen, setRequestOpen] = useState(false);
-  const [photoOpen, setPhotoOpen] = useState(false);
-  const [aiExpertOpen, setAiExpertOpen] = useState(false);
+  const [stockMapOpen, setStockMapOpen] = useState(false);
+  const [oemQueryOpen, setOemQueryOpen] = useState(false);
   const [aiProOpen, setAiProOpen] = useState(false);
   const [contactPhone, setContactPhone] = useState("");
 
