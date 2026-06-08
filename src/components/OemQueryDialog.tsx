@@ -38,7 +38,7 @@ export function OemQueryDialog({ open, onOpenChange }: { open: boolean; onOpenCh
     setSearched(true);
     try {
       const { data } = await supabase.rpc("search_parts_by_oem", { _oem: norm });
-      setRows(((data ?? []) as Match[]).slice(0, 50));
+      setRows(((data ?? []) as unknown as Match[]).slice(0, 50));
     } finally {
       setLoading(false);
     }
