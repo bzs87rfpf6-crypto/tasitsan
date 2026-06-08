@@ -328,6 +328,51 @@ function AdminPage() {
     toast.success("İlan silindi");
   };
 
+  const runBulkPartAction = async (kind: "approve" | "reject" | "delete", ids: string[]) => {
+    if (!ids.length) return;
+    setBulkBusy(true);
+    setBulkProgress({ done: 0, total: ids.length });
+    const BATCH = 200;
+    let failed = 0;
+    const idSet = new Set<string>();
+    const reviewer = user?.id ?? null;
+    const reviewedAt = new Date().toISOString();
+    for (let i = 0; i < ids.length; i += BATCH) {
+      const chunk = ids.slice(i, i + BATCH);
+      let error: any = null;
+      if (kind === "delete") {
+        ({ error } = await supabase.from("parts").delete().in("id", chunk));
+      } else {
+        const status: PartStatus = kind === "approve" ? "approved" : "rejected";
+        ({ error } = await supabase.from("parts")
+          .update({ status, reviewed_at: reviewedAt, reviewed_by: reviewer })
+          .in("id", chunk));
+      }
+      if (error) {
+        failed += chunk.length;
+        toast.error(`Toplu işlem hatası: ${error.message}`);
+      } else {
+        chunk.forEach((id) => idSet.add(id));
+      }
+      setBulkProgress({ done: Math.min(i + BATCH, ids.length), total: ids.length });
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    setParts((prev) => {
+      if (kind === "delete") return prev.filter((p) => !idSet.has(p.id));
+      const status: PartStatus = kind === "approve" ? "approved" : "rejected";
+      return prev.map((p) => (idSet.has(p.id) ? { ...p, status } : p));
+    });
+    setSelectedPartIds(new Set());
+    setBulkBusy(false);
+    setBulkAction(null);
+    const ok = ids.length - failed;
+    if (ok > 0) {
+      const label = kind === "approve" ? "onaylandı" : kind === "reject" ? "reddedildi" : "silindi";
+      toast.success(`${ok} ilan ${label}${failed ? ` (${failed} başarısız)` : ""}`);
+    }
+  };
+
+
   const handleDeleteUser = async (u: ProfileRow) => {
     if (!confirm(`${u.display_name ?? "Kullanıcı"} kalıcı olarak silinsin mi?`)) return;
     try {
