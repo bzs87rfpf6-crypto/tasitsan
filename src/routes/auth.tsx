@@ -7,8 +7,6 @@ import { AppHeader } from "@/components/AppHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { checkAuthLockout, recordAuthFailure, clearAuthFailures, checkRateLimit } from "@/lib/security.functions";
-import { executeRecaptcha } from "@/lib/recaptcha";
-import { verifyRecaptcha } from "@/lib/recaptcha.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Giriş — Taşıtsan" }] }),
@@ -45,16 +43,6 @@ function AuthPage() {
   const recordFailure = useServerFn(recordAuthFailure);
   const clearFailures = useServerFn(clearAuthFailures);
   const rateLimit = useServerFn(checkRateLimit);
-  const verifyCaptcha = useServerFn(verifyRecaptcha);
-
-  async function getRecaptchaToken(action: string): Promise<string | null> {
-    try {
-      return await executeRecaptcha(action);
-    } catch (e) {
-      console.warn("[auth] recaptcha unavailable:", e);
-      return null;
-    }
-  }
 
 
   const sendReset = async () => {
@@ -108,17 +96,6 @@ function AuthPage() {
           toast.error(`Çok fazla kayıt denemesi. ${rl.retry_after_seconds} sn sonra tekrar dene.`);
           setLoading(false);
           return;
-        }
-
-        // reCAPTCHA v3 — bot/abuse koruması
-        const captchaToken = await getRecaptchaToken("signup");
-        if (captchaToken) {
-          const vr = await verifyCaptcha({ data: { token: captchaToken, action: "signup", minScore: 0.5 } });
-          if (!vr.ok) {
-            toast.error("Bot/şüpheli aktivite tespit edildi. Lütfen tekrar dene.");
-            setLoading(false);
-            return;
-          }
         }
 
         const authEmail = phoneToAuthEmail(digits);
@@ -178,17 +155,6 @@ function AuthPage() {
           toast.error(`Çok fazla deneme. ${rl.retry_after_seconds} sn bekle.`);
           setLoading(false);
           return;
-        }
-
-        // reCAPTCHA v3 — bot/abuse koruması
-        const captchaToken = await getRecaptchaToken("login");
-        if (captchaToken) {
-          const vr = await verifyCaptcha({ data: { token: captchaToken, action: "login", minScore: 0.5 } });
-          if (!vr.ok) {
-            toast.error("Bot/şüpheli aktivite tespit edildi. Lütfen tekrar dene.");
-            setLoading(false);
-            return;
-          }
         }
 
         const { error } = await supabase.auth.signInWithPassword({
