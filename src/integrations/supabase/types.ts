@@ -1118,6 +1118,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_meaningful_query: { Args: { _q: string }; Returns: boolean }
       list_urgent_requests_for_supplier: {
         Args: { _limit?: number }
         Returns: {
@@ -1264,6 +1265,9 @@ export type Database = {
           search_count: number
         }[]
       }
+      tr_city_normalize: { Args: { _raw: string }; Returns: string }
+      tr_lower_ascii: { Args: { _t: string }; Returns: string }
+      tr_query_stem: { Args: { _q: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"
