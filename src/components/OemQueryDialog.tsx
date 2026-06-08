@@ -105,7 +105,7 @@ export function OemQueryDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                         <span className="text-sm font-bold text-gold">
                           {r.price ? `${r.price.toLocaleString("tr-TR")} ₺` : "—"}
                         </span>
-                        {r.part_type && <PartTypeBadge value={r.part_type} />}
+                        {r.part_type && <PartTypeBadge partType={r.part_type} />}
                       </div>
                       <p className="text-[10px] text-muted-foreground truncate">{r.city ?? ""}</p>
                     </div>
