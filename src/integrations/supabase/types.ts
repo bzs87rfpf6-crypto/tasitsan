@@ -1041,6 +1041,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_dashboard_overview: { Args: never; Returns: Json }
       check_auth_lockout: { Args: { _identifier: string }; Returns: Json }
       check_rate_limit: {
         Args: { _key: string; _max: number; _window_seconds: number }
