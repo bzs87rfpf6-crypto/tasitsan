@@ -197,18 +197,18 @@ function Index() {
 
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => setAiExpertOpen(true)}
+              onClick={() => setStockMapOpen(true)}
               className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
-              <Sparkles className="size-4" />
-              AI Parça Uzmanı
+              <MapIcon className="size-4" />
+              🗺️ Stok Haritası
             </button>
             <button
-              onClick={() => setPhotoOpen(true)}
+              onClick={() => setOemQueryOpen(true)}
               className="tap-gold w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-card border border-gold/40 text-gold font-semibold text-xs hover:bg-gold/10"
             >
-              <Camera className="size-4" />
-              Fotoğraftan Bul
+              <ScanSearch className="size-4" />
+              🔎 OEM Sorgula
             </button>
           </div>
 
