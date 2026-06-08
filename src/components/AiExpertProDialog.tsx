@@ -88,9 +88,16 @@ export function AiExpertProDialog({
   };
 
   const searchInternalDb = async (oems: string[], keywords: string[]) => {
-    const allOems = Array.from(new Set(oems.filter(Boolean)));
+    // Build OEM variations: both raw upper and normalized (no separators)
+    const oemSet = new Set<string>();
+    for (const o of oems.filter(Boolean)) {
+      const upper = o.toUpperCase().trim();
+      if (upper) oemSet.add(upper);
+      const norm = normalizeOemCode(o);
+      if (norm) oemSet.add(norm);
+    }
     const ors: string[] = [];
-    for (const o of allOems.slice(0, 25)) {
+    for (const o of Array.from(oemSet).slice(0, 25)) {
       const safe = o.replace(/[%,(){}]/g, "");
       if (!safe) continue;
       ors.push(`oem_code.ilike.%${safe}%`, `oem_codes.cs.{${safe}}`);
@@ -98,7 +105,7 @@ export function AiExpertProDialog({
     for (const k of (keywords ?? []).slice(0, 6)) {
       const safe = k.replace(/[%,(){}]/g, "").trim();
       if (safe.length < 2) continue;
-      ors.push(`title.ilike.%${safe}%`);
+      ors.push(`title.ilike.%${safe}%`, `description.ilike.%${safe}%`);
     }
     let q = supabase
       .from("parts")
@@ -107,6 +114,31 @@ export function AiExpertProDialog({
       .limit(30);
     if (ors.length) q = q.or(ors.join(","));
     const { data } = await q;
+    return (data ?? []) as Part[];
+  };
+
+  // OEM-only DB scan (strict). Used to short-circuit AI when a known code matches.
+  const searchByOem = async (oems: string[]) => {
+    const oemSet = new Set<string>();
+    for (const o of oems.filter(Boolean)) {
+      const upper = o.toUpperCase().trim();
+      if (upper) oemSet.add(upper);
+      const norm = normalizeOemCode(o);
+      if (norm) oemSet.add(norm);
+    }
+    if (oemSet.size === 0) return [] as Part[];
+    const ors: string[] = [];
+    for (const o of Array.from(oemSet).slice(0, 25)) {
+      const safe = o.replace(/[%,(){}]/g, "");
+      if (!safe) continue;
+      ors.push(`oem_code.ilike.%${safe}%`, `oem_codes.cs.{${safe}}`);
+    }
+    const { data } = await supabase
+      .from("parts")
+      .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
+      .eq("status", "approved")
+      .or(ors.join(","))
+      .limit(30);
     return (data ?? []) as Part[];
   };
 
@@ -119,16 +151,30 @@ export function AiExpertProDialog({
       const isText = tab === "text";
       const raw = query.trim();
 
-      // STAGE 1 — Instant DB search on the raw query (no AI, no waiting).
+      // ============ TEXT MODE ============
       if (isText) {
+        // STAGE 1 — Strict OEM search (normalized) on Taşıtsan DB
         setStage("db");
-        const normalized = raw.toUpperCase().replace(/\s+/g, "");
-        const quickMatches = await searchInternalDb([normalized, raw], [raw]);
-        if (quickMatches.length > 0) setMatches(quickMatches);
-      }
+        const oemHits = await searchByOem([raw]);
+        if (oemHits.length > 0) {
+          setMatches(oemHits);
+          setSource("db");
+          setStage("done");
+          setLoading(false);
+          return;
+        }
 
-      // STAGE 2 — Cache lookup (text queries only; images have no stable key).
-      if (isText) {
+        // STAGE 2 — Broader DB search (title/description/keywords)
+        const broadHits = await searchInternalDb([raw], [raw]);
+        if (broadHits.length > 0) {
+          setMatches(broadHits);
+          setSource("db");
+          setStage("done");
+          setLoading(false);
+          return;
+        }
+
+        // STAGE 3 — Cache lookup
         setStage("cache");
         const cached = await lookupCache({ data: { query: raw } });
         if (cached.ok && cached.hit && cached.result) {
@@ -145,9 +191,73 @@ export function AiExpertProDialog({
         }
       }
 
-      // STAGE 3 — AI fallback (only when cache misses or image input).
+      // ============ PHOTO MODE ============
+      if (!isText && preview) {
+        // STAGE 1 — Vision: extract OEM + keywords from image (cheap, no internet research)
+        setStage("vision");
+        const vision = await analyze({ data: { imageDataUrl: preview } });
+        if (vision.ok) {
+          const v = vision.result;
+          const oemGuess = (v.oem_code_guess ?? "").trim();
+
+          // STAGE 2 — Search DB by extracted OEM
+          if (oemGuess) {
+            setStage("db");
+            const oemHits = await searchByOem([oemGuess]);
+            if (oemHits.length > 0) {
+              setMatches(oemHits);
+              setResult({
+                part_name: v.part_name,
+                category: v.category,
+                primary_oem: oemGuess,
+                candidate_oems: [],
+                equivalent_oems: [],
+                compatible_vehicles: [
+                  ...(v.brand_compatibility ?? []),
+                  ...(v.model_compatibility ?? []),
+                ],
+                keywords: v.keywords ?? [],
+                description: v.description ?? "",
+                confidence: v.confidence,
+              });
+              setSource("vision");
+              setStage("done");
+              setLoading(false);
+              return;
+            }
+          }
+
+          // STAGE 3 — Broader DB search using part name + keywords
+          const broadHits = await searchInternalDb(
+            oemGuess ? [oemGuess] : [],
+            [v.part_name, ...(v.keywords ?? [])],
+          );
+          if (broadHits.length > 0) {
+            setMatches(broadHits);
+            setResult({
+              part_name: v.part_name,
+              category: v.category,
+              primary_oem: oemGuess,
+              candidate_oems: [],
+              equivalent_oems: [],
+              compatible_vehicles: [
+                ...(v.brand_compatibility ?? []),
+                ...(v.model_compatibility ?? []),
+              ],
+              keywords: v.keywords ?? [],
+              description: v.description ?? "",
+              confidence: v.confidence,
+            });
+            setSource("vision");
+            setStage("done");
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      // ============ STAGE FINAL — AI internet research (only if DB truly empty) ============
       setStage("ai");
-      // Rate limit AI queries: 20 per minute per user, 60 per 10 min per IP
       const rl = await rateLimit({
         data: { action: "ai-expert", max: 20, windowSeconds: 60, scope: "ip+user" },
       });
@@ -177,6 +287,7 @@ export function AiExpertProDialog({
       setLoading(false);
     }
   };
+
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast.error("Lütfen bir görsel seçin."); return; }
