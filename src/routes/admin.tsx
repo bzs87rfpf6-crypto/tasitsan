@@ -10,6 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
 import { adminGetPartRequests, adminGetUsersFull, adminGetSellerContacts, adminGetPartsWithWhatsapp, adminGetSiteSettings, adminSaveSiteSettings } from "@/lib/admin-data.functions";
 import { StatCard } from "@/components/admin/StatCard";
