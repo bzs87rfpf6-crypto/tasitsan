@@ -4,11 +4,16 @@ import { Sparkles, Loader2, Search, Camera, Upload, X, RefreshCw, PackageSearch,
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupCachedResearch, researchPart } from "@/lib/api/ai-expert-pro.functions";
+import { analyzePartImage } from "@/lib/api/vision.functions";
 import { checkRateLimit } from "@/lib/security.functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PartCard, type Part } from "@/components/PartCard";
+
+const normalizeOemCode = (s: string) =>
+  s.toUpperCase().replace(/[\s\-_.\/]/g, "").trim();
+
 
 
 type Research = {
