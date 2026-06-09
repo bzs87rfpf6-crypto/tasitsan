@@ -114,51 +114,48 @@ function PublicProfilePage() {
     <div className="min-h-screen pb-24">
       <AppHeader subtitle="Satıcı Profili" />
       <div className="max-w-md mx-auto px-4 pt-4 space-y-6">
-        {user ? (
-          <section className="bg-card border border-border rounded-xl p-5 flex items-center gap-4">
-            <UserAvatar url={profile.avatar_url} name={profile.display_name} size={80} />
+        <section className="bg-card border border-border rounded-xl p-5 flex items-center gap-4">
+          <UserAvatar url={profile.avatar_url} name={profile.display_name} size={80} />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-display text-xl tracking-wide truncate flex items-center gap-1.5">
+              <span className="truncate">{profile.display_name ?? "Satıcı"}</span>
+              {profile.is_verified && <VerifiedBadge size={18} />}
+            </h1>
+            {profile.is_verified && (
+              <p className="text-[11px] text-sky-400 font-semibold">Doğrulanmış Satıcı</p>
+            )}
+            {profile.city && (
+              <p className="text-xs text-muted-foreground truncate">{profile.city}</p>
+            )}
+            <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="size-3 text-gold" /> {joined}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Package className="size-3 text-gold" /> {parts.length} ilan
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {!user && (
+          <section className="bg-card border border-gold/30 rounded-xl p-4 flex items-center gap-3">
+            <div className="size-10 rounded-full bg-gold/10 grid place-items-center shrink-0">
+              <Lock className="size-5 text-gold" />
+            </div>
             <div className="flex-1 min-w-0">
-              <h1 className="font-display text-xl tracking-wide truncate flex items-center gap-1.5">
-                <span className="truncate">{profile.display_name ?? "Satıcı"}</span>
-                {profile.is_verified && <VerifiedBadge size={18} />}
-              </h1>
-              {profile.is_verified && (
-                <p className="text-[11px] text-sky-400 font-semibold">Doğrulanmış Satıcı</p>
-              )}
-              {profile.city && (
-                <p className="text-xs text-muted-foreground truncate">{profile.city}</p>
-              )}
-              <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="size-3 text-gold" /> {joined}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Package className="size-3 text-gold" /> {parts.length} ilan
-                </span>
-              </div>
-            </div>
-          </section>
-        ) : (
-          <section className="bg-card border border-gold/30 rounded-xl p-5 text-center space-y-3">
-            <div className="mx-auto size-12 rounded-full bg-gold/10 grid place-items-center">
-              <Lock className="size-6 text-gold" />
-            </div>
-            <div>
-              <h1 className="font-display text-lg tracking-wide">Satıcı Bilgileri Üyelere Özel</h1>
-              <p className="text-xs text-muted-foreground mt-1">
-                Firma adı, şehir, telefon, WhatsApp ve e-posta gibi iletişim bilgilerini görmek için giriş yapın.
+              <p className="text-xs font-semibold leading-tight">İletişim bilgileri üyelere özel</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Telefon ve WhatsApp ile satıcıya ulaşmak için giriş yapın.
               </p>
             </div>
             <Link
               to="/auth"
               search={{ redirect: `/u/${id}` } as any}
-              className="inline-flex items-center justify-center h-11 px-5 rounded-lg bg-gold-gradient text-gold-foreground font-semibold text-sm shadow-gold"
+              className="text-xs text-gold font-semibold shrink-0"
             >
-              Satıcı Bilgilerini Görmek İçin Giriş Yap / Üye Ol
+              Giriş →
             </Link>
-            <p className="text-[11px] text-muted-foreground">
-              {parts.length} aktif ilan • Üyelik: {joined}
-            </p>
           </section>
         )}
 
