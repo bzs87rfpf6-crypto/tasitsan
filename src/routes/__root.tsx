@@ -98,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
       { name: "twitter:card", content: "summary_large_image" },
     ];
-    if (gsc) meta.push({ name: "google-site-verification", content: gsc });
+    meta.push({ name: "google-site-verification", content: "5btdy3woANJj2uefmPtCejBLwHmcXm8Ljv" });
     return {
       meta,
       links: [
