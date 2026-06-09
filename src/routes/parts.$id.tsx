@@ -388,7 +388,7 @@ function PartDetail() {
 
         <EquivalentParts partId={part.id} />
 
-        {seller && (user ? (
+        {seller && (
           <Link
             to="/u/$id"
             params={{ id: seller.id }}
@@ -407,27 +407,7 @@ function PartDetail() {
             </div>
             <span className="text-xs text-gold font-semibold">Profili gör →</span>
           </Link>
-        ) : (
-          <button
-            type="button"
-            onClick={() => nav({ to: "/auth", search: { redirect: `/parts/${part.id}` } as any })}
-            className="w-full flex items-center gap-3 bg-card rounded-xl p-4 border border-gold/40 hover:border-gold transition text-left"
-          >
-            <div className="size-12 rounded-full bg-gold/10 grid place-items-center shrink-0">
-              <ShieldCheck className="size-5 text-gold" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-wider text-gold">Satıcı Bilgileri</div>
-              <div className="text-sm font-semibold leading-tight">
-                Satıcı Bilgilerini Görmek İçin Giriş Yap / Üye Ol
-              </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5">
-                Firma adı, telefon, WhatsApp ve diğer iletişim bilgileri üyelere özeldir.
-              </div>
-            </div>
-            <span className="text-xs text-gold font-semibold shrink-0">Giriş →</span>
-          </button>
-        ))}
+        )}
 
 
         {part.oem_code && (
