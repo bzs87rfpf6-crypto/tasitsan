@@ -363,29 +363,58 @@ function Index() {
             ))}
           </div>
         ) : parts.length === 0 ? (
-          <div className="text-center py-12 px-4 space-y-4 bg-card border border-border rounded-2xl">
+          <div className="text-center py-10 px-4 space-y-5 bg-card border border-border rounded-2xl">
             <div className="size-16 rounded-full bg-gold/10 grid place-items-center mx-auto">
               <PackageSearch className="size-8 text-gold" />
             </div>
-            <div className="space-y-1">
-              <p className="font-display text-lg">Aradığınız parça bulunamadı.</p>
-              <p className="text-sm text-muted-foreground">Talep oluşturmak ister misiniz?</p>
-              <p className="text-[11px] text-muted-foreground/80">Taşıtsan ekibi sizin için arayıp size dönüş yapar.</p>
+            <div className="space-y-2 max-w-md mx-auto">
+              <p className="font-display text-xl text-gold">Parça Bulunamadı</p>
+              <p className="text-sm text-foreground leading-relaxed">
+                Aradığınız ürün şu anda stoklarımızda bulunmuyor veya henüz sisteme yüklenmemiş olabilir.
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Talep oluşturmanız halinde binlerce satıcıya ve tedarikçiye ulaşabilir,
+                ürünün stoklarda olup olmadığını sizin için araştırabiliriz.
+              </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center items-stretch sm:items-center max-w-md mx-auto">
               <Button
                 onClick={() => setRequestOpen(true)}
-                className="bg-gold-gradient text-gold-foreground font-semibold shadow-gold"
+                className="bg-gold-gradient text-gold-foreground font-semibold shadow-gold flex-1"
               >
-                Parça Talebi Oluştur
+                Talep Oluştur
               </Button>
-              {(q.trim() || oem.trim() || brand.trim() || model.trim()) && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (!phoneDigits) { toast.error("WhatsApp hattı henüz tanımlanmadı."); return; }
+                  const term = [q, brand, model, oem].filter((x) => x && x.trim()).join(" ").trim();
+                  const text = term
+                    ? `Merhaba, "${term}" parçasını arıyorum. Stoklarınızda var mı?`
+                    : "Merhaba, bir parça arıyorum.";
+                  trackEvent("click_whatsapp", { from: "empty_state", term });
+                  window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+                }}
+                className="flex-1 gap-2"
+              >
+                <MessageCircle className="size-4" /> WhatsApp ile Sor
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setOemQueryOpen(true)}
+                className="flex-1 gap-2"
+              >
+                <ScanSearch className="size-4" /> OEM Sorgula
+              </Button>
+            </div>
+            {(q.trim() || oem.trim() || brand.trim() || model.trim()) && (
+              <div className="pt-1">
                 <CreateAlertButton
                   userId={user?.id ?? null}
                   initial={{ keyword: q.trim(), brand: brand.trim(), model: model.trim(), oem: oem.trim().toUpperCase(), category: cat === "Tümü" ? "" : cat }}
                 />
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
