@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff, Phone, MessageCircle, Eye } from "lucide-react";
