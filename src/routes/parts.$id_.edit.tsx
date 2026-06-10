@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -303,7 +304,7 @@ function EditPartPage() {
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("part-photos").remove(uploadedPaths).catch(() => {});
       }
-      toast.error(err.message ?? "Hata");
+      toast.error(translateError(err, "Hata"));
     } finally {
       setSubmitting(false);
     }

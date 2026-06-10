@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -25,7 +26,7 @@ export function BotFilterPanel() {
   const load = async () => {
     setLoading(true);
     try { setRules(await list()); }
-    catch (e) { toast.error((e as Error).message); }
+    catch (e) { toast.error(translateError(e)); }
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -41,7 +42,7 @@ export function BotFilterPanel() {
       toast.success("Kural eklendi");
       await load();
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(translateError(e));
     } finally {
       setAdding(false);
     }
@@ -52,7 +53,7 @@ export function BotFilterPanel() {
     try {
       await update({ data: { id: r.id, enabled: !r.enabled } });
       setRules((prev) => prev.map((x) => x.id === r.id ? { ...x, enabled: !x.enabled } : x));
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(translateError(e)); }
     finally { setBusy(null); }
   };
 
@@ -63,7 +64,7 @@ export function BotFilterPanel() {
       await remove({ data: { id: r.id } });
       setRules((prev) => prev.filter((x) => x.id !== r.id));
       toast.success("Silindi");
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(translateError(e)); }
     finally { setBusy(null); }
   };
 
@@ -73,7 +74,7 @@ export function BotFilterPanel() {
     try {
       await update({ data: { id: r.id, label: newLabel || null } });
       setRules((prev) => prev.map((x) => x.id === r.id ? { ...x, label: newLabel || null } : x));
-    } catch (e) { toast.error((e as Error).message); }
+    } catch (e) { toast.error(translateError(e)); }
     finally { setBusy(null); }
   };
 

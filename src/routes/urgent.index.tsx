@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -221,7 +222,7 @@ function QuoteDialog({
     setSubmitting(false);
     if (error) {
       console.error("[urgent quote] insert", error);
-      toast.error(error.message);
+      toast.error(translateError(error));
       return;
     }
     toast.success("Teklifiniz Taşıtsan'a iletildi. Onaylandığında müşteriye gönderilir.");

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Bell, Check, CheckCheck, AlertTriangle, UserPlus, Package, MessageSquareQuote, Send } from "lucide-react";
@@ -114,7 +115,7 @@ export function AdminNotificationsPanel() {
               body: `Test bildirimi · ${new Date().toLocaleTimeString("tr-TR")}`,
               link: "/admin",
             });
-            if (error) toast.error("Test başarısız: " + error.message);
+            if (error) toast.error("Test başarısız: " + translateError(error));
             else toast.success("Test bildirimi oluşturuldu — push gelmeli");
           }}
         >

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -244,14 +245,14 @@ function AdminPage() {
       supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       adminGetSiteSettings().then((data) => ({ data, error: null as any })).catch((e) => ({ data: null as any, error: e })),
     ]);
-    if (us.error) toast.error(us.error.message ?? "Kullanıcılar yüklenemedi");
+    if (us.error) toast.error(translateError(us.error, "Kullanıcılar yüklenemedi"));
     setUsers((us.data ?? []) as ProfileRow[]);
     setAdminIds(new Set(((rl.data ?? []) as { user_id: string }[]).map((r) => r.user_id)));
     if (st.data) setSettings(st.data as SiteSettings);
-    if (iq.error) toast.error(iq.error.message);
-    if (rq.error) toast.error((rq.error as any).message ?? "Talepler yüklenemedi");
-    if (pt.error) toast.error(pt.error.message);
-    if (qt.error) toast.error(qt.error.message);
+    if (iq.error) toast.error(translateError(iq.error));
+    if (rq.error) toast.error(translateError(rq.error, "Talepler yüklenemedi"));
+    if (pt.error) toast.error(translateError(pt.error));
+    if (qt.error) toast.error(translateError(qt.error));
 
     const inqs = (iq.data ?? []) as any[];
     const quoteRows = (qt.data ?? []) as any[];
@@ -293,14 +294,14 @@ function AdminPage() {
 
   const updateInquiryStatus = async (id: string, status: Status) => {
     const { error } = await supabase.from("inquiries").update({ status }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     toast.success("Durum güncellendi");
   };
 
   const updateRequestStatus = async (id: string, status: Status) => {
     const { error } = await supabase.from("part_requests").update({ status }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setRequests((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     toast.success("Durum güncellendi");
   };
@@ -309,7 +310,7 @@ function AdminPage() {
     const { error } = await supabase.from("request_quotes")
       .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null })
       .eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setQuotes((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
     toast.success(status === "approved" ? "Teklif onaylandı, müşteriye iletilecek" : status === "rejected" ? "Teklif reddedildi" : "Teklif beklemeye alındı");
   };
@@ -318,7 +319,7 @@ function AdminPage() {
     const { error } = await supabase.from("parts")
       .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null })
       .eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setParts((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
     toast.success(status === "approved" ? "İlan onaylandı" : status === "rejected" ? "İlan reddedildi" : "Beklemede");
   };
@@ -326,7 +327,7 @@ function AdminPage() {
   const deletePart = async (id: string) => {
     if (!confirm("Bu ilanı silmek istediğine emin misin?")) return;
     const { error } = await supabase.from("parts").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setParts((prev) => prev.filter((p) => p.id !== id));
     toast.success("İlan silindi");
   };
@@ -353,7 +354,7 @@ function AdminPage() {
       }
       if (error) {
         failed += chunk.length;
-        toast.error(`Toplu işlem hatası: ${error.message}`);
+        toast.error(`Toplu işlem hatası: ${translateError(error)}`);
       } else {
         chunk.forEach((id) => idSet.add(id));
       }
@@ -382,7 +383,7 @@ function AdminPage() {
       await callDeleteUser({ data: { userId: u.id } });
       setUsers((prev) => prev.filter((x) => x.id !== u.id));
       toast.success("Kullanıcı silindi");
-    } catch (e: any) { toast.error(e.message ?? "Silinemedi"); }
+    } catch (e: any) { toast.error(translateError(e, "Silinemedi")); }
   };
 
   const handleRemoveAvatar = async (u: ProfileRow) => {
@@ -398,7 +399,7 @@ function AdminPage() {
       if (error) throw error;
       setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, avatar_url: null } : x));
       toast.success("Profil fotoğrafı kaldırıldı");
-    } catch (e: any) { toast.error(e.message ?? "Kaldırılamadı"); }
+    } catch (e: any) { toast.error(translateError(e, "Kaldırılamadı")); }
   };
 
   const handleToggleActive = async (u: ProfileRow) => {
@@ -406,13 +407,13 @@ function AdminPage() {
       await callSetActive({ data: { userId: u.id, isActive: !u.is_active } });
       setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_active: !u.is_active } : x));
       toast.success(!u.is_active ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasife alındı");
-    } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+    } catch (e: any) { toast.error(translateError(e, "Güncellenemedi")); }
   };
 
   const handleToggleApproved = async (u: ProfileRow) => {
     const next = !u.is_approved;
     const { error } = await supabase.from("profiles").update({ is_approved: next }).eq("id", u.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_approved: next } : x));
     toast.success(next ? "Kullanıcı onaylandı" : "Onay geri alındı");
   };
@@ -427,7 +428,7 @@ function AdminPage() {
         return next;
       });
       toast.success(isAdminNow ? "Admin yetkisi kaldırıldı" : "Admin yetkisi verildi");
-    } catch (e: any) { toast.error(e.message ?? "Güncellenemedi"); }
+    } catch (e: any) { toast.error(translateError(e, "Güncellenemedi")); }
   };
 
   const openEditUser = (u: ProfileRow) => {
@@ -459,7 +460,7 @@ function AdminPage() {
       toast.success("Kullanıcı güncellendi");
       setEditingUser(null);
     } catch (e: any) {
-      toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
+      toast.error(translateError(e, "Bu işlem için yetkiniz yok"));
     } finally {
       setSavingEdit(false);
     }
@@ -474,14 +475,14 @@ function AdminPage() {
       setEditingUser({ ...editingUser, is_active: next });
       toast.success(next ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasife alındı");
     } catch (e: any) {
-      toast.error(e?.message ?? "Bu işlem için yetkiniz yok");
+      toast.error(translateError(e, "Bu işlem için yetkiniz yok"));
     }
   };
 
   const saveRequestNote = async (id: string, note: string) => {
     const { error } = await supabase.from("part_requests")
       .update({ admin_notes: note.trim() || null }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setRequests((prev) => prev.map((r) => r.id === id ? { ...r, admin_notes: note.trim() || null } as PartRequest : r));
     toast.success("Not kaydedildi");
   };
@@ -493,7 +494,7 @@ function AdminPage() {
       setSettings(row as SiteSettings);
       toast.success("Ayarlar kaydedildi");
     } catch (e: any) {
-      toast.error(e?.message ?? "Kaydedilemedi");
+      toast.error(translateError(e, "Kaydedilemedi"));
     }
   };
 
@@ -1076,7 +1077,7 @@ function AdminPage() {
           const { error } = await supabase.from("parts")
             .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: user?.id ?? null, admin_notes: note.trim() || null })
             .eq("id", id);
-          if (error) { toast.error(error.message); return; }
+          if (error) { toast.error(translateError(error)); return; }
           setParts((prev) => prev.map((p) => (p.id === id ? { ...p, status: "rejected", admin_notes: note.trim() || null } : p)));
           setRejecting(null);
           setRejectNote("");
@@ -1224,7 +1225,7 @@ function EditPartDialog({
     };
     const { error } = await supabase.from("parts").update(patch).eq("id", part.id);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Ürün güncellendi");
     onSaved({ id: part.id, ...patch });
   };

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -157,7 +158,7 @@ export function PartRequestDialog({
       onOpenChange(false);
     } catch (err: any) {
       console.error("[part-request] submit error:", err);
-      toast.error(err.message ?? "Talep gönderilemedi");
+      toast.error(translateError(err, "Talep gönderilemedi"));
     } finally {
 
       setSubmitting(false);

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -178,7 +179,7 @@ function SellPage() {
       nav({ to: "/" });
     } catch (err: any) {
       console.error("[sell] submit error:", err);
-      toast.error(err.message ?? "Hata");
+      toast.error(translateError(err, "Hata"));
     } finally {
       setSubmitting(false);
     }

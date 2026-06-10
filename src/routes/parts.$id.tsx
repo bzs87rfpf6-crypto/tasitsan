@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Send, MapPin, Calendar, Tag, ShieldCheck, ImageOff, Phone, MessageCircle, Eye } from "lucide-react";
@@ -244,7 +245,7 @@ function PartDetail() {
       setOpen(false);
       setForm({ full_name: "", phone: "", email: "", message: "" });
     } catch (err: any) {
-      toast.error(err.message ?? "Talep gönderilemedi");
+      toast.error(translateError(err, "Talep gönderilemedi"));
     } finally {
       setSubmitting(false);
     }

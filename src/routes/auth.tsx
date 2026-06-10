@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -60,7 +61,7 @@ function AuthPage() {
       toast.success("Sıfırlama bağlantısı e-postana gönderildi.");
       setMode("login");
     } catch (err: any) {
-      toast.error(err.message ?? "Bir hata oluştu");
+      toast.error(translateError(err, "Bir hata oluştu"));
     } finally {
       setLoading(false);
     }
@@ -172,7 +173,7 @@ function AuthPage() {
         nav({ to: "/" });
       }
     } catch (err: any) {
-      const msg = err?.message ?? "Bir hata oluştu";
+      const msg = translateError(err);
       if (mode === "login" && /invalid/i.test(msg)) {
         toast.error("Telefon/e-posta veya şifre hatalı.");
       } else {

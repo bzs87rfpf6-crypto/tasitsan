@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList, Bell, Flame } from "lucide-react";
@@ -76,7 +77,7 @@ function AccountPage() {
     const { avatar_url: _ignored, ...patch } = profile;
     const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
     setSaving(false);
-    if (error) toast.error(error.message);
+    if (error) toast.error(translateError(error));
     else toast.success("Profil güncellendi");
   };
 
@@ -84,7 +85,7 @@ function AccountPage() {
     if (!user) return;
     const next = p.status === "inactive" ? "pending" : "inactive";
     const { error } = await supabase.from("parts").update({ status: next }).eq("id", p.id).eq("seller_id", user.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success(next === "inactive" ? "İlan pasife alındı" : "İlan tekrar onaya gönderildi");
     loadParts(user.id);
   };
@@ -93,7 +94,7 @@ function AccountPage() {
     if (!user) return;
     if (!confirm(`"${p.title}" ilanını silmek istediğine emin misin?`)) return;
     const { error } = await supabase.from("parts").delete().eq("id", p.id).eq("seller_id", user.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("İlan silindi");
     loadParts(user.id);
   };

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -70,7 +71,7 @@ function NewUrgent() {
     setSubmitting(false);
     if (error) {
       console.error("[urgent new] insert", error);
-      toast.error(error.message);
+      toast.error(translateError(error));
       return;
     }
     toast.success("🚨 Acil talebiniz tedarikçilere iletildi. Onaylı teklifler size ulaştırılacak.");

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -145,7 +146,7 @@ function RequestsPage() {
       supabase.from("request_quotes").select("id,request_id,price,delivery_time,condition,status").eq("seller_id", user.id),
       (supabase.rpc as unknown as (fn: string) => Promise<{ data: unknown; error: unknown }>)("request_center_stats"),
     ]);
-    if (reqRes.error) toast.error(reqRes.error.message);
+    if (reqRes.error) toast.error(translateError(reqRes.error));
     setRequests((reqRes.data ?? []) as OpenRequest[]);
     setMyQuotes((quoteRes.data ?? []) as MyQuote[]);
     if (!statsRes.error && statsRes.data) {
@@ -392,7 +393,7 @@ function QuoteDialog({
       note: form.note.trim() || null,
     });
     setSubmitting(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Teklifiniz iletildi. Admin onayı sonrası müşteriye sunulacak.");
     onSubmitted();
   };

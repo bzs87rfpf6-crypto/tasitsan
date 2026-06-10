@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useEffect, useState } from "react";
 import { BadgeCheck, Clock, X as XIcon, ShieldCheck, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -152,7 +153,7 @@ export function SellerVerification({ userId }: { userId: string }) {
       .from("seller_verifications")
       .upsert(payload, { onConflict: "user_id" });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Başvurun alındı, en kısa sürede incelenecek.");
     void load();
   };
@@ -203,7 +204,7 @@ export function SellerVerification({ userId }: { userId: string }) {
               .from("seller_verifications")
               .delete()
               .eq("user_id", userId);
-            if (error) { toast.error(error.message); return; }
+            if (error) { toast.error(translateError(error)); return; }
             void load();
           }}
           className="w-full"

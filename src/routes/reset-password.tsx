@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -41,7 +42,7 @@ function ResetPasswordPage() {
       await supabase.auth.signOut();
       nav({ to: "/auth" });
     } catch (err: any) {
-      toast.error(err.message ?? "Bir hata oluştu");
+      toast.error(translateError(err, "Bir hata oluştu"));
     } finally {
       setLoading(false);
     }

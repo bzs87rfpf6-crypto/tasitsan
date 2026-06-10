@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useRef, useState } from "react";
 import { Camera, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -56,7 +57,7 @@ export function AvatarUploader({ userId, displayName, avatarUrl, onChange }: Pro
       onChange(signed.signedUrl);
       toast.success("Profil fotoğrafı güncellendi");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Yükleme başarısız";
+      const msg = translateError(e, "Yükleme başarısız");
       toast.error(msg);
     } finally {
       setBusy(false);
@@ -77,7 +78,7 @@ export function AvatarUploader({ userId, displayName, avatarUrl, onChange }: Pro
       onChange(null);
       toast.success("Profil fotoğrafı kaldırıldı");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Kaldırılamadı");
+      toast.error(translateError(e, "Kaldırılamadı"));
     } finally {
       setBusy(false);
     }

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useEffect, useState } from "react";
 import { Bell, BellOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -71,7 +72,7 @@ export function PushSubscribeButton() {
       toast.success("Push bildirimleri açıldı.");
     } catch (e: any) {
       console.error("[push] enable failed", e);
-      toast.error(e?.message ?? "Abone olunamadı.");
+      toast.error(translateError(e, "Abone olunamadı."));
     } finally {
       setBusy(false);
     }
@@ -89,7 +90,7 @@ export function PushSubscribeButton() {
       setState("off");
       toast.success("Push bildirimleri kapatıldı.");
     } catch (e: any) {
-      toast.error(e?.message ?? "Kapatılamadı.");
+      toast.error(translateError(e, "Kapatılamadı."));
     } finally {
       setBusy(false);
     }

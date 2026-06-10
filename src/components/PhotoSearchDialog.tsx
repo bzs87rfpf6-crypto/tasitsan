@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -320,7 +321,7 @@ function ExpertRequestDialog({
     });
 
     setSubmitting(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Talebiniz alındı. Taşıtsan ekibi en kısa sürede dönüş yapacak.");
     setForm({ full_name: "", phone: "", email: "", message: "" });
     onOpenChange(false);

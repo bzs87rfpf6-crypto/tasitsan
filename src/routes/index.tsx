@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Search, Plus, SlidersHorizontal, X, PackageSearch, Sparkles, Phone, MessageCircle, BellPlus, Map as MapIcon, ScanSearch } from "lucide-react";
@@ -492,7 +493,7 @@ function CreateAlertButton({
       is_active: true,
     });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setDone(true);
     toast.success("Parça alarmı oluşturuldu. Eşleşen ilan eklendiğinde bildirim alacaksınız.");
   };
