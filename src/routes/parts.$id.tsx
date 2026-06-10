@@ -245,7 +245,7 @@ function PartDetail() {
       setOpen(false);
       setForm({ full_name: "", phone: "", email: "", message: "" });
     } catch (err: any) {
-      toast.error(err.message ?? "Talep gönderilemedi");
+      toast.error(translateError(err, "Talep gönderilemedi"));
     } finally {
       setSubmitting(false);
     }

@@ -51,7 +51,7 @@ export function UrgentRequestsPanel() {
     try {
       list = (await adminGetUrgentRequests()) as UrgentRow[];
     } catch (e: any) {
-      toast.error(e?.message ?? "Acil talepler yüklenemedi");
+      toast.error(translateError(e, "Acil talepler yüklenemedi"));
       setLoading(false);
       return;
     }
@@ -92,7 +92,7 @@ export function UrgentRequestsPanel() {
       .from("request_quotes")
       .update({ status, reviewed_at: new Date().toISOString() })
       .eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success(status === "approved" ? "Teklif onaylandı — müşteri görebilir." : "Teklif reddedildi.");
     load();
   };
@@ -103,7 +103,7 @@ export function UrgentRequestsPanel() {
       .from("part_requests")
       .update({ admin_notes: noteVal.trim() || null })
       .eq("id", adminNoteFor.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Not kaydedildi");
     setAdminNoteFor(null);
     load();
@@ -111,7 +111,7 @@ export function UrgentRequestsPanel() {
 
   const setStatus = async (id: string, status: "in_progress" | "resolved") => {
     const { error } = await supabase.from("part_requests").update({ status }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Durum güncellendi");
     load();
   };

@@ -222,7 +222,7 @@ function QuoteDialog({
     setSubmitting(false);
     if (error) {
       console.error("[urgent quote] insert", error);
-      toast.error(error.message);
+      toast.error(translateError(error));
       return;
     }
     toast.success("Teklifiniz Taşıtsan'a iletildi. Onaylandığında müşteriye gönderilir.");

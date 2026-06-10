@@ -71,7 +71,7 @@ function NewUrgent() {
     setSubmitting(false);
     if (error) {
       console.error("[urgent new] insert", error);
-      toast.error(error.message);
+      toast.error(translateError(error));
       return;
     }
     toast.success("🚨 Acil talebiniz tedarikçilere iletildi. Onaylı teklifler size ulaştırılacak.");

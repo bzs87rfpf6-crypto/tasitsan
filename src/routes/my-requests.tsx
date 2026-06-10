@@ -102,7 +102,7 @@ function MyRequestsPage() {
   const closeRequest = async (id: string) => {
     if (!confirm("Talebi kapatmak istediğinize emin misiniz?")) return;
     const { error } = await supabase.from("part_requests").update({ status: "resolved" }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Talep kapatıldı.");
     void load();
   };
@@ -110,7 +110,7 @@ function MyRequestsPage() {
   const deleteRequest = async (id: string) => {
     if (!confirm("Talebi silmek istediğinize emin misiniz?")) return;
     const { error } = await supabase.from("part_requests").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Talep silindi.");
     void load();
   };
@@ -257,7 +257,7 @@ function EditRequestDialog({
       description: form.description.trim() || null,
     }).eq("id", request.id);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Talep güncellendi.");
     onSaved();
   };

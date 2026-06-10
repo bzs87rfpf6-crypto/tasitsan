@@ -42,7 +42,7 @@ function AlertsPage() {
       .from("part_alerts")
       .select("id,keyword,brand,model,oem_code,category,is_active,last_matched_at,match_count,created_at")
       .order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
+    if (error) toast.error(translateError(error));
     setItems((data ?? []) as Alert[]);
     setBusy(false);
   }, [user]);
@@ -51,14 +51,14 @@ function AlertsPage() {
 
   const toggle = async (a: Alert) => {
     const { error } = await supabase.from("part_alerts").update({ is_active: !a.is_active }).eq("id", a.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setItems((xs) => xs.map((x) => x.id === a.id ? { ...x, is_active: !a.is_active } : x));
   };
 
   const remove = async (a: Alert) => {
     if (!confirm("Alarmı silmek istediğinize emin misiniz?")) return;
     const { error } = await supabase.from("part_alerts").delete().eq("id", a.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setItems((xs) => xs.filter((x) => x.id !== a.id));
     toast.success("Alarm silindi");
   };

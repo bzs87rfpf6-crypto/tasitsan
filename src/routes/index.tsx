@@ -493,7 +493,7 @@ function CreateAlertButton({
       is_active: true,
     });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     setDone(true);
     toast.success("Parça alarmı oluşturuldu. Eşleşen ilan eklendiğinde bildirim alacaksınız.");
   };

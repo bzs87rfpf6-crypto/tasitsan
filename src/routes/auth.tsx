@@ -61,7 +61,7 @@ function AuthPage() {
       toast.success("Sıfırlama bağlantısı e-postana gönderildi.");
       setMode("login");
     } catch (err: any) {
-      toast.error(err.message ?? "Bir hata oluştu");
+      toast.error(translateError(err, "Bir hata oluştu"));
     } finally {
       setLoading(false);
     }

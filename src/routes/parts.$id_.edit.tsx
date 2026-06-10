@@ -304,7 +304,7 @@ function EditPartPage() {
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("part-photos").remove(uploadedPaths).catch(() => {});
       }
-      toast.error(err.message ?? "Hata");
+      toast.error(translateError(err, "Hata"));
     } finally {
       setSubmitting(false);
     }

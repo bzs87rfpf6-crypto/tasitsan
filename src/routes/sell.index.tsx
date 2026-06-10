@@ -179,7 +179,7 @@ function SellPage() {
       nav({ to: "/" });
     } catch (err: any) {
       console.error("[sell] submit error:", err);
-      toast.error(err.message ?? "Hata");
+      toast.error(translateError(err, "Hata"));
     } finally {
       setSubmitting(false);
     }

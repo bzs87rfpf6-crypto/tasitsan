@@ -50,7 +50,7 @@ export function AdminVerificationsPanel({ currentUserId }: { currentUserId: stri
       .from("seller_verifications")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    if (error) { toast.error(translateError(error)); setLoading(false); return; }
     const list = (data ?? []) as Row[];
     const userIds = Array.from(new Set(list.map((r) => r.user_id)));
     const [profsRes, partsRes] = await Promise.all([
@@ -84,7 +84,7 @@ export function AdminVerificationsPanel({ currentUserId }: { currentUserId: stri
       .from("seller_verifications")
       .update({ ...patch, reviewed_by: currentUserId, reviewed_at: new Date().toISOString() })
       .eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(translateError(error)); return; }
     toast.success("Güncellendi");
     void load();
   };
