@@ -250,7 +250,7 @@ function AdminPage() {
     setAdminIds(new Set(((rl.data ?? []) as { user_id: string }[]).map((r) => r.user_id)));
     if (st.data) setSettings(st.data as SiteSettings);
     if (iq.error) toast.error(translateError(iq.error));
-    if (rq.error) toast.error((rq.error as any).message ?? "Talepler yüklenemedi");
+    if (rq.error) toast.error(translateError(rq.error, "Talepler yüklenemedi"));
     if (pt.error) toast.error(translateError(pt.error));
     if (qt.error) toast.error(translateError(qt.error));
 
@@ -354,7 +354,7 @@ function AdminPage() {
       }
       if (error) {
         failed += chunk.length;
-        toast.error(`Toplu işlem hatası: ${error.message}`);
+        toast.error(`Toplu işlem hatası: ${translateError(error)}`);
       } else {
         chunk.forEach((id) => idSet.add(id));
       }

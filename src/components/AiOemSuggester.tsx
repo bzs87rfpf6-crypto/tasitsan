@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useState } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,7 +23,7 @@ export function AiOemSuggester({ oem, brand, model, title }: Props) {
       const data = await call({ data: { oem, brand, model, title } });
       setResult(data);
     } catch (e: any) {
-      toast.error(e?.message ?? "AI önerisi alınamadı");
+      toast.error(translateError(e, "AI önerisi alınamadı"));
     } finally {
       setLoading(false);
     }

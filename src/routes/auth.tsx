@@ -173,7 +173,7 @@ function AuthPage() {
         nav({ to: "/" });
       }
     } catch (err: any) {
-      const msg = err?.message ?? "Bir hata oluştu";
+      const msg = translateError(err);
       if (mode === "login" && /invalid/i.test(msg)) {
         toast.error("Telefon/e-posta veya şifre hatalı.");
       } else {

@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -46,7 +47,7 @@ export function FavoriteButton({ partId, size = "md", variant = "overlay", class
       toast.success(next ? "Favorilere eklendi" : "Favorilerden çıkarıldı");
     } catch (err: any) {
       setFav(!next);
-      toast.error(err?.message ?? "İşlem başarısız");
+      toast.error(translateError(err, "İşlem başarısız"));
     } finally {
       setBusy(false);
     }

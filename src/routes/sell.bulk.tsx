@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
@@ -507,7 +508,7 @@ function BulkUploadPage() {
         }
       } catch (e: any) {
         fail++;
-        errorDetails.push(`Satır ${r.__index}: ${e?.message ?? "bilinmeyen hata"}`);
+        errorDetails.push(`Satır ${r.__index}: ${translateError(e, "bilinmeyen hata")}`);
       }
     }
 
