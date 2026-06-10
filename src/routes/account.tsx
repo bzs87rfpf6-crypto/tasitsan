@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList, Bell, Flame } from "lucide-react";

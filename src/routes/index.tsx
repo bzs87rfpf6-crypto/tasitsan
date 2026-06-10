@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Search, Plus, SlidersHorizontal, X, PackageSearch, Sparkles, Phone, MessageCircle, BellPlus, Map as MapIcon, ScanSearch } from "lucide-react";

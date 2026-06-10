@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useEffect, useState } from "react";
 import { BadgeCheck, Clock, X as XIcon, ShieldCheck, Send } from "lucide-react";
 import { toast } from "sonner";

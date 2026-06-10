@@ -1,3 +1,4 @@
+import { translateError } from "@/lib/error-messages";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Bell, Check, CheckCheck, AlertTriangle, UserPlus, Package, MessageSquareQuote, Send } from "lucide-react";
