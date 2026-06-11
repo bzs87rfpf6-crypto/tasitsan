@@ -221,6 +221,8 @@ function AdminPage() {
   const callSetRole = useServerFn(adminSetRole);
   const callSetActive = useServerFn(adminSetActive);
   const callUpdateProfile = useServerFn(adminUpdateProfile);
+  const callResetPw = useServerFn(adminResetUserPassword);
+  const callConfirmAll = useServerFn(adminConfirmAllPendingEmails);
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
