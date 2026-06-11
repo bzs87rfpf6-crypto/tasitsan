@@ -1229,6 +1229,30 @@ function AdminPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={resetPwOpen} onOpenChange={(v) => { if (!v && !resetPwBusy) { setResetPwOpen(false); setResetPwValue(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Yeni Şifre Belirle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              {editingUser?.display_name ?? "Kullanıcı"} için yeni bir şifre belirleyin.
+              Eski şifre görüntülenemez ve geri yüklenemez.
+            </p>
+            <Input type="password" autoComplete="new-password" placeholder="Yeni şifre (en az 6 karakter)"
+              value={resetPwValue} onChange={(e) => setResetPwValue(e.target.value)} className="h-10" />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" disabled={resetPwBusy}
+                onClick={() => { setResetPwOpen(false); setResetPwValue(""); }}>İptal</Button>
+              <Button size="sm" onClick={handleResetPassword} disabled={resetPwBusy || resetPwValue.length < 6}
+                className="bg-gold-gradient text-gold-foreground font-semibold">
+                {resetPwBusy ? "..." : "Şifreyi Sıfırla"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
