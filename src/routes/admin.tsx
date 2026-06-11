@@ -17,7 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile, adminResetUserPassword, adminConfirmAllPendingEmails } from "@/lib/admin.functions";
 import { adminGetPartRequests, adminGetUsersFull, adminGetSellerContacts, adminGetPartsWithWhatsapp, adminGetSiteSettings, adminSaveSiteSettings } from "@/lib/admin-data.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
