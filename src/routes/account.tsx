@@ -197,6 +197,23 @@ function AccountPage() {
         </section>
 
         <section className="bg-card border border-border rounded-xl p-4 space-y-3">
+          <h2 className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center gap-1.5">
+            <KeyRound className="size-4" /> Şifre Değiştir
+          </h2>
+          <Input type="password" autoComplete="current-password" placeholder="Mevcut şifre"
+            value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} className="h-11 bg-background" />
+          <Input type="password" autoComplete="new-password" placeholder="Yeni şifre (en az 6 karakter)"
+            value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} className="h-11 bg-background" />
+          <Input type="password" autoComplete="new-password" placeholder="Yeni şifre (tekrar)"
+            value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} className="h-11 bg-background" />
+          <Button onClick={changePassword} disabled={changingPw || !pw.current || !pw.next}
+            className="w-full bg-gold-gradient text-gold-foreground font-semibold">
+            {changingPw ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+          </Button>
+        </section>
+
+
+        <section className="bg-card border border-border rounded-xl p-4 space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-sky-400 font-semibold">Doğrulanmış Satıcı Başvurusu</h2>
           <SellerVerification userId={user.id} />
         </section>
