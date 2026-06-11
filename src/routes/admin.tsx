@@ -1207,8 +1207,16 @@ function AdminPage() {
                     ? <><UserX className="size-3 mr-1" /> Pasife Al</>
                     : <><UserCheck className="size-3 mr-1" /> Tekrar Aktif Et</>}
                 </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => { setResetPwOpen(true); setResetPwValue(""); }}
+                  className="w-full h-8 text-[11px]">
+                  <KeyRound className="size-3 mr-1" /> Yeni Şifre Belirle
+                </Button>
+                <p className="text-[10px] text-muted-foreground">
+                  Güvenlik nedeniyle mevcut şifre görüntülenemez. Sadece yeni şifre atayabilirsiniz.
+                </p>
               </div>
             )}
+
             <div className="flex gap-2 justify-end pt-1">
               <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingEdit}>
                 İptal
