@@ -1,8 +1,9 @@
 import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList, Bell, Flame } from "lucide-react";
+import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList, Bell, Flame, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
@@ -13,6 +14,7 @@ import { SellerVerification } from "@/components/SellerVerification";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { userChangePassword } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Hesabım — Taşıtsan" }] }),
