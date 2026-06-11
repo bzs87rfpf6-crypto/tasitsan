@@ -1,0 +1,147 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-muted: var(--gold-muted);
+  --font-display: "Bebas Neue", "Impact", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+
+  /* Taşıtsan — Light Corporate. Off-white surfaces, white cards, dark gray text, gold accent. */
+  --background: #f4f5f7;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
+  --primary: #d4a017;
+  --primary-foreground: #14110e;
+  --gold: #d4a017;
+  --gold-foreground: #14110e;
+  --gold-muted: #b8861a;
+  --secondary: #eceef2;
+  --secondary-foreground: #1f2937;
+  --muted: #eceef2;
+  --muted-foreground: #5b6472;
+  --accent: #d4a017;
+  --accent-foreground: #14110e;
+  --destructive: #c83a1f;
+  --destructive-foreground: #ffffff;
+  --border: #e2e5ea;
+  --input: #ffffff;
+  --ring: #d4a017;
+  --whatsapp: #25d366;
+  --gradient-gold: linear-gradient(135deg, #e6b53a, #b8861a);
+  --shadow-gold: 0 8px 30px -10px rgba(212, 160, 23, 0.45);
+  --shadow-card: 0 4px 14px -6px rgba(15, 23, 42, 0.10), 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.dark { /* light corporate theme only — dark class is a no-op */ }
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body {
+    background-color: #f4f5f7;
+    background-color: var(--color-background);
+    color: #1f2937;
+    color: var(--color-foreground);
+  }
+  body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0.02em; }
+}
+
+@layer utilities {
+  .bg-gold-gradient { background-image: var(--gradient-gold); }
+  .shadow-gold { box-shadow: var(--shadow-gold); }
+  .shadow-card { box-shadow: var(--shadow-card, 0 4px 14px -6px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.4)); }
+  .text-gold { color: var(--color-gold); }
+  .border-gold { border-color: var(--color-gold); }
+  .bg-whatsapp { background-color: var(--whatsapp); }
+  .safe-bottom { padding-bottom: 0.75rem; }
+  @supports (padding-bottom: max(0px, env(safe-area-inset-bottom))) {
+    .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.75rem); }
+  }
+
+  /* Unified gold hover + tap feedback for all interactive elements */
+  .tap-gold {
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .tap-gold:hover {
+    box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.35), 0 8px 24px -8px rgba(212, 160, 23, 0.45);
+  }
+  .tap-gold:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.55);
+  }
+
+  @keyframes search-glow {
+    0%, 100% { box-shadow: 0 8px 30px -10px rgba(212, 160, 23, 0.45), 0 0 0 0 rgba(212, 160, 23, 0.4); }
+    50%      { box-shadow: 0 8px 30px -10px rgba(212, 160, 23, 0.65), 0 0 0 8px rgba(212, 160, 23, 0); }
+  }
+  .animate-search-glow { animation: search-glow 2.4s ease-in-out infinite; }
+
+  @keyframes gold-pulse-border {
+    0%, 100% { border-color: rgba(212, 160, 23, 0.45); box-shadow: 0 0 0 0 rgba(212, 160, 23, 0.35); }
+    50%      { border-color: rgba(212, 160, 23, 0.95); box-shadow: 0 0 0 6px rgba(212, 160, 23, 0); }
+  }
+  .animate-gold-pulse-border { animation: gold-pulse-border 2.6s ease-in-out infinite; }
+}
+
+
+/* ====== Mobile / PWA polish ====== */
+@layer base {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+  body {
+    background-color: #f4f5f7;
+    background-color: var(--color-background);
+  }
+  /* Respect iOS/Android cutouts only in engines that parse env() reliably. */
+  .safe-top { padding-top: 0; }
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .safe-top { padding-top: env(safe-area-inset-top); }
+  }
+}
+
+@layer utilities {
+  /* App-like page enter */
+  @keyframes app-page-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-app-page-in { animation: app-page-in 220ms ease-out both; }
+}
