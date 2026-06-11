@@ -666,15 +666,33 @@ function AdminPage() {
         )}
 
         {tab === "users" && (
-          <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="max-w-2xl mx-auto px-4 py-3 space-y-2">
             <div className="relative">
               <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="Kullanıcı ara: isim, telefon, şehir..." className="pl-9 h-9 text-sm" />
+                placeholder="Kullanıcı ara: isim, firma, telefon, e-posta..." className="pl-9 h-9 text-sm" />
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto">
+              {([
+                ["all", "Tümü"],
+                ["active", "Aktif"],
+                ["inactive", "Pasif"],
+                ["pending", "Onay Bekleyen"],
+              ] as const).map(([k, label]) => (
+                <button key={k} onClick={() => setUserStatusFilter(k)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                    userStatusFilter === k ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                  }`}>{label}</button>
+              ))}
+              <Button size="sm" variant="outline" onClick={handleConfirmAllEmails} disabled={confirmBusy}
+                className="ml-auto shrink-0 h-7 text-[11px]">
+                {confirmBusy ? "..." : "Bekleyen E-postaları Onayla"}
+              </Button>
             </div>
           </div>
         )}
       </header>
+
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
         {loading ? (
