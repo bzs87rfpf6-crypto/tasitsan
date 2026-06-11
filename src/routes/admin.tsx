@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil, Trash2, Users as UsersIcon, LayoutDashboard, ClipboardList, AlertTriangle, MessageSquare, Settings as SettingsIcon, Crown, UserX, UserCheck, Save } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil, Trash2, Users as UsersIcon, LayoutDashboard, ClipboardList, AlertTriangle, MessageSquare, Settings as SettingsIcon, Crown, UserX, UserCheck, Save, KeyRound } from "lucide-react";
 import tasitsanLogo from "@/assets/tasitsan-official.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,7 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile, adminResetUserPassword, adminConfirmAllPendingEmails } from "@/lib/admin.functions";
 import { adminGetPartRequests, adminGetUsersFull, adminGetSellerContacts, adminGetPartsWithWhatsapp, adminGetSiteSettings, adminSaveSiteSettings } from "@/lib/admin-data.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
@@ -179,6 +179,11 @@ function AdminPage() {
   const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [reqSearch, setReqSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
+  const [userStatusFilter, setUserStatusFilter] = useState<"all" | "active" | "inactive" | "pending">("all");
+  const [resetPwOpen, setResetPwOpen] = useState(false);
+  const [resetPwValue, setResetPwValue] = useState("");
+  const [resetPwBusy, setResetPwBusy] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PartItem | null>(null);
   const [rejecting, setRejecting] = useState<PartItem | null>(null);
@@ -216,6 +221,8 @@ function AdminPage() {
   const callSetRole = useServerFn(adminSetRole);
   const callSetActive = useServerFn(adminSetActive);
   const callUpdateProfile = useServerFn(adminUpdateProfile);
+  const callResetPw = useServerFn(adminResetUserPassword);
+  const callConfirmAll = useServerFn(adminConfirmAllPendingEmails);
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
@@ -500,11 +507,43 @@ function AdminPage() {
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) =>
-      [u.display_name, u.whatsapp, u.city, u.id].filter(Boolean).join(" ").toLowerCase().includes(q),
-    );
-  }, [users, userSearch]);
+    return users.filter((u) => {
+      if (userStatusFilter === "active" && !u.is_active) return false;
+      if (userStatusFilter === "inactive" && u.is_active) return false;
+      if (userStatusFilter === "pending" && u.is_approved) return false;
+      if (!q) return true;
+      return [u.display_name, u.whatsapp, u.city, u.email, u.id]
+        .filter(Boolean).join(" ").toLowerCase().includes(q);
+    });
+  }, [users, userSearch, userStatusFilter]);
+
+  const handleResetPassword = async () => {
+    if (!editingUser) return;
+    if (resetPwValue.length < 6) { toast.error("Şifre en az 6 karakter olmalı."); return; }
+    setResetPwBusy(true);
+    try {
+      await callResetPw({ data: { userId: editingUser.id, newPassword: resetPwValue } });
+      toast.success("Kullanıcı şifresi sıfırlandı.");
+      setResetPwOpen(false);
+      setResetPwValue("");
+    } catch (e: any) {
+      toast.error(translateError(e, "Şifre sıfırlanamadı"));
+    } finally {
+      setResetPwBusy(false);
+    }
+  };
+
+  const handleConfirmAllEmails = async () => {
+    setConfirmBusy(true);
+    try {
+      const r = await callConfirmAll();
+      toast.success(`${r.confirmed ?? 0} kullanıcının e-postası onaylandı.`);
+    } catch (e: any) {
+      toast.error(translateError(e, "İşlem başarısız"));
+    } finally {
+      setConfirmBusy(false);
+    }
+  };
 
   if (authLoading || isAdmin === null) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -627,15 +666,33 @@ function AdminPage() {
         )}
 
         {tab === "users" && (
-          <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="max-w-2xl mx-auto px-4 py-3 space-y-2">
             <div className="relative">
               <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="Kullanıcı ara: isim, telefon, şehir..." className="pl-9 h-9 text-sm" />
+                placeholder="Kullanıcı ara: isim, firma, telefon, e-posta..." className="pl-9 h-9 text-sm" />
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto">
+              {([
+                ["all", "Tümü"],
+                ["active", "Aktif"],
+                ["inactive", "Pasif"],
+                ["pending", "Onay Bekleyen"],
+              ] as const).map(([k, label]) => (
+                <button key={k} onClick={() => setUserStatusFilter(k)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                    userStatusFilter === k ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                  }`}>{label}</button>
+              ))}
+              <Button size="sm" variant="outline" onClick={handleConfirmAllEmails} disabled={confirmBusy}
+                className="ml-auto shrink-0 h-7 text-[11px]">
+                {confirmBusy ? "..." : "Bekleyen E-postaları Onayla"}
+              </Button>
             </div>
           </div>
         )}
       </header>
+
 
       <main className="max-w-2xl mx-auto px-4 pt-4 space-y-3">
         {loading ? (
@@ -1150,8 +1207,16 @@ function AdminPage() {
                     ? <><UserX className="size-3 mr-1" /> Pasife Al</>
                     : <><UserCheck className="size-3 mr-1" /> Tekrar Aktif Et</>}
                 </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => { setResetPwOpen(true); setResetPwValue(""); }}
+                  className="w-full h-8 text-[11px]">
+                  <KeyRound className="size-3 mr-1" /> Yeni Şifre Belirle
+                </Button>
+                <p className="text-[10px] text-muted-foreground">
+                  Güvenlik nedeniyle mevcut şifre görüntülenemez. Sadece yeni şifre atayabilirsiniz.
+                </p>
               </div>
             )}
+
             <div className="flex gap-2 justify-end pt-1">
               <Button variant="outline" size="sm" onClick={() => setEditingUser(null)} disabled={savingEdit}>
                 İptal
@@ -1159,6 +1224,30 @@ function AdminPage() {
               <Button size="sm" onClick={saveUserEdit} disabled={savingEdit}
                 className="bg-gold-gradient text-gold-foreground font-semibold">
                 <Save className="size-3.5 mr-1" /> {savingEdit ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resetPwOpen} onOpenChange={(v) => { if (!v && !resetPwBusy) { setResetPwOpen(false); setResetPwValue(""); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Yeni Şifre Belirle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              {editingUser?.display_name ?? "Kullanıcı"} için yeni bir şifre belirleyin.
+              Eski şifre görüntülenemez ve geri yüklenemez.
+            </p>
+            <Input type="password" autoComplete="new-password" placeholder="Yeni şifre (en az 6 karakter)"
+              value={resetPwValue} onChange={(e) => setResetPwValue(e.target.value)} className="h-10" />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" disabled={resetPwBusy}
+                onClick={() => { setResetPwOpen(false); setResetPwValue(""); }}>İptal</Button>
+              <Button size="sm" onClick={handleResetPassword} disabled={resetPwBusy || resetPwValue.length < 6}
+                className="bg-gold-gradient text-gold-foreground font-semibold">
+                {resetPwBusy ? "..." : "Şifreyi Sıfırla"}
               </Button>
             </div>
           </div>

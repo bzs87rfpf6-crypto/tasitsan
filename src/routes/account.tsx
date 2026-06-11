@@ -1,8 +1,9 @@
 import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList, Bell, Flame } from "lucide-react";
+import { LogOut, Package, Pencil, Power, Trash2, Heart, ClipboardList, Bell, Flame, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
@@ -13,6 +14,7 @@ import { SellerVerification } from "@/components/SellerVerification";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { userChangePassword } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Hesabım — Taşıtsan" }] }),
@@ -43,6 +45,24 @@ function AccountPage() {
   const [profile, setProfile] = useState({ display_name: "", whatsapp: "", city: "", avatar_url: null as string | null });
   const [myParts, setMyParts] = useState<MyPart[]>([]);
   const [saving, setSaving] = useState(false);
+  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
+  const [changingPw, setChangingPw] = useState(false);
+  const callChangePassword = useServerFn(userChangePassword);
+
+  const changePassword = async () => {
+    if (pw.next.length < 6) { toast.error("Yeni şifre en az 6 karakter olmalı."); return; }
+    if (pw.next !== pw.confirm) { toast.error("Yeni şifreler eşleşmiyor."); return; }
+    setChangingPw(true);
+    try {
+      await callChangePassword({ data: { currentPassword: pw.current, newPassword: pw.next } });
+      toast.success("Şifreniz güncellendi.");
+      setPw({ current: "", next: "", confirm: "" });
+    } catch (e: any) {
+      toast.error(translateError(e, "Şifre güncellenemedi"));
+    } finally {
+      setChangingPw(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
@@ -175,6 +195,23 @@ function AccountPage() {
             {saving ? "..." : "Kaydet"}
           </Button>
         </section>
+
+        <section className="bg-card border border-border rounded-xl p-4 space-y-3">
+          <h2 className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center gap-1.5">
+            <KeyRound className="size-4" /> Şifre Değiştir
+          </h2>
+          <Input type="password" autoComplete="current-password" placeholder="Mevcut şifre"
+            value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} className="h-11 bg-background" />
+          <Input type="password" autoComplete="new-password" placeholder="Yeni şifre (en az 6 karakter)"
+            value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} className="h-11 bg-background" />
+          <Input type="password" autoComplete="new-password" placeholder="Yeni şifre (tekrar)"
+            value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} className="h-11 bg-background" />
+          <Button onClick={changePassword} disabled={changingPw || !pw.current || !pw.next}
+            className="w-full bg-gold-gradient text-gold-foreground font-semibold">
+            {changingPw ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+          </Button>
+        </section>
+
 
         <section className="bg-card border border-border rounded-xl p-4 space-y-3">
           <h2 className="text-xs uppercase tracking-wider text-sky-400 font-semibold">Doğrulanmış Satıcı Başvurusu</h2>

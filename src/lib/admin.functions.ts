@@ -110,3 +110,83 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
 
     return { ok: true, profile: patch };
   });
+
+export const adminResetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      userId: z.string().uuid(),
+      newPassword: z.string().min(6, "Şifre en az 6 karakter olmalı").max(72),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.newPassword,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("admin_audit_log").insert({
+      actor_id: context.userId,
+      target_user_id: data.userId,
+      action: "reset_password",
+      old_value: null,
+      new_value: { reset: true },
+    });
+    return { ok: true };
+  });
+
+export const adminConfirmAllPendingEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    let page = 1;
+    let confirmed = 0;
+    // paginate auth users
+    while (true) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) throw new Error(error.message);
+      const users = data?.users ?? [];
+      if (!users.length) break;
+      for (const u of users) {
+        if (!u.email_confirmed_at) {
+          const { error: uErr } = await supabaseAdmin.auth.admin.updateUserById(u.id, { email_confirm: true });
+          if (!uErr) confirmed++;
+        }
+      }
+      if (users.length < 200) break;
+      page++;
+      if (page > 50) break; // safety
+    }
+    return { ok: true, confirmed };
+  });
+
+export const userChangePassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      currentPassword: z.string().min(1),
+      newPassword: z.string().min(6, "Yeni şifre en az 6 karakter olmalı").max(72),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    // Look up auth email for current user
+    const { data: userRes, error: gErr } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    if (gErr || !userRes?.user?.email) throw new Error("Kullanıcı bulunamadı");
+    const email = userRes.user.email;
+
+    // Verify current password using a fresh client (does not affect caller's session)
+    const { createClient } = await import("@supabase/supabase-js");
+    const url = process.env.SUPABASE_URL!;
+    const anon = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const tmp = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { error: sErr } = await tmp.auth.signInWithPassword({ email, password: data.currentPassword });
+    if (sErr) throw new Error("Mevcut şifre hatalı");
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(context.userId, {
+      password: data.newPassword,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
