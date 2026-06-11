@@ -507,11 +507,43 @@ function AdminPage() {
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) =>
-      [u.display_name, u.whatsapp, u.city, u.id].filter(Boolean).join(" ").toLowerCase().includes(q),
-    );
-  }, [users, userSearch]);
+    return users.filter((u) => {
+      if (userStatusFilter === "active" && !u.is_active) return false;
+      if (userStatusFilter === "inactive" && u.is_active) return false;
+      if (userStatusFilter === "pending" && u.is_approved) return false;
+      if (!q) return true;
+      return [u.display_name, u.whatsapp, u.city, u.email, u.id]
+        .filter(Boolean).join(" ").toLowerCase().includes(q);
+    });
+  }, [users, userSearch, userStatusFilter]);
+
+  const handleResetPassword = async () => {
+    if (!editingUser) return;
+    if (resetPwValue.length < 6) { toast.error("Şifre en az 6 karakter olmalı."); return; }
+    setResetPwBusy(true);
+    try {
+      await callResetPw({ data: { userId: editingUser.id, newPassword: resetPwValue } });
+      toast.success("Kullanıcı şifresi sıfırlandı.");
+      setResetPwOpen(false);
+      setResetPwValue("");
+    } catch (e: any) {
+      toast.error(translateError(e, "Şifre sıfırlanamadı"));
+    } finally {
+      setResetPwBusy(false);
+    }
+  };
+
+  const handleConfirmAllEmails = async () => {
+    setConfirmBusy(true);
+    try {
+      const r = await callConfirmAll();
+      toast.success(`${r.confirmed ?? 0} kullanıcının e-postası onaylandı.`);
+    } catch (e: any) {
+      toast.error(translateError(e, "İşlem başarısız"));
+    } finally {
+      setConfirmBusy(false);
+    }
+  };
 
   if (authLoading || isAdmin === null) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
