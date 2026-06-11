@@ -179,6 +179,11 @@ function AdminPage() {
   const [reqSubTab, setReqSubTab] = useState<"open" | "awaiting" | "received" | "done">("open");
   const [reqSearch, setReqSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
+  const [userStatusFilter, setUserStatusFilter] = useState<"all" | "active" | "inactive" | "pending">("all");
+  const [resetPwOpen, setResetPwOpen] = useState(false);
+  const [resetPwValue, setResetPwValue] = useState("");
+  const [resetPwBusy, setResetPwBusy] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PartItem | null>(null);
   const [rejecting, setRejecting] = useState<PartItem | null>(null);
