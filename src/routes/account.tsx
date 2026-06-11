@@ -45,6 +45,24 @@ function AccountPage() {
   const [profile, setProfile] = useState({ display_name: "", whatsapp: "", city: "", avatar_url: null as string | null });
   const [myParts, setMyParts] = useState<MyPart[]>([]);
   const [saving, setSaving] = useState(false);
+  const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
+  const [changingPw, setChangingPw] = useState(false);
+  const callChangePassword = useServerFn(userChangePassword);
+
+  const changePassword = async () => {
+    if (pw.next.length < 6) { toast.error("Yeni şifre en az 6 karakter olmalı."); return; }
+    if (pw.next !== pw.confirm) { toast.error("Yeni şifreler eşleşmiyor."); return; }
+    setChangingPw(true);
+    try {
+      await callChangePassword({ data: { currentPassword: pw.current, newPassword: pw.next } });
+      toast.success("Şifreniz güncellendi.");
+      setPw({ current: "", next: "", confirm: "" });
+    } catch (e: any) {
+      toast.error(translateError(e, "Şifre güncellenemedi"));
+    } finally {
+      setChangingPw(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) nav({ to: "/auth" });
