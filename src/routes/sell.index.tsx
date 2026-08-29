@@ -12,12 +12,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
+import { DeliveryOptionsPicker } from "@/components/DeliveryOptionsPicker";
+import type { DeliveryOption } from "@/lib/delivery-options";
 import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 import { recordBulkClick } from "@/lib/bulkNavTrace";
 import { createBrowserId } from "@/lib/browser-compat";
 import { useServerFn } from "@tanstack/react-start";
 import { executeRecaptcha } from "@/lib/recaptcha";
 import { verifyRecaptcha } from "@/lib/recaptcha.functions";
+import { VehicleClassPicker } from "@/components/VehicleClassPicker";
+import type { VehicleClass } from "@/lib/vehicle-class";
+import {
+  CONSTRUCTION_BRANDS,
+  CONSTRUCTION_CATEGORIES,
+  CONSTRUCTION_PARENT_OF,
+} from "@/lib/construction";
 
 // Browser-safe image MIME types. iOS HEIC/Apple ProRAW (.dng) cannot be rendered
 // by <img>, and DNG files balloon memory enough to crash the tab into a reload.
@@ -25,9 +34,35 @@ const ACCEPTED_MIME = /^image\/(jpeg|jpg|png|webp|gif)$/i;
 const REJECTED_EXT = /\.(heic|heif|dng|raw|cr2|nef|arw|tif|tiff)$/i;
 
 export const Route = createFileRoute("/sell/")({
-  head: () => ({ meta: [{ title: "İlan Ver — Taşıtsan" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    oem: typeof search.oem === "string" ? search.oem.slice(0, 60) : undefined,
+    title: typeof search.title === "string" ? search.title.slice(0, 120) : undefined,
+    brand: typeof search.brand === "string" ? search.brand.slice(0, 60) : undefined,
+    model: typeof search.model === "string" ? search.model.slice(0, 60) : undefined,
+    category: typeof search.category === "string" ? search.category.slice(0, 60) : undefined,
+  }),
+  head: () => {
+    const url = "https://www.tasitsan.com.tr/sell";
+    const title = "İlan Ver — Ücretsiz Yedek Parça İlanı | Taşıtsan";
+    const description = "Otomotiv yedek parçanı Taşıtsan Parça Borsası'nda ücretsiz ilana çıkar. Marka, model, OEM kodu ve fotoğraflarla binlerce alıcıya ulaş.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: SellPage,
 });
+
 
 const CATEGORIES = [
   "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
@@ -44,8 +79,26 @@ function SellPage() {
     title: "", description: "", brand: "", model: "", year: "", engine_code: "",
     category: "Motor", condition: "used", price: "", stock_quantity: "1", city: "", whatsapp: "",
   });
+  const [vehicleClass, setVehicleClass] = useState<VehicleClass>("automobile");
   const [partType, setPartType] = useState<PartType | "">("");
   const [oemCodes, setOemCodes] = useState<string[]>([]);
+  const prefill = Route.useSearch();
+
+  // Talep Borsası'ndan gelen "Bu Ürünü Ekle" — OEM ve ürün bilgisi otomatik dolar.
+  useEffect(() => {
+    if (prefill.oem) setOemCodes((prev) => (prev.length ? prev : [prefill.oem!.toUpperCase()]));
+    setForm((f) => ({
+      ...f,
+      title: f.title || prefill.title || "",
+      brand: f.brand || prefill.brand || "",
+      model: f.model || prefill.model || "",
+      category: prefill.category || f.category,
+    }));
+    // yalnızca ilk yüklemede
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
+  const [urgentDelivery, setUrgentDelivery] = useState(false);
   
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -150,7 +203,7 @@ function SellPage() {
         photoUrls.push(pub.publicUrl);
       }
 
-      const { error } = await supabase.from("parts").insert({
+      const basePayload: Record<string, unknown> = {
         seller_id: user.id,
         title: form.title,
         description: form.description || null,
@@ -168,14 +221,52 @@ function SellPage() {
         photos: photoUrls,
         whatsapp: form.whatsapp,
         status: "pending",
-      });
-      if (error) { console.error("[sell] parts insert failed:", error); throw error; }
+        vehicle_class: vehicleClass,
+        machine_subcategory:
+          (vehicleClass === "construction" || vehicleClass === "agriculture")
+            ? form.category
+            : null,
+      };
+      const extendedPayload = {
+        ...basePayload,
+        delivery_options: deliveryOptions,
+        urgent_delivery: urgentDelivery,
+      };
+      let { error } = await supabase.from("parts").insert(extendedPayload as any);
+      // Fallback: if PostgREST schema cache hasn't picked up the new columns yet,
+      // retry without them so listing creation is never blocked.
+      if (error && /delivery_options|urgent_delivery|schema cache|column .* does not exist/i.test(error.message || "")) {
+        console.warn("[sell] retry insert without delivery fields:", error.message);
+        const retry = await supabase.from("parts").insert(basePayload as any);
+        error = retry.error;
+      }
+      if (error) {
+        console.error("[sell] parts insert failed:", error);
+        toast.error(`İlan kaydedilemedi: ${error.message}`);
+        throw error;
+      }
 
       if (form.whatsapp !== profileWa) {
         await supabase.from("profiles").update({ whatsapp: form.whatsapp, city: form.city || null }).eq("id", user.id);
       }
 
       toast.success("İlanınız admin onayına gönderildi.");
+
+      // Aynı OEM için bekleyen talep var mı? Satıcıyı bilgilendir.
+      try {
+        const codes = (oemCodes ?? []).filter(Boolean).slice(0, 5);
+        let pending = 0;
+        for (const code of codes) {
+          const { data } = await supabase.rpc("count_pending_requests_for_oem" as never, { _oem: code } as never);
+          pending += Number(data ?? 0);
+        }
+        if (pending > 0) {
+          toast.info(`Bu ürün için bekleyen ${pending} adet talep bulunmaktadır.`, { duration: 9000 });
+        }
+      } catch (e) {
+        console.warn("[sell] pending request check failed:", e);
+      }
+
       nav({ to: "/" });
     } catch (err: any) {
       console.error("[sell] submit error:", err);
@@ -197,10 +288,11 @@ function SellPage() {
         <AppHeader subtitle="Yeni İlan" />
         <div className="max-w-md mx-auto px-4 pt-10 text-center space-y-4">
           <div className="rounded-2xl border border-gold/30 bg-gold/5 px-5 py-6 space-y-3">
-            <h2 className="font-display text-xl text-gold">Hesabın onay bekliyor</h2>
+            <h2 className="font-display text-xl text-gold">Satıcı yetkin onay bekliyor</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Hesabın Taşıtsan ekibi tarafından inceleniyor. Onay verildikten sonra ilan
-              yükleyebilirsin. Onay genellikle kısa sürede tamamlanır.
+              Üyeliğin aktif — parça arayabilir, talep oluşturabilir ve satıcılarla iletişime
+              geçebilirsin. İlan verebilmek için satıcı yetkisinin Taşıtsan ekibi tarafından
+              onaylanması gerekir; bu genellikle kısa sürede tamamlanır.
             </p>
             <p className="text-[11px] text-muted-foreground">
               Acil bir durum varsa WhatsApp üzerinden bizimle iletişime geçebilirsin.
@@ -237,6 +329,16 @@ function SellPage() {
           <span className="text-gold font-semibold">Onay süreci:</span> Eklediğiniz ilanlar Taşıtsan ekibi tarafından incelendikten sonra yayınlanır.
         </div>
 
+        <VehicleClassPicker
+          value={vehicleClass}
+          onChange={(v) => {
+            setVehicleClass(v);
+            if (v === "construction" || v === "agriculture") {
+              setForm((f) => ({ ...f, category: "Motor", brand: "" }));
+            }
+          }}
+        />
+
         <section className="space-y-2">
           <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
             <span>Fotoğraflar (en az 3, en fazla 6)</span>
@@ -266,7 +368,21 @@ function SellPage() {
           onChange={(e) => setForm({ ...form, title: e.target.value })} required maxLength={120} className="h-12 bg-card" />
 
         <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Marka *" value={form.brand} required onChange={(e) => setForm({ ...form, brand: e.target.value })} className="h-12 bg-card" />
+          {vehicleClass === "construction" ? (
+            <select
+              value={form.brand}
+              required
+              onChange={(e) => setForm({ ...form, brand: e.target.value })}
+              className="h-12 bg-card border border-input rounded-md px-3 text-sm"
+            >
+              <option value="">Marka seçin *</option>
+              {CONSTRUCTION_BRANDS.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          ) : (
+            <Input placeholder="Marka *" value={form.brand} required onChange={(e) => setForm({ ...form, brand: e.target.value })} className="h-12 bg-card" />
+          )}
           <Input placeholder="Model *" value={form.model} required onChange={(e) => setForm({ ...form, model: e.target.value })} className="h-12 bg-card" />
         </div>
 
@@ -287,14 +403,48 @@ function SellPage() {
 
         <div>
           <label className="text-xs uppercase tracking-wider text-gold font-semibold mb-1.5 block">Kategori</label>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => (
-              <button key={c} type="button" onClick={() => setForm({ ...form, category: c })}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border ${
-                  form.category === c ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
-                }`}>{c}</button>
-            ))}
-          </div>
+          {vehicleClass === "construction" ? (
+            <div className="space-y-2">
+              {CONSTRUCTION_CATEGORIES.map((node) => (
+                <div key={node.label} className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, category: node.label })}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border ${
+                      form.category === node.label ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    {node.label}
+                  </button>
+                  {node.children && (
+                    <div className="flex flex-wrap gap-1.5 pl-3">
+                      {node.children.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setForm({ ...form, category: c })}
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
+                            form.category === c ? "bg-gold/20 text-gold border-gold/40" : "border-border/60 text-muted-foreground"
+                          }`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((c) => (
+                <button key={c} type="button" onClick={() => setForm({ ...form, category: c })}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border ${
+                    form.category === c ? "bg-gold-gradient text-gold-foreground border-transparent" : "border-border text-muted-foreground"
+                  }`}>{c}</button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -345,6 +495,15 @@ function SellPage() {
         <Textarea placeholder="Açıklama, uyumlu modeller, kusurlar..." value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={4} className="bg-card resize-none" />
+
+        <DeliveryOptionsPicker
+          value={deliveryOptions}
+          onChange={setDeliveryOptions}
+          urgent={urgentDelivery}
+          onUrgentChange={setUrgentDelivery}
+        />
+
+
 
 
         <div>

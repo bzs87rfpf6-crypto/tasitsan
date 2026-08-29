@@ -10,7 +10,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/alerts")({
-  head: () => ({ meta: [{ title: "Kayıtlı Parça Alarmlarım — Taşıtsan" }] }),
+  head: () => ({ meta: [{ title: "Kayıtlı Parça Alarmlarım — Taşıtsan" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: AlertsPage,
 });
 

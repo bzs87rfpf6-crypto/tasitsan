@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertOwnerAdmin } from "@/lib/admin-auth.server";
 import { getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 
 const eventSchema = z.object({
@@ -172,13 +173,7 @@ export const listSecurityEvents = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: isAdmin } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!isAdmin) throw new Error("Yetkisiz");
+    await assertOwnerAdmin(context.supabase, context.userId);
     let q = supabaseAdmin
       .from("security_events")
       .select("*")

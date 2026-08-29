@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import webpush from "web-push";
+import { ADMIN_OWNER_USER_ID } from "@/lib/admin-owner";
 
 export const Route = createFileRoute("/api/public/push-dispatch")({
   server: {
@@ -46,18 +47,11 @@ export const Route = createFileRoute("/api/public/push-dispatch")({
         if (!pub || !priv) return new Response("VAPID not configured", { status: 500 });
         webpush.setVapidDetails(subject, pub, priv);
 
-        // Load admin subscriptions
-        const { data: admins } = await supabaseAdmin
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "admin");
-        const adminIds = (admins ?? []).map((r) => r.user_id as string);
-        if (adminIds.length === 0) return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
-
+        // Admin bildirimleri yalnızca sabit yönetici sahibinin cihazlarına gider.
         const { data: subs } = await supabaseAdmin
           .from("push_subscriptions")
           .select("id,endpoint,p256dh,auth_key,user_id")
-          .in("user_id", adminIds);
+          .eq("user_id", ADMIN_OWNER_USER_ID);
 
         const payload = JSON.stringify({
           title: notif.title,

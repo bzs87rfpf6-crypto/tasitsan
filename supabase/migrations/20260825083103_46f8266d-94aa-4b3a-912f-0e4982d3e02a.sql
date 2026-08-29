@@ -1,0 +1,1 @@
+ALTER FUNCTION public.vehicle_suggest(text, int) SET search_path TO 'public', 'extensions';

@@ -1,10 +1,22 @@
 // Taşıtsan service worker — push notifications + safe activation
-self.addEventListener("install", (event) => {
+// Bu SW hiçbir şeyi cache'lemez (fetch handler yok). Yeni sürüm yayınlandığında
+// beklemeden devralır ve eski app-shell cache'lerini temizler.
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      try {
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name).catch(() => false)));
+      } catch (_) {
+        /* cache API yoksa yoksay */
+      }
+      await self.clients.claim();
+    })(),
+  );
 });
 
 self.addEventListener("push", (event) => {

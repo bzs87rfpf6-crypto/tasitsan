@@ -14,22 +14,51 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as MyRequestsRouteImport } from './routes/my-requests'
 import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as IletisimRouteImport } from './routes/iletisim'
+import { Route as IadePolitikasiRouteImport } from './routes/iade-politikasi'
+import { Route as HakkimizdaRouteImport } from './routes/hakkimizda'
+import { Route as FirsatlarRouteImport } from './routes/firsatlar'
 import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AgirVasitaParcalariRouteImport } from './routes/agir-vasita-parcalari'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as KeyDottxtRouteImport } from './routes/$key[.]txt'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UrgentIndexRouteImport } from './routes/urgent.index'
+import { Route as StokIndexRouteImport } from './routes/stok.index'
 import { Route as SellIndexRouteImport } from './routes/sell.index'
+import { Route as PartsIndexRouteImport } from './routes/parts.index'
+import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as UrgentNewRouteImport } from './routes/urgent.new'
 import { Route as UIdRouteImport } from './routes/u.$id'
+import { Route as StokIdRouteImport } from './routes/stok.$id'
+import { Route as SitemapsNameRouteImport } from './routes/sitemaps.$name'
 import { Route as SellBulkRouteImport } from './routes/sell.bulk'
 import { Route as RequestsIdRouteImport } from './routes/requests.$id'
 import { Route as PartsIdRouteImport } from './routes/parts.$id'
+import { Route as OrderSuccessIdRouteImport } from './routes/order-success.$id'
+import { Route as OemOemRouteImport } from './routes/oem.$oem'
+import { Route as MarkaBrandRouteImport } from './routes/marka.$brand'
+import { Route as KategoriSlugRouteImport } from './routes/kategori.$slug'
+import { Route as AdminLiveSupportRouteImport } from './routes/admin_.live-support'
+import { Route as AccountXmlFeedsRouteImport } from './routes/account.xml-feeds'
+import { Route as AccountStokRouteImport } from './routes/account.stok'
+import { Route as AccountSalesRouteImport } from './routes/account.sales'
+import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as PartsIdEditRouteImport } from './routes/parts.$id_.edit'
+import { Route as MarkaBrandModelRouteImport } from './routes/marka.$brand.$model'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicAlertDispatchRouteImport } from './routes/api/public/alert-dispatch'
+import { Route as MarkaBrandModelCategoryRouteImport } from './routes/marka.$brand.$model.$category'
+import { Route as ApiPublicImgSplatRouteImport } from './routes/api/public/img/$'
+import { Route as ApiPublicHooksXmlSyncRouteImport } from './routes/api/public/hooks/xml-sync'
+import { Route as ApiPublicHooksIndexnowFlushRouteImport } from './routes/api/public/hooks/indexnow-flush'
+import { Route as ApiPublicHooksImageResolverRouteImport } from './routes/api/public/hooks/image-resolver'
+import { Route as ApiPublicHooksDemandAiRouteImport } from './routes/api/public/hooks/demand-ai'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -56,9 +85,34 @@ const InsightsRoute = InsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IletisimRoute = IletisimRouteImport.update({
+  id: '/iletisim',
+  path: '/iletisim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IadePolitikasiRoute = IadePolitikasiRouteImport.update({
+  id: '/iade-politikasi',
+  path: '/iade-politikasi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HakkimizdaRoute = HakkimizdaRouteImport.update({
+  id: '/hakkimizda',
+  path: '/hakkimizda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FirsatlarRoute = FirsatlarRouteImport.update({
+  id: '/firsatlar',
+  path: '/firsatlar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FavoritesRoute = FavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -71,6 +125,11 @@ const AlertsRoute = AlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgirVasitaParcalariRoute = AgirVasitaParcalariRouteImport.update({
+  id: '/agir-vasita-parcalari',
+  path: '/agir-vasita-parcalari',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -79,6 +138,11 @@ const AdminRoute = AdminRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KeyDottxtRoute = KeyDottxtRouteImport.update({
+  id: '/$key.txt',
+  path: '/$key.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -91,10 +155,25 @@ const UrgentIndexRoute = UrgentIndexRouteImport.update({
   path: '/urgent/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StokIndexRoute = StokIndexRouteImport.update({
+  id: '/stok/',
+  path: '/stok/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SellIndexRoute = SellIndexRouteImport.update({
   id: '/sell/',
   path: '/sell/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PartsIndexRoute = PartsIndexRouteImport.update({
+  id: '/parts/',
+  path: '/parts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountRoute,
 } as any)
 const UrgentNewRoute = UrgentNewRouteImport.update({
   id: '/urgent/new',
@@ -104,6 +183,16 @@ const UrgentNewRoute = UrgentNewRouteImport.update({
 const UIdRoute = UIdRouteImport.update({
   id: '/u/$id',
   path: '/u/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StokIdRoute = StokIdRouteImport.update({
+  id: '/stok/$id',
+  path: '/stok/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapsNameRoute = SitemapsNameRouteImport.update({
+  id: '/sitemaps/$name',
+  path: '/sitemaps/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SellBulkRoute = SellBulkRouteImport.update({
@@ -121,14 +210,69 @@ const PartsIdRoute = PartsIdRouteImport.update({
   path: '/parts/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrderSuccessIdRoute = OrderSuccessIdRouteImport.update({
+  id: '/order-success/$id',
+  path: '/order-success/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OemOemRoute = OemOemRouteImport.update({
+  id: '/oem/$oem',
+  path: '/oem/$oem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarkaBrandRoute = MarkaBrandRouteImport.update({
+  id: '/marka/$brand',
+  path: '/marka/$brand',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KategoriSlugRoute = KategoriSlugRouteImport.update({
+  id: '/kategori/$slug',
+  path: '/kategori/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLiveSupportRoute = AdminLiveSupportRouteImport.update({
+  id: '/admin_/live-support',
+  path: '/admin/live-support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountXmlFeedsRoute = AccountXmlFeedsRouteImport.update({
+  id: '/xml-feeds',
+  path: '/xml-feeds',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountStokRoute = AccountStokRouteImport.update({
+  id: '/stok',
+  path: '/stok',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountSalesRoute = AccountSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountOrdersRoute = AccountOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AccountRoute,
+} as any)
 const PartsIdEditRoute = PartsIdEditRouteImport.update({
   id: '/parts/$id_/edit',
   path: '/parts/$id/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarkaBrandModelRoute = MarkaBrandModelRouteImport.update({
+  id: '/$model',
+  path: '/$model',
+  getParentRoute: () => MarkaBrandRoute,
+} as any)
 const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
   id: '/api/public/push-dispatch',
   path: '/api/public/push-dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAlertDispatchRoute = ApiPublicAlertDispatchRouteImport.update({
@@ -136,170 +280,396 @@ const ApiPublicAlertDispatchRoute = ApiPublicAlertDispatchRouteImport.update({
   path: '/api/public/alert-dispatch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarkaBrandModelCategoryRoute = MarkaBrandModelCategoryRouteImport.update({
+  id: '/$category',
+  path: '/$category',
+  getParentRoute: () => MarkaBrandModelRoute,
+} as any)
+const ApiPublicImgSplatRoute = ApiPublicImgSplatRouteImport.update({
+  id: '/api/public/img/$',
+  path: '/api/public/img/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksXmlSyncRoute = ApiPublicHooksXmlSyncRouteImport.update({
+  id: '/api/public/hooks/xml-sync',
+  path: '/api/public/hooks/xml-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksIndexnowFlushRoute =
+  ApiPublicHooksIndexnowFlushRouteImport.update({
+    id: '/api/public/hooks/indexnow-flush',
+    path: '/api/public/hooks/indexnow-flush',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksImageResolverRoute =
+  ApiPublicHooksImageResolverRouteImport.update({
+    id: '/api/public/hooks/image-resolver',
+    path: '/api/public/hooks/image-resolver',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDemandAiRoute = ApiPublicHooksDemandAiRouteImport.update({
+  id: '/api/public/hooks/demand-ai',
+  path: '/api/public/hooks/demand-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/$key.txt': typeof KeyDottxtRoute
+  '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/agir-vasita-parcalari': typeof AgirVasitaParcalariRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/cart': typeof CartRoute
   '/favorites': typeof FavoritesRoute
+  '/firsatlar': typeof FirsatlarRoute
+  '/hakkimizda': typeof HakkimizdaRoute
+  '/iade-politikasi': typeof IadePolitikasiRoute
+  '/iletisim': typeof IletisimRoute
   '/insights': typeof InsightsRoute
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/account/orders': typeof AccountOrdersRoute
+  '/account/sales': typeof AccountSalesRoute
+  '/account/stok': typeof AccountStokRoute
+  '/account/xml-feeds': typeof AccountXmlFeedsRoute
+  '/admin/live-support': typeof AdminLiveSupportRoute
+  '/kategori/$slug': typeof KategoriSlugRoute
+  '/marka/$brand': typeof MarkaBrandRouteWithChildren
+  '/oem/$oem': typeof OemOemRoute
+  '/order-success/$id': typeof OrderSuccessIdRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
   '/sell/bulk': typeof SellBulkRoute
+  '/sitemaps/$name': typeof SitemapsNameRoute
+  '/stok/$id': typeof StokIdRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/account/': typeof AccountIndexRoute
+  '/parts/': typeof PartsIndexRoute
   '/sell/': typeof SellIndexRoute
+  '/stok/': typeof StokIndexRoute
   '/urgent/': typeof UrgentIndexRoute
   '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/marka/$brand/$model': typeof MarkaBrandModelRouteWithChildren
   '/parts/$id/edit': typeof PartsIdEditRoute
+  '/api/public/hooks/demand-ai': typeof ApiPublicHooksDemandAiRoute
+  '/api/public/hooks/image-resolver': typeof ApiPublicHooksImageResolverRoute
+  '/api/public/hooks/indexnow-flush': typeof ApiPublicHooksIndexnowFlushRoute
+  '/api/public/hooks/xml-sync': typeof ApiPublicHooksXmlSyncRoute
+  '/api/public/img/$': typeof ApiPublicImgSplatRoute
+  '/marka/$brand/$model/$category': typeof MarkaBrandModelCategoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/$key.txt': typeof KeyDottxtRoute
   '/admin': typeof AdminRoute
+  '/agir-vasita-parcalari': typeof AgirVasitaParcalariRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/cart': typeof CartRoute
   '/favorites': typeof FavoritesRoute
+  '/firsatlar': typeof FirsatlarRoute
+  '/hakkimizda': typeof HakkimizdaRoute
+  '/iade-politikasi': typeof IadePolitikasiRoute
+  '/iletisim': typeof IletisimRoute
   '/insights': typeof InsightsRoute
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/account/orders': typeof AccountOrdersRoute
+  '/account/sales': typeof AccountSalesRoute
+  '/account/stok': typeof AccountStokRoute
+  '/account/xml-feeds': typeof AccountXmlFeedsRoute
+  '/admin/live-support': typeof AdminLiveSupportRoute
+  '/kategori/$slug': typeof KategoriSlugRoute
+  '/marka/$brand': typeof MarkaBrandRouteWithChildren
+  '/oem/$oem': typeof OemOemRoute
+  '/order-success/$id': typeof OrderSuccessIdRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
   '/sell/bulk': typeof SellBulkRoute
+  '/sitemaps/$name': typeof SitemapsNameRoute
+  '/stok/$id': typeof StokIdRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/account': typeof AccountIndexRoute
+  '/parts': typeof PartsIndexRoute
   '/sell': typeof SellIndexRoute
+  '/stok': typeof StokIndexRoute
   '/urgent': typeof UrgentIndexRoute
   '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/marka/$brand/$model': typeof MarkaBrandModelRouteWithChildren
   '/parts/$id/edit': typeof PartsIdEditRoute
+  '/api/public/hooks/demand-ai': typeof ApiPublicHooksDemandAiRoute
+  '/api/public/hooks/image-resolver': typeof ApiPublicHooksImageResolverRoute
+  '/api/public/hooks/indexnow-flush': typeof ApiPublicHooksIndexnowFlushRoute
+  '/api/public/hooks/xml-sync': typeof ApiPublicHooksXmlSyncRoute
+  '/api/public/img/$': typeof ApiPublicImgSplatRoute
+  '/marka/$brand/$model/$category': typeof MarkaBrandModelCategoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/account': typeof AccountRoute
+  '/$key.txt': typeof KeyDottxtRoute
+  '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRoute
+  '/agir-vasita-parcalari': typeof AgirVasitaParcalariRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/cart': typeof CartRoute
   '/favorites': typeof FavoritesRoute
+  '/firsatlar': typeof FirsatlarRoute
+  '/hakkimizda': typeof HakkimizdaRoute
+  '/iade-politikasi': typeof IadePolitikasiRoute
+  '/iletisim': typeof IletisimRoute
   '/insights': typeof InsightsRoute
   '/my-requests': typeof MyRequestsRoute
   '/requests': typeof RequestsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/account/orders': typeof AccountOrdersRoute
+  '/account/sales': typeof AccountSalesRoute
+  '/account/stok': typeof AccountStokRoute
+  '/account/xml-feeds': typeof AccountXmlFeedsRoute
+  '/admin_/live-support': typeof AdminLiveSupportRoute
+  '/kategori/$slug': typeof KategoriSlugRoute
+  '/marka/$brand': typeof MarkaBrandRouteWithChildren
+  '/oem/$oem': typeof OemOemRoute
+  '/order-success/$id': typeof OrderSuccessIdRoute
   '/parts/$id': typeof PartsIdRoute
   '/requests/$id': typeof RequestsIdRoute
   '/sell/bulk': typeof SellBulkRoute
+  '/sitemaps/$name': typeof SitemapsNameRoute
+  '/stok/$id': typeof StokIdRoute
   '/u/$id': typeof UIdRoute
   '/urgent/new': typeof UrgentNewRoute
+  '/account/': typeof AccountIndexRoute
+  '/parts/': typeof PartsIndexRoute
   '/sell/': typeof SellIndexRoute
+  '/stok/': typeof StokIndexRoute
   '/urgent/': typeof UrgentIndexRoute
   '/api/public/alert-dispatch': typeof ApiPublicAlertDispatchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/marka/$brand/$model': typeof MarkaBrandModelRouteWithChildren
   '/parts/$id_/edit': typeof PartsIdEditRoute
+  '/api/public/hooks/demand-ai': typeof ApiPublicHooksDemandAiRoute
+  '/api/public/hooks/image-resolver': typeof ApiPublicHooksImageResolverRoute
+  '/api/public/hooks/indexnow-flush': typeof ApiPublicHooksIndexnowFlushRoute
+  '/api/public/hooks/xml-sync': typeof ApiPublicHooksXmlSyncRoute
+  '/api/public/img/$': typeof ApiPublicImgSplatRoute
+  '/marka/$brand/$model/$category': typeof MarkaBrandModelCategoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$key.txt'
     | '/account'
     | '/admin'
+    | '/agir-vasita-parcalari'
     | '/alerts'
     | '/auth'
+    | '/cart'
     | '/favorites'
+    | '/firsatlar'
+    | '/hakkimizda'
+    | '/iade-politikasi'
+    | '/iletisim'
     | '/insights'
     | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/account/orders'
+    | '/account/sales'
+    | '/account/stok'
+    | '/account/xml-feeds'
+    | '/admin/live-support'
+    | '/kategori/$slug'
+    | '/marka/$brand'
+    | '/oem/$oem'
+    | '/order-success/$id'
     | '/parts/$id'
     | '/requests/$id'
     | '/sell/bulk'
+    | '/sitemaps/$name'
+    | '/stok/$id'
     | '/u/$id'
     | '/urgent/new'
+    | '/account/'
+    | '/parts/'
     | '/sell/'
+    | '/stok/'
     | '/urgent/'
     | '/api/public/alert-dispatch'
+    | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/marka/$brand/$model'
     | '/parts/$id/edit'
+    | '/api/public/hooks/demand-ai'
+    | '/api/public/hooks/image-resolver'
+    | '/api/public/hooks/indexnow-flush'
+    | '/api/public/hooks/xml-sync'
+    | '/api/public/img/$'
+    | '/marka/$brand/$model/$category'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/account'
+    | '/$key.txt'
     | '/admin'
+    | '/agir-vasita-parcalari'
     | '/alerts'
     | '/auth'
+    | '/cart'
     | '/favorites'
+    | '/firsatlar'
+    | '/hakkimizda'
+    | '/iade-politikasi'
+    | '/iletisim'
     | '/insights'
     | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/account/orders'
+    | '/account/sales'
+    | '/account/stok'
+    | '/account/xml-feeds'
+    | '/admin/live-support'
+    | '/kategori/$slug'
+    | '/marka/$brand'
+    | '/oem/$oem'
+    | '/order-success/$id'
     | '/parts/$id'
     | '/requests/$id'
     | '/sell/bulk'
+    | '/sitemaps/$name'
+    | '/stok/$id'
     | '/u/$id'
     | '/urgent/new'
+    | '/account'
+    | '/parts'
     | '/sell'
+    | '/stok'
     | '/urgent'
     | '/api/public/alert-dispatch'
+    | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/marka/$brand/$model'
     | '/parts/$id/edit'
+    | '/api/public/hooks/demand-ai'
+    | '/api/public/hooks/image-resolver'
+    | '/api/public/hooks/indexnow-flush'
+    | '/api/public/hooks/xml-sync'
+    | '/api/public/img/$'
+    | '/marka/$brand/$model/$category'
   id:
     | '__root__'
     | '/'
+    | '/$key.txt'
     | '/account'
     | '/admin'
+    | '/agir-vasita-parcalari'
     | '/alerts'
     | '/auth'
+    | '/cart'
     | '/favorites'
+    | '/firsatlar'
+    | '/hakkimizda'
+    | '/iade-politikasi'
+    | '/iletisim'
     | '/insights'
     | '/my-requests'
     | '/requests'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/account/orders'
+    | '/account/sales'
+    | '/account/stok'
+    | '/account/xml-feeds'
+    | '/admin_/live-support'
+    | '/kategori/$slug'
+    | '/marka/$brand'
+    | '/oem/$oem'
+    | '/order-success/$id'
     | '/parts/$id'
     | '/requests/$id'
     | '/sell/bulk'
+    | '/sitemaps/$name'
+    | '/stok/$id'
     | '/u/$id'
     | '/urgent/new'
+    | '/account/'
+    | '/parts/'
     | '/sell/'
+    | '/stok/'
     | '/urgent/'
     | '/api/public/alert-dispatch'
+    | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/marka/$brand/$model'
     | '/parts/$id_/edit'
+    | '/api/public/hooks/demand-ai'
+    | '/api/public/hooks/image-resolver'
+    | '/api/public/hooks/indexnow-flush'
+    | '/api/public/hooks/xml-sync'
+    | '/api/public/img/$'
+    | '/marka/$brand/$model/$category'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AccountRoute: typeof AccountRoute
+  KeyDottxtRoute: typeof KeyDottxtRoute
+  AccountRoute: typeof AccountRouteWithChildren
   AdminRoute: typeof AdminRoute
+  AgirVasitaParcalariRoute: typeof AgirVasitaParcalariRoute
   AlertsRoute: typeof AlertsRoute
   AuthRoute: typeof AuthRoute
+  CartRoute: typeof CartRoute
   FavoritesRoute: typeof FavoritesRoute
+  FirsatlarRoute: typeof FirsatlarRoute
+  HakkimizdaRoute: typeof HakkimizdaRoute
+  IadePolitikasiRoute: typeof IadePolitikasiRoute
+  IletisimRoute: typeof IletisimRoute
   InsightsRoute: typeof InsightsRoute
   MyRequestsRoute: typeof MyRequestsRoute
   RequestsRoute: typeof RequestsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AdminLiveSupportRoute: typeof AdminLiveSupportRoute
+  KategoriSlugRoute: typeof KategoriSlugRoute
+  MarkaBrandRoute: typeof MarkaBrandRouteWithChildren
+  OemOemRoute: typeof OemOemRoute
+  OrderSuccessIdRoute: typeof OrderSuccessIdRoute
   PartsIdRoute: typeof PartsIdRoute
   SellBulkRoute: typeof SellBulkRoute
+  SitemapsNameRoute: typeof SitemapsNameRoute
+  StokIdRoute: typeof StokIdRoute
   UIdRoute: typeof UIdRoute
   UrgentNewRoute: typeof UrgentNewRoute
+  PartsIndexRoute: typeof PartsIndexRoute
   SellIndexRoute: typeof SellIndexRoute
+  StokIndexRoute: typeof StokIndexRoute
   UrgentIndexRoute: typeof UrgentIndexRoute
   ApiPublicAlertDispatchRoute: typeof ApiPublicAlertDispatchRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   PartsIdEditRoute: typeof PartsIdEditRoute
+  ApiPublicHooksDemandAiRoute: typeof ApiPublicHooksDemandAiRoute
+  ApiPublicHooksImageResolverRoute: typeof ApiPublicHooksImageResolverRoute
+  ApiPublicHooksIndexnowFlushRoute: typeof ApiPublicHooksIndexnowFlushRoute
+  ApiPublicHooksXmlSyncRoute: typeof ApiPublicHooksXmlSyncRoute
+  ApiPublicImgSplatRoute: typeof ApiPublicImgSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -339,11 +709,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/iletisim': {
+      id: '/iletisim'
+      path: '/iletisim'
+      fullPath: '/iletisim'
+      preLoaderRoute: typeof IletisimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/iade-politikasi': {
+      id: '/iade-politikasi'
+      path: '/iade-politikasi'
+      fullPath: '/iade-politikasi'
+      preLoaderRoute: typeof IadePolitikasiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hakkimizda': {
+      id: '/hakkimizda'
+      path: '/hakkimizda'
+      fullPath: '/hakkimizda'
+      preLoaderRoute: typeof HakkimizdaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/firsatlar': {
+      id: '/firsatlar'
+      path: '/firsatlar'
+      fullPath: '/firsatlar'
+      preLoaderRoute: typeof FirsatlarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/favorites': {
       id: '/favorites'
       path: '/favorites'
       fullPath: '/favorites'
       preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -360,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agir-vasita-parcalari': {
+      id: '/agir-vasita-parcalari'
+      path: '/agir-vasita-parcalari'
+      fullPath: '/agir-vasita-parcalari'
+      preLoaderRoute: typeof AgirVasitaParcalariRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -372,6 +784,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$key.txt': {
+      id: '/$key.txt'
+      path: '/$key.txt'
+      fullPath: '/$key.txt'
+      preLoaderRoute: typeof KeyDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -388,12 +807,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UrgentIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stok/': {
+      id: '/stok/'
+      path: '/stok'
+      fullPath: '/stok/'
+      preLoaderRoute: typeof StokIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sell/': {
       id: '/sell/'
       path: '/sell'
       fullPath: '/sell/'
       preLoaderRoute: typeof SellIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/parts/': {
+      id: '/parts/'
+      path: '/parts'
+      fullPath: '/parts/'
+      preLoaderRoute: typeof PartsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRoute
     }
     '/urgent/new': {
       id: '/urgent/new'
@@ -407,6 +847,20 @@ declare module '@tanstack/react-router' {
       path: '/u/$id'
       fullPath: '/u/$id'
       preLoaderRoute: typeof UIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stok/$id': {
+      id: '/stok/$id'
+      path: '/stok/$id'
+      fullPath: '/stok/$id'
+      preLoaderRoute: typeof StokIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemaps/$name': {
+      id: '/sitemaps/$name'
+      path: '/sitemaps/$name'
+      fullPath: '/sitemaps/$name'
+      preLoaderRoute: typeof SitemapsNameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sell/bulk': {
@@ -430,6 +884,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/order-success/$id': {
+      id: '/order-success/$id'
+      path: '/order-success/$id'
+      fullPath: '/order-success/$id'
+      preLoaderRoute: typeof OrderSuccessIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oem/$oem': {
+      id: '/oem/$oem'
+      path: '/oem/$oem'
+      fullPath: '/oem/$oem'
+      preLoaderRoute: typeof OemOemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marka/$brand': {
+      id: '/marka/$brand'
+      path: '/marka/$brand'
+      fullPath: '/marka/$brand'
+      preLoaderRoute: typeof MarkaBrandRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kategori/$slug': {
+      id: '/kategori/$slug'
+      path: '/kategori/$slug'
+      fullPath: '/kategori/$slug'
+      preLoaderRoute: typeof KategoriSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin_/live-support': {
+      id: '/admin_/live-support'
+      path: '/admin/live-support'
+      fullPath: '/admin/live-support'
+      preLoaderRoute: typeof AdminLiveSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/xml-feeds': {
+      id: '/account/xml-feeds'
+      path: '/xml-feeds'
+      fullPath: '/account/xml-feeds'
+      preLoaderRoute: typeof AccountXmlFeedsRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/stok': {
+      id: '/account/stok'
+      path: '/stok'
+      fullPath: '/account/stok'
+      preLoaderRoute: typeof AccountStokRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/sales': {
+      id: '/account/sales'
+      path: '/sales'
+      fullPath: '/account/sales'
+      preLoaderRoute: typeof AccountSalesRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/orders': {
+      id: '/account/orders'
+      path: '/orders'
+      fullPath: '/account/orders'
+      preLoaderRoute: typeof AccountOrdersRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/parts/$id_/edit': {
       id: '/parts/$id_/edit'
       path: '/parts/$id/edit'
@@ -437,11 +954,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartsIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/marka/$brand/$model': {
+      id: '/marka/$brand/$model'
+      path: '/$model'
+      fullPath: '/marka/$brand/$model'
+      preLoaderRoute: typeof MarkaBrandModelRouteImport
+      parentRoute: typeof MarkaBrandRoute
+    }
     '/api/public/push-dispatch': {
       id: '/api/public/push-dispatch'
       path: '/api/public/push-dispatch'
       fullPath: '/api/public/push-dispatch'
       preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/alert-dispatch': {
@@ -451,8 +982,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAlertDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/marka/$brand/$model/$category': {
+      id: '/marka/$brand/$model/$category'
+      path: '/$category'
+      fullPath: '/marka/$brand/$model/$category'
+      preLoaderRoute: typeof MarkaBrandModelCategoryRouteImport
+      parentRoute: typeof MarkaBrandModelRoute
+    }
+    '/api/public/img/$': {
+      id: '/api/public/img/$'
+      path: '/api/public/img/$'
+      fullPath: '/api/public/img/$'
+      preLoaderRoute: typeof ApiPublicImgSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/xml-sync': {
+      id: '/api/public/hooks/xml-sync'
+      path: '/api/public/hooks/xml-sync'
+      fullPath: '/api/public/hooks/xml-sync'
+      preLoaderRoute: typeof ApiPublicHooksXmlSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/indexnow-flush': {
+      id: '/api/public/hooks/indexnow-flush'
+      path: '/api/public/hooks/indexnow-flush'
+      fullPath: '/api/public/hooks/indexnow-flush'
+      preLoaderRoute: typeof ApiPublicHooksIndexnowFlushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/image-resolver': {
+      id: '/api/public/hooks/image-resolver'
+      path: '/api/public/hooks/image-resolver'
+      fullPath: '/api/public/hooks/image-resolver'
+      preLoaderRoute: typeof ApiPublicHooksImageResolverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/demand-ai': {
+      id: '/api/public/hooks/demand-ai'
+      path: '/api/public/hooks/demand-ai'
+      fullPath: '/api/public/hooks/demand-ai'
+      preLoaderRoute: typeof ApiPublicHooksDemandAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface AccountRouteChildren {
+  AccountOrdersRoute: typeof AccountOrdersRoute
+  AccountSalesRoute: typeof AccountSalesRoute
+  AccountStokRoute: typeof AccountStokRoute
+  AccountXmlFeedsRoute: typeof AccountXmlFeedsRoute
+  AccountIndexRoute: typeof AccountIndexRoute
+}
+
+const AccountRouteChildren: AccountRouteChildren = {
+  AccountOrdersRoute: AccountOrdersRoute,
+  AccountSalesRoute: AccountSalesRoute,
+  AccountStokRoute: AccountStokRoute,
+  AccountXmlFeedsRoute: AccountXmlFeedsRoute,
+  AccountIndexRoute: AccountIndexRoute,
+}
+
+const AccountRouteWithChildren =
+  AccountRoute._addFileChildren(AccountRouteChildren)
 
 interface RequestsRouteChildren {
   RequestsIdRoute: typeof RequestsIdRoute
@@ -466,27 +1058,73 @@ const RequestsRouteWithChildren = RequestsRoute._addFileChildren(
   RequestsRouteChildren,
 )
 
+interface MarkaBrandModelRouteChildren {
+  MarkaBrandModelCategoryRoute: typeof MarkaBrandModelCategoryRoute
+}
+
+const MarkaBrandModelRouteChildren: MarkaBrandModelRouteChildren = {
+  MarkaBrandModelCategoryRoute: MarkaBrandModelCategoryRoute,
+}
+
+const MarkaBrandModelRouteWithChildren = MarkaBrandModelRoute._addFileChildren(
+  MarkaBrandModelRouteChildren,
+)
+
+interface MarkaBrandRouteChildren {
+  MarkaBrandModelRoute: typeof MarkaBrandModelRouteWithChildren
+}
+
+const MarkaBrandRouteChildren: MarkaBrandRouteChildren = {
+  MarkaBrandModelRoute: MarkaBrandModelRouteWithChildren,
+}
+
+const MarkaBrandRouteWithChildren = MarkaBrandRoute._addFileChildren(
+  MarkaBrandRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AccountRoute: AccountRoute,
+  KeyDottxtRoute: KeyDottxtRoute,
+  AccountRoute: AccountRouteWithChildren,
   AdminRoute: AdminRoute,
+  AgirVasitaParcalariRoute: AgirVasitaParcalariRoute,
   AlertsRoute: AlertsRoute,
   AuthRoute: AuthRoute,
+  CartRoute: CartRoute,
   FavoritesRoute: FavoritesRoute,
+  FirsatlarRoute: FirsatlarRoute,
+  HakkimizdaRoute: HakkimizdaRoute,
+  IadePolitikasiRoute: IadePolitikasiRoute,
+  IletisimRoute: IletisimRoute,
   InsightsRoute: InsightsRoute,
   MyRequestsRoute: MyRequestsRoute,
   RequestsRoute: RequestsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AdminLiveSupportRoute: AdminLiveSupportRoute,
+  KategoriSlugRoute: KategoriSlugRoute,
+  MarkaBrandRoute: MarkaBrandRouteWithChildren,
+  OemOemRoute: OemOemRoute,
+  OrderSuccessIdRoute: OrderSuccessIdRoute,
   PartsIdRoute: PartsIdRoute,
   SellBulkRoute: SellBulkRoute,
+  SitemapsNameRoute: SitemapsNameRoute,
+  StokIdRoute: StokIdRoute,
   UIdRoute: UIdRoute,
   UrgentNewRoute: UrgentNewRoute,
+  PartsIndexRoute: PartsIndexRoute,
   SellIndexRoute: SellIndexRoute,
+  StokIndexRoute: StokIndexRoute,
   UrgentIndexRoute: UrgentIndexRoute,
   ApiPublicAlertDispatchRoute: ApiPublicAlertDispatchRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   PartsIdEditRoute: PartsIdEditRoute,
+  ApiPublicHooksDemandAiRoute: ApiPublicHooksDemandAiRoute,
+  ApiPublicHooksImageResolverRoute: ApiPublicHooksImageResolverRoute,
+  ApiPublicHooksIndexnowFlushRoute: ApiPublicHooksIndexnowFlushRoute,
+  ApiPublicHooksXmlSyncRoute: ApiPublicHooksXmlSyncRoute,
+  ApiPublicImgSplatRoute: ApiPublicImgSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

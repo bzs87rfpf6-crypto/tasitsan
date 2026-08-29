@@ -15,8 +15,18 @@ export const Route = createFileRoute("/requests/$id")({
     if (!data) throw notFound();
     return data;
   },
-  head: ({ loaderData }) => {
-    if (!loaderData) return {};
+  head: ({ loaderData, params }) => {
+    const url = `https://www.tasitsan.com.tr/requests/${params.id}`;
+    if (!loaderData) {
+      return {
+        meta: [
+          { title: "Talep — Taşıtsan Parça Borsası" },
+          { name: "robots", content: "noindex,follow" },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
     const title = `${loaderData.part_name || loaderData.search_query || "Parça"} aranıyor` +
       (loaderData.brand ? ` — ${loaderData.brand}${loaderData.model ? " " + loaderData.model : ""}` : "") +
       " | Taşıtsan";
@@ -34,6 +44,22 @@ export const Route = createFileRoute("/requests/$id")({
       loaderData.part_name, loaderData.brand, loaderData.model, loaderData.oem_code,
       loaderData.engine_code, loaderData.category, loaderData.city, "parça talebi", "Taşıtsan",
     ].filter(Boolean).join(", ");
+    const image = loaderData.photos?.[0];
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: title,
+      description,
+      datePublished: loaderData.created_at,
+      mainEntityOfPage: url,
+      ...(image ? { image: [image] } : {}),
+      author: { "@type": "Organization", name: "Taşıtsan Parça Borsası" },
+      publisher: {
+        "@type": "Organization",
+        name: "Taşıtsan Parça Borsası",
+        logo: { "@type": "ImageObject", url: "https://www.tasitsan.com.tr/icon-512.png" },
+      },
+    };
     return {
       meta: [
         { title },
@@ -42,16 +68,29 @@ export const Route = createFileRoute("/requests/$id")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
-        ...(loaderData.photos?.[0] ? [{ property: "og:image", content: loaderData.photos[0] }] : []),
+        { property: "og:url", content: url },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:card", content: "summary_large_image" },
+        ...(image ? [
+          { property: "og:image", content: image },
+          { name: "twitter:image", content: image },
+        ] : []),
       ],
-      links: [{ rel: "canonical", href: `/requests/${loaderData.id}` }],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }],
     };
   },
-  errorComponent: ({ error }) => (
-    <div className="min-h-screen grid place-items-center p-6 text-center text-muted-foreground">
-      Talep yüklenemedi: {error.message}
-    </div>
-  ),
+
+  errorComponent: ({ error }) => {
+    console.error("[talep] load failed", error);
+    return (
+      <div className="min-h-screen grid place-items-center p-6 text-center text-muted-foreground">
+        Talep şu anda yüklenemedi. Lütfen sayfayı yenileyin.
+      </div>
+    );
+  },
+
   notFoundComponent: () => (
     <div className="min-h-screen grid place-items-center p-6 text-center">
       <div>
@@ -90,7 +129,7 @@ function RequestDetailPage() {
           <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
             {r.brand && <span><Tag className="size-3 inline mr-0.5" />{r.brand} {r.model} {r.year}</span>}
             {r.city && <span><MapPin className="size-3 inline mr-0.5" />{r.city}</span>}
-            <span><Calendar className="size-3 inline mr-0.5" />{new Date(r.created_at).toLocaleDateString("tr-TR")}</span>
+            {r.created_at && <span><Calendar className="size-3 inline mr-0.5" />{new Date(r.created_at).toLocaleDateString("tr-TR")}</span>}
           </p>
           {(r.oem_code || r.engine_code) && (
             <p className="text-[11px] font-mono text-muted-foreground/90">
@@ -119,24 +158,8 @@ function RequestDetailPage() {
           </Button>
         </div>
 
-        <script type="application/ld+json" dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Demand",
-            "name": title,
-            "description": r.description || title,
-            "category": r.category || undefined,
-            "itemOffered": {
-              "@type": "Product",
-              "name": title,
-              "brand": r.brand || undefined,
-              "model": r.model || undefined,
-              "mpn": r.oem_code || undefined,
-            },
-            "availableAtOrFrom": r.city ? { "@type": "Place", "address": r.city } : undefined,
-          }),
-        }} />
       </main>
+
     </div>
   );
 }

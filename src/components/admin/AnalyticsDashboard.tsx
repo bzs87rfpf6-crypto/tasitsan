@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Users as UsersIcon, Package, MapPin, Search, Phone, MessageCircle,
-  Monitor, Smartphone, TrendingUp, Eye, Hash, Building2,
+  Monitor, Smartphone, TrendingUp, Eye, Hash, Building2, Bot,
 } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -11,6 +11,7 @@ import {
 import { getAnalyticsOverview } from "@/lib/analytics-admin.functions";
 import { getTopOemSearches } from "@/lib/oem-analytics.functions";
 import { StatCard } from "@/components/admin/StatCard";
+import { VisitorInsightsPanel } from "@/components/admin/VisitorInsightsPanel";
 
 type Overview = Awaited<ReturnType<typeof getAnalyticsOverview>>;
 
@@ -54,15 +55,20 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-4">
+      {/* Profesyonel ziyaretçi & ilgi analizi */}
+      <VisitorInsightsPanel />
+
       {/* Ziyaretçi metrikleri */}
       <SectionTitle icon={<TrendingUp className="size-4" />} title="Ziyaretçi Özeti" />
       <div className="grid grid-cols-2 gap-2.5">
         <StatCard icon={<UsersIcon className="size-3.5" />} label="Toplam Ziyaretçi (30g)" value={data.visitorsTotal} />
-        <StatCard icon={<TrendingUp className="size-3.5" />} label="Bugün" value={data.visitorsDaily} accent="text-emerald-400" />
+        <StatCard icon={<TrendingUp className="size-3.5" />} label="Bugünkü Benzersiz Ziyaretçi" value={data.visitorsDaily} accent="text-emerald-400" />
         <StatCard icon={<TrendingUp className="size-3.5" />} label="Bu Hafta" value={data.visitorsWeekly} />
         <StatCard icon={<TrendingUp className="size-3.5" />} label="Bu Ay" value={data.visitorsMonthly} />
         <StatCard icon={<MapPin className="size-3.5" />} label="Farklı Şehir" value={data.distinctCities} accent="text-gold" />
         <StatCard icon={<Eye className="size-3.5" />} label="Toplam Tıklama" value={data.whatsappClicks + data.callClicks} />
+        <StatCard icon={<Bot className="size-3.5" />} label="Filtrelenmiş Bot Sayısı" value={data.botsFiltered?.hits ?? 0} accent="text-muted-foreground" />
+        <StatCard icon={<UsersIcon className="size-3.5" />} label="Bugünkü Ziyaret (5dk tekil)" value={data.visitsTodayDeduped ?? 0} accent="text-emerald-400" />
       </div>
 
       {/* Daily visitor trend */}

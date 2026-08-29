@@ -1,3 +1,4 @@
+import { buildPartParam } from "@/lib/part-slug";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Layers } from "lucide-react";
@@ -55,7 +56,7 @@ export function EquivalentParts({ partId }: { partId: string }) {
           <Link
             key={p.id}
             to="/parts/$id"
-            params={{ id: p.id }}
+            params={{ id: buildPartParam(p) }}
             className="group block rounded-xl overflow-hidden bg-card border border-border hover:border-gold transition-colors"
           >
             <div className="aspect-square bg-secondary relative overflow-hidden">

@@ -150,7 +150,16 @@ export function translateError(input: unknown, fallback?: string): string {
   const lower = msg.toLowerCase();
   if (EXACT_MAP[lower]) return EXACT_MAP[lower];
   if (CODE_MAP[lower]) return CODE_MAP[lower];
-  for (const [re, tr] of SUBSTRING_MAP) if (re.test(msg)) return tr;
+  for (const [re, tr] of SUBSTRING_MAP) {
+    if (re.test(msg)) {
+      // Surface the original error in the console so admins can pinpoint the
+      // underlying RPC / RLS issue behind a translated message.
+      if (tr.includes("yetkiniz bulunmuyor")) {
+        try { console.warn("[translateError] permission-like error:", input); } catch {}
+      }
+      return tr;
+    }
+  }
 
   if (TURKISH_RE.test(msg)) return msg;
   if (ENGLISH_HINT_RE.test(msg)) return fb;

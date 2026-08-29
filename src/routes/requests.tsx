@@ -11,16 +11,41 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { SafePartImage } from "@/components/SafePartImage";
+import { VehicleClassTabs } from "@/components/VehicleClassTabs";
+import type { VehicleClass } from "@/lib/vehicle-class";
+import { CONSTRUCTION_CATEGORIES } from "@/lib/construction";
+
 
 export const Route = createFileRoute("/requests")({
-  head: () => ({ meta: [{ title: "Parça Talep Merkezi — Taşıtsan" }] }),
+  head: () => {
+    const url = "https://www.tasitsan.com.tr/requests";
+    const title = "Parça Talep Merkezi — Aranan Yedek Parçalar | Taşıtsan";
+    const description = "Türkiye genelinden aranan otomotiv yedek parça talepleri. Marka, model, OEM ve aciliyete göre filtreleyin; elinizdeki parçayla teklif verin.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: RequestsPage,
 });
 
-const CATEGORIES = [
+
+const AUTO_CATEGORIES = [
   "Tümü", "Motor", "Şanzıman", "Kaporta", "Elektrik", "Fren",
   "Süspansiyon", "Klima", "Yakıt Sistemi", "Aydınlatma", "Diğer",
 ];
+const CONSTRUCTION_TOP_CATEGORIES = ["Tümü", ...CONSTRUCTION_CATEGORIES.map((n) => n.label)];
+
 
 type Urgency = "all" | "normal" | "urgent" | "very_urgent";
 type DateRange = "all" | "24h" | "7d" | "30d";
@@ -70,7 +95,9 @@ interface OpenRequest {
   created_at: string;
   urgency?: Urgency | null;
   is_urgent?: boolean | null;
+  vehicle_class?: VehicleClass | null;
 }
+
 
 interface MyQuote {
   id: string;
@@ -125,6 +152,12 @@ function formatHours(h: number): string {
 function RequestsPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
+  const [vc, setVc] = useState<VehicleClass>(() => {
+    if (typeof window === "undefined") return "automobile";
+    const saved = localStorage.getItem("ts:vc");
+    return (saved === "construction" ? "construction" : "automobile") as VehicleClass;
+  });
+  const CATEGORIES = vc === "construction" ? CONSTRUCTION_TOP_CATEGORIES : AUTO_CATEGORIES;
   const [cat, setCat] = useState("Tümü");
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -135,6 +168,16 @@ function RequestsPage() {
   const [stats, setStats] = useState<CenterStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [quoting, setQuoting] = useState<OpenRequest | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("ts:vc", vc);
+    setCat("Tümü");
+    setSearch("");
+    setCityFilter("");
+    setUrgencyFilter("all");
+    setDateFilter("all");
+  }, [vc]);
+
 
   useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
 
@@ -172,6 +215,8 @@ function RequestsPage() {
                   : dateFilter === "30d" ? 30 * 24 * 3600 * 1000
                   : 0;
     return requests.filter((r) => {
+      const rowVc = (r.vehicle_class ?? "automobile") as VehicleClass;
+      if (rowVc !== vc) return false;
       if (cat !== "Tümü" && r.category !== cat) return false;
       if (c && !(r.city || "").toLowerCase().includes(c)) return false;
       if (urgencyFilter !== "all" && effectiveUrgency(r) !== urgencyFilter) return false;
@@ -183,7 +228,8 @@ function RequestsPage() {
       }
       return true;
     });
-  }, [cat, requests, search, cityFilter, urgencyFilter, dateFilter]);
+  }, [cat, requests, search, cityFilter, urgencyFilter, dateFilter, vc]);
+
 
   if (authLoading || !user) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
@@ -203,6 +249,12 @@ function RequestsPage() {
             </p>
           </div>
         </div>
+
+        <div className="max-w-2xl mx-auto px-4 pb-2">
+          <VehicleClassTabs value={vc} onChange={setVc} size="sm" />
+        </div>
+
+
 
         <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-2 gap-2">
           <Input placeholder="Marka, model, OEM..." value={search}

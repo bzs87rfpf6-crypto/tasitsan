@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/AppHeader";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Şifre Sıfırla — Taşıtsan" }] }),
+  head: () => ({ meta: [{ title: "Şifre Sıfırla — Taşıtsan" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: ResetPasswordPage,
 });
 
@@ -18,9 +18,9 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
 
   useEffect(() => {
-    // Supabase puts the recovery token in URL hash and creates a session via detectSessionInUrl
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
@@ -32,8 +32,11 @@ function ResetPasswordPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
-    if (password !== confirm) return toast.error("Şifreler eşleşmiyor");
+    const errs: { password?: string; confirm?: string } = {};
+    if (password.length < 6) errs.password = "Şifre en az 6 karakter olmalıdır.";
+    if (password !== confirm) errs.confirm = "Şifreler eşleşmiyor.";
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
@@ -62,25 +65,33 @@ function ResetPasswordPage() {
         </div>
 
         {ready ? (
-          <form onSubmit={submit} className="space-y-3">
-            <Input
-              type="password"
-              placeholder="Yeni şifre"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="h-12 bg-card"
-            />
-            <Input
-              type="password"
-              placeholder="Yeni şifre (tekrar)"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              minLength={6}
-              className="h-12 bg-card"
-            />
+          <form onSubmit={submit} className="space-y-3" noValidate>
+            <div>
+              <PasswordInput
+                placeholder="Yeni şifre"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                className="h-12 bg-card"
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive mt-1 px-1">{errors.password}</p>
+              )}
+            </div>
+            <div>
+              <PasswordInput
+                placeholder="Yeni şifre (tekrar)"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                className="h-12 bg-card"
+              />
+              {errors.confirm && (
+                <p className="text-xs text-destructive mt-1 px-1">{errors.confirm}</p>
+              )}
+            </div>
             <Button
               type="submit"
               disabled={loading}

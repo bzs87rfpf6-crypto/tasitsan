@@ -28,6 +28,10 @@ const ALIASES: Record<string, string> = {
   "great wall": "great-wall",
   "tofaş": "fiat",
   "tofas": "fiat",
+  "citroën": "citroen",
+  "citroen": "citroen",
+  "ssangyong": "ssangyong",
+  "škoda": "skoda",
 };
 
 export function getBrandLogoUrl(brand: string | null | undefined): string | null {

@@ -20,7 +20,7 @@ export interface PartTypeMeta {
 export const PART_TYPE_META: Record<PartType, PartTypeMeta> = {
   original: {
     value: "original",
-    label: "ORİJİNAL OEM",
+    label: "ORİJİNAL",
     longLabel: "Orijinal (OEM)",
     emoji: "🟢",
     badgeClass: "bg-emerald-500/15 text-emerald-400 border-emerald-500/40",
@@ -84,6 +84,17 @@ const EXCEL_ALIASES: Record<string, PartType> = {
   "yenilenmis": "refurbished",
   "revizyonlu/yenilenmiş": "refurbished",
   "refurbished": "refurbished",
+  // Taşıtsan şablonundaki menşei/kategori değerleri
+  "psa": "original",
+  "psa grup": "original",
+  "alman": "equivalent",
+  "alman menşei": "equivalent",
+  "alman mensei": "equivalent",
+  "çin": "aftermarket",
+  "cin": "aftermarket",
+  "çin menşei": "aftermarket",
+  "cin mensei": "aftermarket",
+  "ithal": "aftermarket",
 };
 
 export function parsePartTypeFromExcel(raw: string | null | undefined): PartType | null {

@@ -6,7 +6,7 @@ import { useRouter } from "@tanstack/react-router";
  * üzerinden in-app navigasyona çevirir.
  *
  * Desteklenenler:
- *  - https://tasitsan.com.tr/...  (Universal Link / App Link)
+ *  - https://www.tasitsan.com.tr/...  (Universal Link / App Link)
  *  - tasitsan://...                (custom scheme)
  */
 export function DeepLinkHandler() {
@@ -14,7 +14,7 @@ export function DeepLinkHandler() {
 
   useEffect(() => {
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-    const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
+    const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv[)]|\bwv\b|Capacitor/i.test(ua);
     if (isCapacitorLike) {
       return;
     }

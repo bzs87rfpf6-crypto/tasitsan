@@ -1,8 +1,54 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /api/
 Disallow: /account
 Disallow: /auth
 Disallow: /reset-password
+Disallow: /cart
+Disallow: /order-success
+Disallow: /favorites
+Disallow: /my-requests
+Disallow: /alerts
+Disallow: /*/edit$
+# Tracking/filtre parametreleri: kanonik değer taşımayan varyasyonlar taranmasın.
+Disallow: /*?*utm_
+Disallow: /*?*gclid=
+Disallow: /*?*fbclid=
+Disallow: /*?*ref=
 
-Sitemap: https://tasitsan.com.tr/sitemap.xml
+# Ürün, OEM, marka, model, kategori ve talep sayfaları engellenmez.
+# Faceted/paginated URL'ler noindex,follow + canonical ile yönetilir.
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /account
+Disallow: /cart
+Disallow: /order-success
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /account
+Disallow: /cart
+
+# AI search crawlers
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /account
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+Disallow: /account
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+Disallow: /account
+
+Sitemap: https://www.tasitsan.com.tr/sitemap.xml

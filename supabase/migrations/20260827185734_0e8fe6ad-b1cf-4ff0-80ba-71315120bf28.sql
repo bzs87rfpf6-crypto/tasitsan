@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.admin_set_trusted_seller(uuid, boolean) FROM anon;

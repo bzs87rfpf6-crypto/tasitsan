@@ -1,23 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-async function assertAdmin(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Yetkisiz");
-}
+import { assertOwnerAdmin } from "@/lib/admin-auth.server";
 
 export const adminGetPartRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    await assertOwnerAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("part_requests")
@@ -30,7 +19,7 @@ export const adminGetPartRequests = createServerFn({ method: "GET" })
 export const adminGetUrgentRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    await assertOwnerAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("part_requests")
@@ -45,11 +34,11 @@ export const adminGetUrgentRequests = createServerFn({ method: "GET" })
 export const adminGetUsersFull = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    await assertOwnerAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("profiles")
-      .select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved,avatar_url")
+      .select("id,display_name,whatsapp,city,email,created_at,is_active,is_approved,avatar_url,trusted_seller")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return (data ?? []) as any[];
@@ -59,7 +48,7 @@ export const adminGetSellerContacts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ ids: z.array(z.string().uuid()).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertOwnerAdmin(context.supabase, context.userId);
     if (!data.ids.length) return [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
@@ -74,12 +63,12 @@ export const adminGetPartsWithWhatsapp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ ids: z.array(z.string().uuid()).max(1000) }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertOwnerAdmin(context.supabase, context.userId);
     if (!data.ids.length) return [];
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("parts")
-      .select("id,title,brand,model,whatsapp,city,seller_id")
+      .select("id,seo_slug,title,brand,model,oem_code,oem_codes,whatsapp,city,seller_id")
       .in("id", data.ids);
     if (error) throw new Error(error.message);
     return (rows ?? []) as any[];
@@ -88,7 +77,7 @@ export const adminGetPartsWithWhatsapp = createServerFn({ method: "POST" })
 export const adminGetSiteSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.userId);
+    await assertOwnerAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("site_settings")
@@ -115,7 +104,7 @@ export const adminSaveSiteSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid(), patch: SiteSettingsPatch }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    await assertOwnerAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("site_settings")
@@ -125,4 +114,20 @@ export const adminSaveSiteSettings = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     return row as any;
+  });
+
+/** Admin-only: fetch profile cards (incl. e-mail) for a set of user ids. */
+export const adminGetProfilesByIds = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ ids: z.array(z.string().uuid()).max(500) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwnerAdmin(context.supabase, context.userId);
+    if (!data.ids.length) return [];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id,display_name,avatar_url,email,is_verified")
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as { id: string; display_name: string | null; avatar_url: string | null; email: string | null; is_verified: boolean }[];
   });

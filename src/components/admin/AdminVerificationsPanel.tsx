@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, X as XIcon, BadgeCheck, ShieldOff, Calendar, MapPin, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { adminGetProfilesByIds } from "@/lib/admin-data.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -55,7 +56,7 @@ export function AdminVerificationsPanel({ currentUserId }: { currentUserId: stri
     const userIds = Array.from(new Set(list.map((r) => r.user_id)));
     const [profsRes, partsRes] = await Promise.all([
       userIds.length
-        ? supabase.from("profiles").select("id,display_name,avatar_url,email,is_verified").in("id", userIds)
+        ? adminGetProfilesByIds({ data: { ids: userIds } }).then((rows) => ({ data: rows as any[] })).catch(() => ({ data: [] as any[] }))
         : Promise.resolve({ data: [] as any[] }),
       userIds.length
         ? supabase.from("parts").select("seller_id").in("seller_id", userIds).eq("status", "approved")

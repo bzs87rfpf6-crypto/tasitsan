@@ -1,5 +1,6 @@
 import { translateError } from "@/lib/error-messages";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { extractPartUuid } from "@/lib/part-slug";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { X, ArrowLeft, GripVertical } from "lucide-react";
@@ -30,6 +31,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { OemInput } from "@/components/OemInput";
+import { DeliveryOptionsPicker } from "@/components/DeliveryOptionsPicker";
+import { normalizeDeliveryOptions, type DeliveryOption } from "@/lib/delivery-options";
 import { StockInsightsCard } from "@/components/StockInsightsCard";
 import { PART_TYPE_VALUES, PART_TYPE_META, type PartType } from "@/lib/part-type";
 import { createBrowserId } from "@/lib/browser-compat";
@@ -49,7 +52,7 @@ type PhotoItem =
   | { id: string; kind: "new"; file: File; preview: string };
 
 export const Route = createFileRoute("/parts/$id_/edit")({
-  head: () => ({ meta: [{ title: "İlan Düzenle — Taşıtsan" }] }),
+  head: () => ({ meta: [{ title: "İlan Düzenle — Taşıtsan" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: EditPartPage,
 });
 
@@ -108,7 +111,9 @@ function SortablePhoto({
 }
 
 function EditPartPage() {
-  const { id } = Route.useParams();
+  const { id: rawId } = Route.useParams();
+  const [resolvedId, setResolvedId] = useState<string | null>(null);
+  const [idNotFound, setIdNotFound] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
 
@@ -122,7 +127,36 @@ function EditPartPage() {
   const [partType, setPartType] = useState<PartType | "">("");
   const [items, setItems] = useState<PhotoItem[]>([]);
   const [removedPhotos, setRemovedPhotos] = useState<string[]>([]);
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([]);
+  const [urgentDelivery, setUrgentDelivery] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const uuid = extractPartUuid(rawId);
+      if (uuid) {
+        if (!cancelled) setResolvedId(uuid);
+        return;
+      }
+      const { data } = await supabase.from("parts").select("id").eq("seo_slug", rawId).maybeSingle();
+      if (data?.id) {
+        if (!cancelled) setResolvedId(data.id);
+        return;
+      }
+      const { data: hist } = await supabase.from("parts_slug_history")
+        .select("part_id").eq("slug", rawId).maybeSingle();
+      if (hist?.part_id) {
+        if (!cancelled) setResolvedId(hist.part_id);
+        return;
+      }
+      if (!cancelled) {
+        setIdNotFound(true);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [rawId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -135,13 +169,13 @@ function EditPartPage() {
   }, [authLoading, user, nav]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !resolvedId) return;
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
         .from("parts")
         .select("*")
-        .eq("id", id)
+        .eq("id", resolvedId)
         .maybeSingle();
       if (cancelled) return;
       if (error || !data) {
@@ -174,10 +208,12 @@ function EditPartPage() {
       const arr = (data.oem_codes as string[] | null) ?? (data.oem_code ? [data.oem_code] : []);
       setOemCodes(arr);
       setPartType(((data as any).part_type as PartType | null) ?? "");
+      setDeliveryOptions(normalizeDeliveryOptions((data as any).delivery_options ?? []));
+      setUrgentDelivery(Boolean((data as any).urgent_delivery));
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [user, id, nav]);
+  }, [user, resolvedId, nav]);
 
   // Revoke object URLs for any 'new' items when unmounting.
   useEffect(() => {
@@ -242,7 +278,7 @@ function EditPartPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !resolvedId) return;
     if (items.length < MIN_PHOTOS) { toast.error(`En az ${MIN_PHOTOS} fotoğraf olmalı.`); return; }
     if (items.length > MAX_PHOTOS) { toast.error(`En fazla ${MAX_PHOTOS} fotoğraf yükleyebilirsiniz.`); return; }
     if (!form.price || parseFloat(form.price) <= 0) { toast.error("Geçerli fiyat girin."); return; }
@@ -271,7 +307,7 @@ function EditPartPage() {
         it.kind === "existing" ? it.url : (uploadedUrls.get(it.id) as string),
       );
 
-      const { error } = await supabase.from("parts").update({
+      const baseUpdate: Record<string, unknown> = {
         title: form.title,
         description: form.description || null,
         brand: form.brand || null,
@@ -286,8 +322,25 @@ function EditPartPage() {
         stock_quantity: form.stock_quantity ? Math.max(0, parseInt(form.stock_quantity)) : 1,
         city: form.city || null,
         photos: photoUrls,
-      }).eq("id", id).eq("seller_id", user.id);
-      if (error) throw error;
+      };
+      const extendedUpdate = {
+        ...baseUpdate,
+        delivery_options: deliveryOptions,
+        urgent_delivery: urgentDelivery,
+      };
+      let { error } = await supabase.from("parts").update(extendedUpdate as any)
+        .eq("id", resolvedId).eq("seller_id", user.id);
+      if (error && /delivery_options|urgent_delivery|schema cache|column .* does not exist/i.test(error.message || "")) {
+        console.warn("[edit] retry update without delivery fields:", error.message);
+        const retry = await supabase.from("parts").update(baseUpdate as any)
+          .eq("id", resolvedId).eq("seller_id", user.id);
+        error = retry.error;
+      }
+      if (error) {
+        console.error("[edit] parts update failed:", error);
+        toast.error(`Kaydedilemedi: ${error.message}`);
+        throw error;
+      }
 
       // Delete removed photos from storage after successful DB update.
       const pathsToDelete = removedPhotos
@@ -313,6 +366,17 @@ function EditPartPage() {
   if (authLoading || loading) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
   }
+  if (idNotFound) {
+    return (
+      <div className="min-h-screen pb-24">
+        <AppHeader subtitle="İlan Düzenle" />
+        <div className="max-w-md mx-auto px-4 pt-10 text-center">
+          <p className="text-sm text-muted-foreground">İlan bulunamadı.</p>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
   if (notOwner) {
     return (
       <div className="min-h-screen pb-24">
@@ -334,7 +398,7 @@ function EditPartPage() {
           <ArrowLeft className="size-3.5" /> Hesabıma dön
         </button>
 
-        <StockInsightsCard partId={id} />
+        {resolvedId && <StockInsightsCard partId={resolvedId} />}
 
         <section className="space-y-2">
           <label className="text-xs uppercase tracking-wider text-gold font-semibold flex items-center justify-between">
@@ -450,6 +514,13 @@ function EditPartPage() {
         <Textarea placeholder="Açıklama" value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={4} className="bg-card resize-none" />
+
+        <DeliveryOptionsPicker
+          value={deliveryOptions}
+          onChange={setDeliveryOptions}
+          urgent={urgentDelivery}
+          onUrgentChange={setUrgentDelivery}
+        />
 
         <Button type="submit" disabled={submitting}
           className="w-full h-13 bg-gold-gradient text-gold-foreground font-semibold text-base shadow-gold py-4">

@@ -31,7 +31,7 @@ function isStandaloneLaunch() {
 
 function isCapacitorLikeRuntime() {
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  return Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
+  return Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv[)]|\bwv\b|Capacitor/i.test(ua);
 }
 
 function settleAll(promises: Array<Promise<unknown>>) {

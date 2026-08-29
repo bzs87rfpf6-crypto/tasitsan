@@ -1,0 +1,1 @@
+ALTER TABLE public.xml_feeds ADD CONSTRAINT xml_feeds_seller_profile_fkey FOREIGN KEY (seller_id) REFERENCES public.profiles(id) ON DELETE CASCADE; NOTIFY pgrst, 'reload schema';

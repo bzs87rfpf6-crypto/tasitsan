@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertOwnerAdmin } from "@/lib/admin-auth.server";
 
 const PatternSchema = z
   .string()
@@ -19,13 +20,7 @@ export type BotRule = {
 };
 
 async function assertAdmin(supabase: ReturnType<typeof Object>, userId: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Yetkisiz");
+  await assertOwnerAdmin(supabase, userId);
 }
 
 export const listBotRules = createServerFn({ method: "GET" })

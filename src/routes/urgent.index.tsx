@@ -15,12 +15,27 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/urgent/")({
-  head: () => ({
-    meta: [
-      { title: "🚨 Acil Parça Talepleri — Taşıtsan" },
-      { name: "description", content: "Acil parça talepleri ve tedarikçi teklifleri. Bende var deyin, müşteriye Taşıtsan iletir." },
-    ],
-  }),
+  head: () => {
+    const url = "https://www.tasitsan.com.tr/urgent";
+    const title = "Acil Parça Talepleri — Taşıtsan Parça Borsası";
+    const description =
+      "Acil parça talepleri ve tedarikçi teklifleri. Bende var deyin, müşteriye Taşıtsan iletir.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { name: "robots", content: "index,follow,max-image-preview:large" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: UrgentPage,
 });
 
@@ -88,7 +103,7 @@ function UrgentPage() {
         <div className="max-w-md mx-auto px-4 py-10 text-center space-y-3">
           <Siren className="size-12 text-destructive mx-auto" />
           <p className="font-display text-lg">Acil talepleri görmek için giriş yapın</p>
-          <Link to="/auth" className="inline-block text-gold font-semibold">Giriş Yap →</Link>
+          <Link to="/auth" rel="nofollow" className="inline-block text-gold font-semibold">Giriş Yap →</Link>
         </div>
         <BottomNav />
       </div>

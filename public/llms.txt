@@ -1,0 +1,24 @@
+# Taşıtsan Parça Borsası
+
+> Türkiye'nin otomotiv yedek parça borsası. OEM numarası, marka, model ve motor koduna göre binlerce sıfır ve çıkma yedek parça ilanını doğrulanmış satıcılardan bulun; teklif alın; güvenli iletişim kurun.
+
+Taşıtsan (https://www.tasitsan.com.tr), binek ve ağır vasıta yedek parçaları için Türkçe pazaryeridir. Alıcılar OEM koduyla arama yapar, satıcılarla platform üzerinden yazışır, teklif toplar ve karar verir. Tüm satıcılar Taşıtsan tarafından doğrulanır; iletişim ve teklif akışları platform dışına çıkmaz.
+
+## Ana bölümler
+
+- [Anasayfa](https://www.tasitsan.com.tr/): Arama, öne çıkan ilanlar, kategoriler.
+- [Yedek parça arama](https://www.tasitsan.com.tr/parts): OEM, marka, model, motor kodu, kategori ve şehir filtreleri.
+- [Ağır vasıta parçaları](https://www.tasitsan.com.tr/agir-vasita-parcalari): Kamyon, otobüs ve iş makinesi yedek parça ilanları.
+- [Talep oluştur](https://www.tasitsan.com.tr/urgent/new): Ücretsiz üye olun, aradığınız parçayı satıcılara iletin.
+- [İlan ver](https://www.tasitsan.com.tr/sell): Ücretsiz ilan yayınlama.
+- [Hakkımızda](https://www.tasitsan.com.tr/hakkimizda) · [İletişim](https://www.tasitsan.com.tr/iletisim)
+
+## SEO ve dizin
+
+- Sitemap: https://www.tasitsan.com.tr/sitemap.xml
+- Robots: https://www.tasitsan.com.tr/robots.txt
+- Kanonik alan: https://www.tasitsan.com.tr
+
+## AI kullanım notu
+
+Ürün başlıkları, OEM kodları, marka/model uyumluluk bilgileri ve açıklamalar kamuya açıktır ve alıntılanabilir; kaynak olarak `https://www.tasitsan.com.tr` ve ilgili ilan URL'sini gösterin. Kullanıcı hesapları, iletişim bilgileri ve teklif verileri gizlidir; taranmaz ve paylaşılmaz.

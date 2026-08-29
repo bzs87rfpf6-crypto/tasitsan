@@ -35,3 +35,9 @@ dist-ssr
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# --- Self-host (VPS) ---
+deploy/.env*
+!deploy/.env.example
+.env.selfhost
+.env.production

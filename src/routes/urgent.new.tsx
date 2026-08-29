@@ -1,17 +1,34 @@
 import { translateError } from "@/lib/error-messages";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Siren, ArrowLeft } from "lucide-react";
+import { Siren, ArrowLeft, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useServerFn } from "@tanstack/react-start";
+import { recordAiSearchConversion } from "@/lib/ai-search.functions";
+import { trackEvent } from "@/lib/analytics";
+import { fallback, zodValidator } from "@tanstack/zod-adapter";
+import { z } from "zod";
+
+const searchSchema = z.object({
+  q:         fallback(z.string(), "").default(""),
+  brand:     fallback(z.string(), "").default(""),
+  model:     fallback(z.string(), "").default(""),
+  year:      fallback(z.string(), "").default(""),
+  part_name: fallback(z.string(), "").default(""),
+  category:  fallback(z.string(), "").default(""),
+  oem:       fallback(z.string(), "").default(""),
+  src:       fallback(z.string(), "").default(""), // ai_search_logs.id — dönüşüm köprüsü
+});
 
 export const Route = createFileRoute("/urgent/new")({
-  head: () => ({ meta: [{ title: "🚨 Acil Parça Talebi Oluştur — Taşıtsan" }] }),
+  head: () => ({ meta: [{ title: "🚨 Acil Parça Talebi Oluştur — Taşıtsan" }, { name: "robots", content: "noindex,follow" }] }),
+  validateSearch: zodValidator(searchSchema),
   component: NewUrgent,
 });
 
@@ -23,20 +40,30 @@ const CATEGORIES = [
 function NewUrgent() {
   const { user } = useAuth();
   const nav = useNavigate();
+  const search = Route.useSearch();
+  const recordConv = useServerFn(recordAiSearchConversion);
   const [form, setForm] = useState({
-    oem_code: "",
-    part_name: "",
-    brand: "",
-    model: "",
-    year: "",
+    oem_code: (search.oem || "").toUpperCase().slice(0, 60),
+    part_name: (search.part_name || search.q || "").slice(0, 120),
+    brand: (search.brand || "").slice(0, 40),
+    model: (search.model || "").slice(0, 40),
+    year: (search.year || "").replace(/\D/g, "").slice(0, 4),
     city: "",
-    category: "",
-    notes: "",
+    category: CATEGORIES.includes(search.category) ? search.category : "",
+    notes: search.q && search.q !== search.part_name ? `Arama: ${search.q}` : "",
     full_name: "",
     phone: "",
     email: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  const prefilled = !!(search.q || search.brand || search.oem);
+
+  useEffect(() => {
+    if (search.src) {
+      trackEvent("failed_search_to_request_open", { log_id: search.src, q: search.q });
+    }
+  }, [search.src, search.q]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,9 +101,15 @@ function NewUrgent() {
       toast.error(translateError(error));
       return;
     }
+    // AI arama dönüşümünü işaretle
+    if (search.src && /^[0-9a-f-]{36}$/i.test(search.src)) {
+      recordConv({ data: { log_id: search.src, event: "request_created" } }).catch(() => {});
+      trackEvent("failed_search_to_request_submitted", { log_id: search.src });
+    }
     toast.success("🚨 Acil talebiniz tedarikçilere iletildi. Onaylı teklifler size ulaştırılacak.");
     nav({ to: "/urgent" });
   };
+
 
   if (!user) {
     return (
@@ -84,7 +117,7 @@ function NewUrgent() {
         <AppHeader subtitle="Acil Talep" />
         <div className="max-w-md mx-auto px-4 py-10 text-center">
           <p className="text-sm text-muted-foreground mb-3">Talep oluşturmak için giriş yapın.</p>
-          <Link to="/auth" className="text-gold font-semibold">Giriş Yap →</Link>
+          <Link to="/auth" rel="nofollow" className="text-gold font-semibold">Giriş Yap →</Link>
         </div>
       </div>
     );
@@ -103,12 +136,27 @@ function NewUrgent() {
         <div className="bg-gradient-to-br from-destructive/20 via-destructive/5 to-background border-2 border-destructive/50 rounded-2xl p-4 mb-4">
           <div className="flex items-center gap-2">
             <Siren className="size-6 text-destructive animate-pulse" />
-            <h1 className="font-display text-lg tracking-wide text-destructive">🚨 Acil Parça Talebi</h1>
+            <h1 className="font-display text-lg tracking-wide text-destructive">🚨 Acil Parça Talebi Oluştur</h1>
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
             Talebiniz tedarikçilere anında iletilir. İletişim bilgileriniz gizli kalır — sadece Taşıtsan görür.
           </p>
         </div>
+
+        {prefilled && (
+          <div className="mb-3 rounded-xl border-2 border-primary/40 bg-primary/5 p-3 flex items-start gap-2.5">
+            <Sparkles className="size-4 text-primary shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <div className="font-semibold text-primary mb-0.5">AI aramandan aktarıldı</div>
+              <div className="text-muted-foreground">
+                {search.q ? <>Arama: <b className="text-foreground">"{search.q}"</b>. </> : null}
+                Alanları kontrol edip iletişim bilgilerini ekle, gönder.
+              </div>
+            </div>
+          </div>
+        )}
+
+
 
         <form onSubmit={submit} className="space-y-2.5">
           <Field label="OEM Numarası *">

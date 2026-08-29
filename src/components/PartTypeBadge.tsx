@@ -10,15 +10,25 @@ interface Props {
 export function PartTypeBadge({ partType, size = "sm", showEmoji = true, className = "" }: Props) {
   const meta = getPartTypeMeta(partType);
   if (!meta) return null;
+
+  const isOpaque = meta.value === "original" || meta.value === "aftermarket";
+
   const sizeClass =
     size === "md"
-      ? "text-[11px] px-2.5 py-1"
-      : "text-[10px] px-2 py-0.5";
+      ? "text-[13px] px-2.5 py-1"
+      : "text-[13px] px-2 py-0.5";
+
+  const styleClass = isOpaque
+    ? meta.value === "original"
+      ? "bg-emerald-700 text-white border-emerald-800 shadow-md"
+      : "bg-blue-800 text-white border-blue-900 shadow-md"
+    : meta.badgeClass;
+
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border font-bold uppercase tracking-wider ${meta.badgeClass} ${sizeClass} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-md border font-bold uppercase tracking-wider ${styleClass} ${sizeClass} ${className}`}
     >
-      {showEmoji && <span aria-hidden>{meta.emoji}</span>}
+      {showEmoji && !isOpaque && <span aria-hidden>{meta.emoji}</span>}
       <span>{meta.label}</span>
     </span>
   );

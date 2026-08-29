@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { Eye, Heart, TrendingUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { buildPartParam } from "@/lib/part-slug";
 
 interface RankedPart {
   id: string;
+  seo_slug: string | null;
   title: string;
+  oem_code: string | null;
+  oem_codes: string[] | null;
   brand: string | null;
   model: string | null;
   count: number;
@@ -36,13 +40,13 @@ async function topPartsByCount(table: "part_views" | "favorites", days: number |
   const top = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
   if (top.length === 0) return [];
   const ids = top.map(([id]) => id);
-  const { data: parts } = await supabase.from("parts").select("id,title,brand,model").in("id", ids);
+  const { data: parts } = await supabase.from("parts").select("id,seo_slug,title,oem_code,oem_codes,brand,model").in("id", ids);
   const map = new Map((parts ?? []).map((p: any) => [p.id, p]));
   return top
     .map(([id, count]) => {
       const p = map.get(id);
       if (!p) return null;
-      return { id, title: p.title, brand: p.brand, model: p.model, count } as RankedPart;
+      return { id, seo_slug: p.seo_slug, title: p.title, oem_code: p.oem_code, oem_codes: p.oem_codes, brand: p.brand, model: p.model, count } as RankedPart;
     })
     .filter(Boolean) as RankedPart[];
 }
@@ -147,7 +151,7 @@ function RankList({ title, icon, items, loading }: { title: string; icon: React.
         <ol className="space-y-1.5">
           {items.map((p, i) => (
             <li key={p.id}>
-              <Link to="/parts/$id" params={{ id: p.id }}
+              <Link to="/parts/$id" params={{ id: buildPartParam(p) }}
                 className="flex items-center gap-2 text-xs hover:text-gold">
                 <span className="size-5 shrink-0 rounded-full bg-secondary text-muted-foreground grid place-items-center text-[10px] font-bold">{i + 1}</span>
                 <span className="flex-1 truncate">{p.title}</span>

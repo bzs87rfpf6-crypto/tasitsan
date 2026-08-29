@@ -31,12 +31,12 @@
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
   --color-gold-muted: var(--gold-muted);
-  --font-display: "Bebas Neue", "Impact", sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Bebas Neue", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 :root {
-  --radius: 0.875rem;
+  --radius: 1rem;
 
   /* Taşıtsan — Light Corporate. Off-white surfaces, white cards, dark gray text, gold accent. */
   --background: #f4f5f7;
@@ -64,7 +64,8 @@
   --whatsapp: #25d366;
   --gradient-gold: linear-gradient(135deg, #e6b53a, #b8861a);
   --shadow-gold: 0 8px 30px -10px rgba(212, 160, 23, 0.45);
-  --shadow-card: 0 4px 14px -6px rgba(15, 23, 42, 0.10), 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 10px 30px -12px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 18px 40px -14px rgba(15, 23, 42, 0.24), 0 4px 10px rgba(15, 23, 42, 0.08);
 }
 
 .dark { /* light corporate theme only — dark class is a no-op */ }
@@ -144,4 +145,64 @@
     to   { opacity: 1; transform: translateY(0); }
   }
   .animate-app-page-in { animation: app-page-in 220ms ease-out both; }
+
+  /* Sonsuz marka şeridi */
+  @keyframes brand-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .animate-brand-marquee { animation: brand-marquee 45s linear infinite; }
+  .marquee-track:hover .animate-brand-marquee { animation-play-state: paused; }
+  .marquee-track::-webkit-scrollbar { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-brand-marquee { animation: none; }
+  }
+}
+
+
+/* ====== UI Refresh 2.0 — presentation only ====== */
+@layer base {
+  body {
+    line-height: 1.6;
+    letter-spacing: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1;
+    font-kerning: normal;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    /* Türkçe aksanların (Ğ, İ, Ş, Ç) kırpılmaması için */
+    padding-block-start: 0.02em;
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3 { font-weight: 700; }
+  p, li, span, label { letter-spacing: 0; }
+
+  /* Masaüstü tipografi ölçeği (1024px ve üzeri) */
+  @media (min-width: 1024px) {
+    h1 { font-size: 34px; font-weight: 700; }
+    h2 { font-size: 24px; font-weight: 600; }
+    h3 { font-size: 20px; font-weight: 600; }
+    p, li, label, input, textarea, select, button { font-size: 16px; }
+  }
+}
+
+
+@layer utilities {
+  .shadow-card-hover { box-shadow: var(--shadow-card-hover); }
+  /* Gentle lift for cards */
+  .card-lift {
+    transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+  }
+  .card-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+  }
+  .card-zoom { transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease; }
+  .card-zoom:hover { transform: scale(1.02); box-shadow: var(--shadow-card-hover); }
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ShieldCheck, ArrowLeft, Phone, Mail, Calendar, Search, Package, Check, X as XIcon, Pencil, Trash2, Users as UsersIcon, LayoutDashboard, ClipboardList, AlertTriangle, MessageSquare, Settings as SettingsIcon, Crown, UserX, UserCheck, Save, KeyRound } from "lucide-react";
-import tasitsanLogo from "@/assets/tasitsan-official.png.asset.json";
+import { CORPORATE_LOGO_SRC } from "@/lib/corporate-logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -17,31 +17,89 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { adminDeleteUser, adminSetActive, adminSetRole, adminUpdateProfile, adminResetUserPassword, adminConfirmAllPendingEmails } from "@/lib/admin.functions";
+import { adminDeleteUser, adminSetActive, adminUpdateProfile, adminResetUserPassword, adminConfirmAllPendingEmails, adminSetTrustedSeller } from "@/lib/admin.functions";
 import { adminGetPartRequests, adminGetUsersFull, adminGetSellerContacts, adminGetPartsWithWhatsapp, adminGetSiteSettings, adminSaveSiteSettings } from "@/lib/admin-data.functions";
 import { StatCard } from "@/components/admin/StatCard";
 import { SafePartImage } from "@/components/SafePartImage";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { DashboardLiveInbox } from "@/components/admin/DashboardLiveInbox";
+import { AdminInstallCard } from "@/components/admin/AdminInstallCard";
+
 import { ListingStatsPanel } from "@/components/admin/ListingStatsPanel";
-import { AdminVerificationsPanel } from "@/components/admin/AdminVerificationsPanel";
+import { ProductReportsPanel } from "@/components/admin/ProductReportsPanel";
+import { TrustCenterPanel } from "@/components/admin/TrustCenterPanel";
 import { BotFilterPanel } from "@/components/admin/BotFilterPanel";
 import { StockEvaluationPanel } from "@/components/admin/StockEvaluationPanel";
 import { UrgentRequestsPanel } from "@/components/admin/UrgentRequestsPanel";
+import { PendingRequestsPanel } from "@/components/admin/PendingRequestsPanel";
 import { AdminNotificationsPanel } from "@/components/admin/AdminNotificationsPanel";
+import { OrdersPanel } from "@/components/admin/OrdersPanel";
+import { OrderStatsCards } from "@/components/admin/OrderStatsCards";
+
+import { AdminNotificationsBell } from "@/components/admin/AdminNotificationsBell";
 import { SystemHealthPanel } from "@/components/admin/SystemHealthPanel";
+import { SeoSitemapPanel } from "@/components/admin/SeoSitemapPanel";
+import { SeoReportPanel } from "@/components/admin/SeoReportPanel";
+import { OemSeoAuditPanel } from "@/components/admin/OemSeoAuditPanel";
+import { Seo31Panel } from "@/components/admin/Seo31Panel";
+import { IndexNowPanel } from "@/components/admin/IndexNowPanel";
+import { SeoHealthPanel } from "@/components/admin/SeoHealthPanel";
+import { SeoGrowthPanel } from "@/components/admin/SeoGrowthPanel";
+import { SeoBackfillPanel } from "@/components/admin/SeoBackfillPanel";
+import { SeoScorePanel } from "@/components/admin/SeoScorePanel";
+import { SeoQaPanel } from "@/components/admin/SeoQaPanel";
+import { SeoIndexCenterPanel } from "@/components/admin/SeoIndexCenterPanel";
+import { SeoIndexBoostPanel } from "@/components/admin/SeoIndexBoostPanel";
+import { OemLearningPanel } from "@/components/admin/OemLearningPanel";
+import { AiAnalyticsPanel } from "@/components/admin/AiAnalyticsPanel";
+import { SemanticEmbeddingPanel } from "@/components/admin/SemanticEmbeddingPanel";
+
+
+import { BulkApprovePanel } from "@/components/admin/BulkApprovePanel";
+import { ProductStatsPanel } from "@/components/admin/ProductStatsPanel";
+import { OemIntelligencePanel } from "@/components/admin/OemIntelligencePanel";
+import { XmlIntegrationPanel } from "@/components/admin/XmlIntegrationPanel";
+import { OemImageCenterPanel } from "@/components/admin/OemImageCenterPanel";
+import { OemCacheStatsPanel } from "@/components/admin/OemCacheStatsPanel";
+import { BayramotoImporterPanel } from "@/components/admin/BayramotoImporterPanel";
+import { BayramotoMatcherPanel } from "@/components/admin/BayramotoMatcherPanel";
+import { PartmanImporterPanel } from "@/components/admin/PartmanImporterPanel";
+import { OemImageResolverDebugPanel } from "@/components/admin/OemImageResolverDebugPanel";
+import { StokBorsasiPanel } from "@/components/admin/StokBorsasiPanel";
+import { SignupFailuresPanel } from "@/components/admin/SignupFailuresPanel";
+
+
+
 import { SecurityEventsPanel } from "@/components/admin/SecurityEventsPanel";
 import { SearchAnalyticsPanel } from "@/components/admin/SearchAnalyticsPanel";
+import { DemandAnalyticsPanel } from "@/components/admin/DemandAnalyticsPanel";
+import { ModerationPanel } from "@/components/admin/ModerationPanel";
+import { LiveTrafficPanel } from "@/components/admin/LiveTrafficPanel";
 import { AdminAdvancedDashboard } from "@/components/admin/AdminAdvancedDashboard";
+import { ConversionAnalyticsPanel } from "@/components/admin/ConversionAnalyticsPanel";
+import { ReviewsAdminPanel } from "@/components/admin/ReviewsAdminPanel";
+import { AiSupportPanel } from "@/components/admin/AiSupportPanel";
+import { FeaturedDealsPanel } from "@/components/admin/FeaturedDealsPanel";
+import { BulkPricePanel } from "@/components/admin/BulkPricePanel";
+import { OemCatalogPanel } from "@/components/admin/OemCatalogPanel";
+import { SupplierScanPanel } from "@/components/admin/SupplierScanPanel";
+import { ExternalSuppliersPanel } from "@/components/admin/ExternalSuppliersPanel";
+import { OnlineParcaPerfPanel } from "@/components/admin/OnlineParcaPerfPanel";
+import { AdminBulkDeletePanel } from "@/components/admin/AdminBulkDeletePanel";
+import { addFeaturedDeal, removeFeaturedDealByPart, fetchFeaturedPartIds, MAX_FEATURED_DEALS } from "@/lib/featured-deals";
+import { useAdminLiveChatNotifier } from "@/hooks/use-admin-live-chat-notifier";
 import { UserAvatar } from "@/components/UserAvatar";
+import { buildPartParam } from "@/lib/part-slug";
+import { hasAdminAccess } from "@/lib/admin-access";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }] }),
+  head: () => ({ meta: [{ title: "Yönetici Paneli — Taşıtsan" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: AdminPage,
 });
 
 type Status = "new" | "in_progress" | "resolved";
 type PartStatus = "pending" | "approved" | "rejected";
-type Tab = "dashboard" | "analytics" | "notifications" | "products" | "users" | "inquiries" | "requests" | "urgent" | "verifications" | "bots" | "stock" | "system" | "security" | "searches" | "settings";
+type Tab = "dashboard" | "live" | "analytics" | "conversion" | "notifications" | "orders" | "products" | "users" | "inquiries" | "requests" | "pending-requests" | "urgent" | "moderation" | "verifications" | "bots" | "stock" | "system" | "xml" | "stok-borsasi" | "oem-images" | "signup-failures" | "security" | "searches" | "demand" | "reviews" | "ai-support" | "featured-deals" | "bulk-price" | "bulk-delete" | "supplier-scan" | "oem-catalog" | "external-suppliers" | "settings";
 
 interface ProfileRow {
   id: string;
@@ -53,6 +111,7 @@ interface ProfileRow {
   is_active: boolean;
   is_approved: boolean;
   avatar_url: string | null;
+  trusted_seller: boolean;
 }
 
 interface SiteSettings {
@@ -80,7 +139,7 @@ interface Inquiry {
   message: string;
   status: Status;
   created_at: string;
-  part?: { title: string; brand: string | null; model: string | null; whatsapp: string; city: string | null; seller_id: string } | null;
+  part?: { id: string; seo_slug: string | null; title: string; brand: string | null; model: string | null; oem_code?: string | null; oem_codes?: string[] | null; whatsapp: string; city: string | null; seller_id: string } | null;
   buyer?: { display_name: string | null } | null;
   seller?: { display_name: string | null; whatsapp: string | null } | null;
 }
@@ -127,6 +186,7 @@ interface PartItem {
   model: string | null;
   year: number | null;
   oem_code: string | null;
+  oem_codes?: string[] | null;
   category: string | null;
   price: number | null;
   stock_quantity: number | null;
@@ -167,6 +227,7 @@ function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const { unreadTotal: liveChatUnread } = useAdminLiveChatNotifier({ isAdmin: !!isAdmin });
   const [tab, setTab] = useState<Tab>("dashboard");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [requests, setRequests] = useState<PartRequest[]>([]);
@@ -197,6 +258,37 @@ function AdminPage() {
   const [bulkAction, setBulkAction] = useState<null | { kind: "approve" | "reject" | "delete"; ids: string[] }>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const [productStatsVersion, setProductStatsVersion] = useState(0);
+  const [featuredIds, setFeaturedIds] = useState<Set<string>>(new Set());
+  const [featuredBusy, setFeaturedBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    void fetchFeaturedPartIds().then(setFeaturedIds).catch(() => {});
+  }, [isAdmin, tab]);
+
+  const toggleFeatured = async (partId: string) => {
+    setFeaturedBusy(partId);
+    try {
+      if (featuredIds.has(partId)) {
+        await removeFeaturedDealByPart(partId);
+        setFeaturedIds((s) => { const n = new Set(s); n.delete(partId); return n; });
+        toast.success("Fırsat listesinden kaldırıldı.");
+      } else {
+        if (featuredIds.size >= MAX_FEATURED_DEALS) {
+          toast.error(`En fazla ${MAX_FEATURED_DEALS} fırsat ürünü eklenebilir.`);
+          return;
+        }
+        await addFeaturedDeal(partId);
+        setFeaturedIds((s) => new Set(s).add(partId));
+        toast.success("Bugünün Fırsatı listesine eklendi.");
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setFeaturedBusy(null);
+    }
+  };
 
   useEffect(() => { setSelectedPartIds(new Set()); }, [tab, filter]);
 
@@ -218,18 +310,26 @@ function AdminPage() {
   }, [isAdmin]);
 
   const callDeleteUser = useServerFn(adminDeleteUser);
-  const callSetRole = useServerFn(adminSetRole);
   const callSetActive = useServerFn(adminSetActive);
   const callUpdateProfile = useServerFn(adminUpdateProfile);
   const callResetPw = useServerFn(adminResetUserPassword);
   const callConfirmAll = useServerFn(adminConfirmAllPendingEmails);
+  const callSetTrusted = useServerFn(adminSetTrustedSeller);
 
-  useEffect(() => { if (!authLoading && !user) nav({ to: "/auth" }); }, [authLoading, user, nav]);
+  useEffect(() => {
+    if (!authLoading && !user) {
+      nav({ to: "/auth", search: { redirect: "/admin" } as never, replace: true });
+    }
+  }, [authLoading, user, nav]);
 
   useEffect(() => {
     if (!user) { setIsAdmin(null); return; }
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
+    let cancelled = false;
+    setIsAdmin(null);
+    hasAdminAccess(user.id)
+      .then((allowed) => { if (!cancelled) setIsAdmin(allowed); })
+      .catch(() => { if (!cancelled) setIsAdmin(false); });
+    return () => { cancelled = true; };
   }, [user]);
 
   useEffect(() => {
@@ -252,14 +352,18 @@ function AdminPage() {
       supabase.from("user_roles").select("user_id,role").eq("role", "admin"),
       adminGetSiteSettings().then((data) => ({ data, error: null as any })).catch((e) => ({ data: null as any, error: e })),
     ]);
-    if (us.error) toast.error(translateError(us.error, "Kullanıcılar yüklenemedi"));
+    // Initial dashboard load: log errors to console so a single non-fatal
+    // RLS/permission issue doesn't spam a misleading "Bu işlemi yapma
+    // yetkiniz bulunmuyor." toast over the whole admin panel. Individual
+    // admin actions (update/delete/save) still surface errors via toast.
+    if (us.error) console.error("[admin.load] users:", us.error);
     setUsers((us.data ?? []) as ProfileRow[]);
     setAdminIds(new Set(((rl.data ?? []) as { user_id: string }[]).map((r) => r.user_id)));
     if (st.data) setSettings(st.data as SiteSettings);
-    if (iq.error) toast.error(translateError(iq.error));
-    if (rq.error) toast.error(translateError(rq.error, "Talepler yüklenemedi"));
-    if (pt.error) toast.error(translateError(pt.error));
-    if (qt.error) toast.error(translateError(qt.error));
+    if (iq.error) console.error("[admin.load] inquiries:", iq.error);
+    if (rq.error) console.error("[admin.load] requests:", rq.error);
+    if (pt.error) console.error("[admin.load] parts:", pt.error);
+    if (qt.error) console.error("[admin.load] quotes:", qt.error);
 
     const inqs = (iq.data ?? []) as any[];
     const quoteRows = (qt.data ?? []) as any[];
@@ -328,6 +432,7 @@ function AdminPage() {
       .eq("id", id);
     if (error) { toast.error(translateError(error)); return; }
     setParts((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
+    setProductStatsVersion((v) => v + 1);
     toast.success(status === "approved" ? "İlan onaylandı" : status === "rejected" ? "İlan reddedildi" : "Beklemede");
   };
 
@@ -336,6 +441,7 @@ function AdminPage() {
     const { error } = await supabase.from("parts").delete().eq("id", id);
     if (error) { toast.error(translateError(error)); return; }
     setParts((prev) => prev.filter((p) => p.id !== id));
+    setProductStatsVersion((v) => v + 1);
     toast.success("İlan silindi");
   };
 
@@ -376,6 +482,7 @@ function AdminPage() {
     setSelectedPartIds(new Set());
     setBulkBusy(false);
     setBulkAction(null);
+    setProductStatsVersion((v) => v + 1);
     const ok = ids.length - failed;
     if (ok > 0) {
       const label = kind === "approve" ? "onaylandı" : kind === "reject" ? "reddedildi" : "silindi";
@@ -425,17 +532,15 @@ function AdminPage() {
     toast.success(next ? "Kullanıcı onaylandı" : "Onay geri alındı");
   };
 
-  const handleToggleAdmin = async (u: ProfileRow) => {
-    const isAdminNow = adminIds.has(u.id);
+  const handleToggleTrusted = async (u: ProfileRow) => {
+    const next = !u.trusted_seller;
     try {
-      await callSetRole({ data: { userId: u.id, makeAdmin: !isAdminNow } });
-      setAdminIds((prev) => {
-        const next = new Set(prev);
-        if (isAdminNow) next.delete(u.id); else next.add(u.id);
-        return next;
-      });
-      toast.success(isAdminNow ? "Admin yetkisi kaldırıldı" : "Admin yetkisi verildi");
-    } catch (e: any) { toast.error(translateError(e, "Güncellenemedi")); }
+      await callSetTrusted({ data: { userId: u.id, trusted: next } });
+      setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, trusted_seller: next } : x));
+      toast.success(next ? "🛡️ Güvenilir Satıcı rozeti verildi" : "Güvenilir Satıcı rozeti kaldırıldı");
+    } catch (e: any) {
+      toast.error(translateError(e, "Rozet güncellenemedi"));
+    }
   };
 
   const openEditUser = (u: ProfileRow) => {
@@ -584,36 +689,56 @@ function AdminPage() {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link to="/" className="size-9 rounded-full bg-card grid place-items-center"><ArrowLeft className="size-4" /></Link>
           <img
-            src={tasitsanLogo.url}
+            src={CORPORATE_LOGO_SRC}
             alt="Taşıtsan"
             className="h-9 w-9 object-contain"
             width={36}
             height={36}
           />
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="font-display text-lg tracking-wide">Yönetici Paneli</h1>
             <p className="text-[11px] text-muted-foreground">
               {pendingCount} onay bekliyor · {inquiries.length} teklif · {requests.length} parça talebi
             </p>
           </div>
+          <AdminNotificationsBell />
         </div>
 
         <div className="max-w-2xl mx-auto px-4 flex gap-1.5 border-b border-border overflow-x-auto">
           {([
             ["dashboard", "Panel"],
+            ["live", "🟢 Canlı Trafik"],
             ["analytics", "📈 Analitik"],
+            ["conversion", "💰 Dönüşüm"],
             ["notifications", `🔔 Bildirim${unreadNotifs ? ` (${unreadNotifs})` : ""}`],
+            ["orders", "🛒 Siparişler"],
             ["products", `Ürünler${pendingCount ? ` (${pendingCount})` : ""}`],
             ["users", `Kullanıcılar (${users.length})`],
             ["inquiries", `Teklifler (${inquiries.length})`],
             ["requests", `Talepler (${requests.length})`],
+            ["pending-requests", "⏳ Bekleyen Talepler"],
             ["urgent", "🚨 Acil"],
-            ["verifications", "Doğrulama"],
+            ["moderation", "🧹 Moderasyon"],
+            ["verifications", "🛡 Güven Merkezi"],
             ["bots", "Bot Filtreleri"],
             ["stock", "Stok Analizi"],
             ["system", "🛡️ Yedekleme"],
+            ["xml", "📡 XML Entegrasyon"],
+            ["stok-borsasi", "📦 Stok Borsası"],
+            ["oem-images", "🖼️ OEM Görsel"],
+            ["signup-failures", "⚠️ Üyelik Hataları"],
+
             ["security", "🔒 Güvenlik"],
             ["searches", "🔎 Aramalar"],
+            ["demand", "🔥 Talep Analizi"],
+            ["reviews", "⭐ Yorumlar"],
+            ["ai-support", "🤖 AI Destek"],
+            ["featured-deals", "🔥 Bugünün Fırsatları"],
+            ["bulk-price", "💰 Toplu Fiyat Yönetimi"],
+            ["bulk-delete", "🗑️ Toplu Ürün Sil"],
+            ["supplier-scan", "🏭 OnlineParça Tarama"],
+            ["oem-catalog", "📚 OEM Kataloğu"],
+            ["external-suppliers", "🌐 Harici Tedarikçiler"],
             ["settings", "Ayarlar"],
           ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => { setTab(t); setFilter("all"); }}
@@ -623,6 +748,15 @@ function AdminPage() {
               {label}
             </button>
           ))}
+          <Link to="/admin/live-support"
+            className="shrink-0 px-3 py-2.5 text-xs sm:text-sm font-semibold border-b-2 -mb-px border-transparent text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1.5 relative">
+            💬 Canlı Destek →
+            {liveChatUnread > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold animate-pulse">
+                {liveChatUnread > 99 ? "99+" : liveChatUnread}
+              </span>
+            )}
+          </Link>
         </div>
 
         {(tab === "products" || tab === "inquiries" || tab === "requests") && (
@@ -699,8 +833,13 @@ function AdminPage() {
           <p className="text-center text-muted-foreground text-sm py-8">Yükleniyor...</p>
         ) : tab === "dashboard" ? (
           <div className="space-y-4">
+            <AdminInstallCard />
+            <OrderStatsCards onJump={(t: string) => setTab(t as Tab)} />
+            <DashboardLiveInbox />
+
             <AnalyticsDashboard />
             <ListingStatsPanel />
+            <ProductReportsPanel />
             <DashboardPanel
               users={users}
               parts={parts}
@@ -709,8 +848,13 @@ function AdminPage() {
               onJump={(t) => { setTab(t); setFilter("all"); }}
             />
           </div>
+
+        ) : tab === "live" ? (
+          <LiveTrafficPanel />
         ) : tab === "analytics" ? (
           <AdminAdvancedDashboard />
+        ) : tab === "conversion" ? (
+          <ConversionAnalyticsPanel />
         ) : tab === "users" ? (
           <UsersPanel
             users={filteredUsers}
@@ -719,31 +863,120 @@ function AdminPage() {
             currentUserId={user?.id ?? null}
             onDelete={handleDeleteUser}
             onToggleActive={handleToggleActive}
-            onToggleAdmin={handleToggleAdmin}
             onToggleApproved={handleToggleApproved}
+            onToggleTrusted={handleToggleTrusted}
             onEditName={openEditUser}
             onRemoveAvatar={handleRemoveAvatar}
           />
         ) : tab === "notifications" ? (
           <AdminNotificationsPanel />
+        ) : tab === "orders" ? (
+          <OrdersPanel />
         ) : tab === "verifications" ? (
-          <AdminVerificationsPanel currentUserId={user?.id ?? null} />
+          <TrustCenterPanel />
+
+        ) : tab === "pending-requests" ? (
+          <PendingRequestsPanel />
         ) : tab === "urgent" ? (
           <UrgentRequestsPanel />
+        ) : tab === "moderation" ? (
+          <ModerationPanel />
         ) : tab === "bots" ? (
           <BotFilterPanel />
         ) : tab === "stock" ? (
           <StockEvaluationPanel />
         ) : tab === "system" ? (
-          <SystemHealthPanel />
+          <div className="space-y-4">
+            <SystemHealthPanel />
+            <AiAnalyticsPanel />
+            <OemLearningPanel />
+            <SemanticEmbeddingPanel />
+            <SeoIndexCenterPanel />
+            <SeoIndexBoostPanel />
+            <SeoQaPanel />
+            <SeoGrowthPanel />
+            <SeoBackfillPanel />
+            <SeoScorePanel />
+            <SeoSitemapPanel />
+
+            <Seo31Panel />
+            <IndexNowPanel />
+            <SeoHealthPanel />
+            <OemSeoAuditPanel />
+            <SeoReportPanel />
+
+            <OemIntelligencePanel />
+          </div>
+        ) : tab === "xml" ? (
+          <XmlIntegrationPanel />
+        ) : tab === "stok-borsasi" ? (
+          <StokBorsasiPanel />
+        ) : tab === "oem-images" ? (
+          <div className="space-y-4 max-w-full overflow-x-hidden">
+            <OemImageResolverDebugPanel />
+            <OemCacheStatsPanel />
+            <PartmanImporterPanel />
+            <BayramotoImporterPanel />
+            <BayramotoMatcherPanel />
+            <OemImageCenterPanel />
+          </div>
+
+
+
+        ) : tab === "signup-failures" ? (
+          <SignupFailuresPanel />
         ) : tab === "security" ? (
+
           <SecurityEventsPanel />
         ) : tab === "searches" ? (
           <SearchAnalyticsPanel />
+        ) : tab === "demand" ? (
+          <DemandAnalyticsPanel />
+        ) : tab === "reviews" ? (
+          <ReviewsAdminPanel />
+        ) : tab === "ai-support" ? (
+          <AiSupportPanel />
+        ) : tab === "featured-deals" ? (
+          <FeaturedDealsPanel />
+        ) : tab === "bulk-price" ? (
+          <BulkPricePanel />
+        ) : tab === "bulk-delete" ? (
+          <AdminBulkDeletePanel />
+        ) : tab === "supplier-scan" ? (
+          <SupplierScanPanel />
+        ) : tab === "oem-catalog" ? (
+          <OemCatalogPanel />
+        ) : tab === "external-suppliers" ? (
+          <div className="space-y-6">
+            <OnlineParcaPerfPanel />
+            <ExternalSuppliersPanel />
+          </div>
         ) : tab === "settings" ? (
           <SettingsPanel settings={settings} onSave={saveSettings} />
         ) : tab === "products" ? (
           <>
+            <ProductStatsPanel refreshKey={productStatsVersion} />
+            <BulkApprovePanel
+              onChanged={() => {
+                setProductStatsVersion((v) => v + 1);
+                void load();
+              }}
+            />
+
+            <div className="rounded-lg border border-border bg-card/60 px-3 py-2 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                {filter === "all" ? "Tüm ürünler" : `Filtre: ${PART_STATUS_LABEL[filter as PartStatus] ?? filter}`}
+              </span>
+              <span className="text-foreground">
+                <strong>{filteredParts.length.toLocaleString("tr-TR")}</strong> gösteriliyor
+                {" · "}
+                <span className="text-gold">{pendingCount.toLocaleString("tr-TR")}</span> bekleyen
+                {" / "}
+                <span className="text-muted-foreground">{parts.length.toLocaleString("tr-TR")}</span> toplam
+              </span>
+            </div>
+
+
             {filteredParts.length > 0 && (() => {
               const pageIds = filteredParts.map((p) => p.id);
               const allIds = parts.map((p) => p.id);
@@ -905,6 +1138,14 @@ function AdminPage() {
                   <XIcon className="size-3.5 mr-1" /> Reddet
                 </Button>
               </div>
+              <Button size="sm" variant="outline" onClick={() => void toggleFeatured(p.id)}
+                disabled={featuredBusy === p.id || p.status !== "approved"}
+                title={p.status !== "approved" ? "Sadece onaylı ürünler fırsat olabilir" : ""}
+                className={`w-full h-9 text-xs ${featuredIds.has(p.id)
+                  ? "border-orange-500/60 text-orange-400 hover:bg-orange-500/10"
+                  : "border-gold/40 text-gold hover:bg-gold/10"}`}>
+                {featuredIds.has(p.id) ? "★ Bugünün Fırsatından Kaldır" : "⭐ Bugünün Fırsatı Yap"}
+              </Button>
               <Button size="sm" variant="outline" onClick={() => deletePart(p.id)}
                 className="w-full h-9 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
                 <Trash2 className="size-3.5 mr-1" /> İlanı Sil
@@ -919,10 +1160,14 @@ function AdminPage() {
             <article key={i.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <Link to="/parts/$id" params={{ id: i.part_id }}
-                    className="font-semibold text-sm hover:text-gold transition-colors line-clamp-1">
-                    {i.part?.title ?? "Silinmiş ilan"}
-                  </Link>
+                  {i.part ? (
+                    <Link to="/parts/$id" params={{ id: buildPartParam(i.part) }}
+                      className="font-semibold text-sm hover:text-gold transition-colors line-clamp-1">
+                      {i.part.title}
+                    </Link>
+                  ) : (
+                    <span className="font-semibold text-sm text-muted-foreground line-clamp-1">Silinmiş ilan</span>
+                  )}
                   {i.part && (
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {[i.part.brand, i.part.model, i.part.city].filter(Boolean).join(" • ")}
@@ -1278,6 +1523,7 @@ function EditPartDialog({
   const [form, setForm] = useState({
     title: "", brand: "", model: "", year: "", oem_code: "",
     category: "", price: "", stock_quantity: "", description: "",
+    supplier_stock: false, minimum_order_amount: "", single_shipment_allowed: true, procurement_days: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -1293,6 +1539,12 @@ function EditPartDialog({
       price: part.price != null ? String(part.price) : "",
       stock_quantity: part.stock_quantity != null ? String(part.stock_quantity) : "",
       description: part.description ?? "",
+      supplier_stock: !!(part as { supplier_stock?: boolean }).supplier_stock,
+      minimum_order_amount: (part as { minimum_order_amount?: number | null }).minimum_order_amount != null
+        ? String((part as { minimum_order_amount?: number | null }).minimum_order_amount) : "",
+      single_shipment_allowed: (part as { single_shipment_allowed?: boolean }).single_shipment_allowed !== false,
+      procurement_days: (part as { procurement_days?: number | null }).procurement_days != null
+        ? String((part as { procurement_days?: number | null }).procurement_days) : "",
     });
   }, [part]);
 
@@ -1301,22 +1553,39 @@ function EditPartDialog({
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const patch = {
+    const trimmedOem = form.oem_code.trim().toUpperCase();
+    // Send BOTH oem_code and oem_codes[] so the OEM change is guaranteed to
+    // stick even under the normalize trigger.
+    const patch: Record<string, unknown> = {
       title: form.title.trim(),
       brand: form.brand.trim() || null,
       model: form.model.trim() || null,
       year: form.year ? parseInt(form.year) : null,
-      oem_code: form.oem_code.trim() || null,
+      oem_code: trimmedOem || null,
+      oem_codes: trimmedOem
+        ? Array.from(new Set([trimmedOem, ...((part.oem_codes ?? []).filter((c: string) => c && c.toUpperCase() !== trimmedOem))]))
+        : [],
       category: form.category.trim() || null,
       price: form.price ? parseFloat(form.price) : null,
       stock_quantity: form.stock_quantity ? Math.max(0, parseInt(form.stock_quantity)) : 0,
       description: form.description.trim() || null,
+      supplier_stock: !!form.supplier_stock,
+      minimum_order_amount: form.minimum_order_amount ? parseFloat(form.minimum_order_amount) : null,
+      single_shipment_allowed: !!form.single_shipment_allowed,
+      procurement_days: form.procurement_days ? Math.max(0, parseInt(form.procurement_days)) : null,
     };
-    const { error } = await supabase.from("parts").update(patch).eq("id", part.id);
+    // Route through admin_update_part RPC: SECURITY DEFINER, writes audit log,
+    // returns the fresh row so we can't get stomped by cache/realtime.
+    const { data, error } = await supabase.rpc("admin_update_part", {
+      _id: part.id,
+      _patch: patch as never,
+    });
     setSaving(false);
     if (error) { toast.error(translateError(error)); return; }
+    const fresh = (Array.isArray(data) ? data[0] : data) as Partial<PartItem> | null;
     toast.success("Ürün güncellendi");
-    onSaved({ id: part.id, ...patch });
+    onSaved({ id: part.id, ...(fresh ?? patch) } as Partial<PartItem> & { id: string });
+    onClose();
   };
 
   return (
@@ -1343,6 +1612,25 @@ function EditPartDialog({
               onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d.]/g, "") })} />
             <Input placeholder="Stok" inputMode="numeric" value={form.stock_quantity}
               onChange={(e) => setForm({ ...form, stock_quantity: e.target.value.replace(/\D/g, "") })} />
+          </div>
+          <div className="rounded-lg border border-gold/30 bg-gold/5 p-3 space-y-2">
+            <p className="text-xs uppercase tracking-wider text-gold font-semibold">Tedarikçi / Servis Stoğu</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" className="accent-gold size-4" checked={form.supplier_stock}
+                onChange={(e) => setForm({ ...form, supplier_stock: e.target.checked })} />
+              Tedarikçi stoğu (Taşıtsan deposunda değil)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" className="accent-gold size-4" checked={form.single_shipment_allowed}
+                onChange={(e) => setForm({ ...form, single_shipment_allowed: e.target.checked })} />
+              Tek başına gönderilebilir
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="Min. sipariş ₺ (varsayılan 750)" inputMode="decimal" value={form.minimum_order_amount}
+                onChange={(e) => setForm({ ...form, minimum_order_amount: e.target.value.replace(/[^\d.]/g, "") })} />
+              <Input placeholder="Temin süresi (gün)" inputMode="numeric" value={form.procurement_days}
+                onChange={(e) => setForm({ ...form, procurement_days: e.target.value.replace(/\D/g, "") })} />
+            </div>
           </div>
           <Textarea placeholder="Açıklama" rows={4} value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })} className="resize-none" />
@@ -1485,7 +1773,7 @@ function DashboardPanel({
 }
 
 function UsersPanel({
-  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleAdmin, onToggleApproved, onEditName, onRemoveAvatar,
+  users, parts, adminIds, currentUserId, onDelete, onToggleActive, onToggleApproved, onToggleTrusted, onEditName, onRemoveAvatar,
 }: {
   users: ProfileRow[];
   parts: PartItem[];
@@ -1493,8 +1781,8 @@ function UsersPanel({
   currentUserId: string | null;
   onDelete: (u: ProfileRow) => void;
   onToggleActive: (u: ProfileRow) => void;
-  onToggleAdmin: (u: ProfileRow) => void;
   onToggleApproved: (u: ProfileRow) => void;
+  onToggleTrusted: (u: ProfileRow) => void;
   onEditName: (u: ProfileRow) => void;
   onRemoveAvatar: (u: ProfileRow) => void;
 }) {
@@ -1524,6 +1812,7 @@ function UsersPanel({
                   {isUserAdmin && <Crown className="size-3.5 text-gold shrink-0" />}
                   {!approved && <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gold/15 text-gold border border-gold/40">Onay Bekliyor</span>}
                   {!u.is_active && <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive/15 text-destructive border border-destructive/40">Pasif</span>}
+                  {u.trusted_seller && <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gold-gradient text-gold-foreground border border-gold font-semibold">🛡️ Güvenilir</span>}
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate">
                   {[u.city, u.whatsapp, u.email].filter(Boolean).join(" · ") || "—"}
@@ -1543,6 +1832,10 @@ function UsersPanel({
               className="w-full h-8 text-[11px]">
               <Pencil className="size-3 mr-1" /> Kullanıcı Düzenle
             </Button>
+            <Button size="sm" variant="outline" onClick={() => onToggleTrusted(u)}
+              className={`w-full h-8 text-[11px] ${u.trusted_seller ? "border-gold text-gold bg-gold/10" : "border-gold/40 text-gold hover:bg-gold/10"}`}>
+              🛡️ {u.trusted_seller ? "Güvenilir Rozetini Kaldır" : "Güvenilir Rozeti Ver"}
+            </Button>
             {u.avatar_url && (
               <Button size="sm" variant="outline" onClick={() => onRemoveAvatar(u)}
                 className="w-full h-8 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10">
@@ -1556,10 +1849,6 @@ function UsersPanel({
                   <XIcon className="size-3 mr-1" /> Onayı Kaldır
                 </Button>
               )}
-              <Button size="sm" variant="outline" onClick={() => onToggleAdmin(u)} disabled={isSelf && isUserAdmin}
-                className={`h-8 text-[11px] ${isUserAdmin ? "border-gold/40 text-gold" : ""}`}>
-                <Crown className="size-3 mr-1" /> {isUserAdmin ? "Admin Kaldır" : "Admin Yap"}
-              </Button>
               <Button size="sm" variant="outline" onClick={() => onToggleActive(u)} disabled={isSelf}
                 className="h-8 text-[11px]">
                 {u.is_active ? <><UserX className="size-3 mr-1" />Pasifle</> : <><UserCheck className="size-3 mr-1" />Aktifle</>}
@@ -1678,7 +1967,7 @@ function SettingsPanel({ settings, onSave }: { settings: SiteSettings | null; on
           <Input value={form.gsc_verification_code ?? ""} onChange={(e) => set("gsc_verification_code", e.target.value)} className="mt-1 h-9 font-mono" placeholder="abc123..." />
           <span className="text-[10px] text-muted-foreground mt-1 block">
             Search Console &gt; HTML etiketi yönteminde verilen <code>content</code> değerini buraya yapıştırın. Sitenizin <code>&lt;head&gt;</code> bölümüne otomatik eklenir.
-            Sitemap: <code>https://tasitsan.com.tr/sitemap.xml</code>
+            Sitemap: <code>https://www.tasitsan.com.tr/sitemap.xml</code>
           </span>
         </label>
       </section>

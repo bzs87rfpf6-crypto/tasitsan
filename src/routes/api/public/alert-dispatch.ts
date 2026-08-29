@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import webpush from "web-push";
+import { buildPartParam } from "@/lib/part-slug";
 
 export const Route = createFileRoute("/api/public/alert-dispatch")({
   server: {
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/api/public/alert-dispatch")({
         // Load part
         const { data: part } = await supabaseAdmin
           .from("parts")
-          .select("id,title,brand,model,category,oem_code,oem_codes,status,seller_id")
+          .select("id,seo_slug,title,brand,model,category,oem_code,oem_codes,status,seller_id")
           .eq("id", body.part_id).maybeSingle();
         if (!part || part.status !== "approved") return new Response("Skip", { status: 200 });
 
@@ -87,7 +88,7 @@ export const Route = createFileRoute("/api/public/alert-dispatch")({
           const payload = JSON.stringify({
             title: "Parça Alarmı",
             body: titleText,
-            url: `/parts/${part.id}`,
+            url: `/parts/${buildPartParam(part)}`,
             tag: `alert-${part.id}`,
           });
           try {

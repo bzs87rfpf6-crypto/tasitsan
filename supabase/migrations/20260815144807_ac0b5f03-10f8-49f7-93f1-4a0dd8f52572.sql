@@ -1,0 +1,1 @@
+UPDATE public.parts SET status = 'passive' WHERE source_type = 'external_supplier' AND status <> 'passive';

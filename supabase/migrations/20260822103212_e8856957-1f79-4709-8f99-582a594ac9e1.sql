@@ -1,0 +1,1 @@
+ALTER TABLE public.bilus_sessions ADD COLUMN IF NOT EXISTS test_passed_at timestamptz;

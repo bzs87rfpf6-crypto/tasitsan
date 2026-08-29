@@ -12,19 +12,24 @@ import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { translateError } from "@/lib/error-messages";
+import { organizationLd as organizationLdFromBuild } from "@/lib/eeat-content";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
+import { CartProvider } from "@/lib/cart";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const PwaLaunchDiagnostics = lazy(() => import("@/components/PwaLaunchDiagnostics").then((mod) => ({ default: mod.PwaLaunchDiagnostics })));
 const DeepLinkHandler = lazy(() => import("@/components/DeepLinkHandler").then((mod) => ({ default: mod.DeepLinkHandler })));
 const InstallPrompt = lazy(() => import("@/components/InstallPrompt").then((mod) => ({ default: mod.InstallPrompt })));
 const SplashScreen = lazy(() => import("@/components/SplashScreen").then((mod) => ({ default: mod.SplashScreen })));
+const SupportChat = lazy(() => import("@/components/support/SupportChat"));
+const LocationConsentDialog = lazy(() => import("@/components/LocationConsentDialog"));
 
 function isAndroidCapacitorLikeRuntime() {
   if (typeof window === "undefined") return false;
   const hasCapacitor = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  return hasCapacitor || /; wv\)|\bwv\b|Capacitor/i.test(ua);
+  return hasCapacitor || /; wv[)]|\bwv\b|Capacitor/i.test(ua);
 }
 
 function NotFoundComponent() {
@@ -43,16 +48,36 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  console.error("[TanStack ErrorBoundary]", error?.name, error?.message, error?.stack);
   const router = useRouter();
+  // Teknik detay ASLA sunucu HTML'ine yazılmaz: Google snippet'inde
+  // "TypeError: Failed to fetch dynamically imported module" gibi metinler
+  // görünmesin diye yalnızca ?debug=1 ile ve hidrasyondan sonra gösterilir.
+  const [debug, setDebug] = useState<string | null>(null);
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportLovableError(error, {
+      boundary: "tanstack_root_error_component",
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorStack: error?.stack,
+      path: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
+    });
+    try {
+      if (new URLSearchParams(window.location.search).get("debug") === "1") {
+        setDebug(`${error?.name ?? "Error"}: ${error?.message ?? "Unknown"}\n${error?.stack ?? ""}`);
+      }
+    } catch { /* noop */ }
   }, [error]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
+      <div className="max-w-lg text-center">
         <h1 className="text-xl font-semibold">Bir şeyler ters gitti</h1>
         <p className="mt-2 text-sm text-muted-foreground">{translateError(error)}</p>
+        {debug && (
+          <pre className="mt-3 text-left text-xs bg-muted/30 rounded-md p-2 whitespace-pre-wrap break-words max-h-64 overflow-auto">
+            {debug}
+          </pre>
+        )}
         <div className="mt-6 flex gap-2 justify-center">
           <button
             onClick={() => { router.invalidate(); reset(); }}
@@ -66,6 +91,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     </div>
   );
 }
+
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: async () => {
@@ -84,26 +110,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#f4f5f7" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Taşıtsan" },
+      { name: "apple-mobile-web-app-title", content: "Taşıtsan Parça Borsası" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "format-detection", content: "telephone=no" },
       { title: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
       { name: "description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
       { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1" },
-      { property: "og:title", content: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
-      { property: "og:description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
+      { property: "og:title", content: "Taşıtsan Parça Borsası | Otomotiv Yedek Parça Pazaryeri" },
+      { property: "og:description", content: "Toyota, Mitsubishi, Isuzu, Renault, Ford ve birçok marka için binlerce sıfır ve çıkma yedek parçayı güvenle bulun." },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Taşıtsan Parça Borsası" },
       { property: "og:locale", content: "tr_TR" },
-      { name: "twitter:title", content: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça" },
-      { name: "twitter:description", content: "Türkiye'nin yedek parça borsası. Tüm teklif ve iletişim süreçleri Taşıtsan üzerinden güvenle yönetilir." },
+      { property: "og:url", content: "https://www.tasitsan.com.tr" },
+      { property: "og:image", content: "https://www.tasitsan.com.tr/og-image.jpg" },
+      { property: "og:image:secure_url", content: "https://www.tasitsan.com.tr/og-image.jpg" },
+      { property: "og:image:type", content: "image/jpeg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça Pazaryeri" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@tasitsan" },
+      { name: "twitter:title", content: "Taşıtsan Parça Borsası | Otomotiv Yedek Parça Pazaryeri" },
+      { name: "twitter:description", content: "Toyota, Mitsubishi, Isuzu, Renault, Ford ve birçok marka için binlerce sıfır ve çıkma yedek parçayı güvenle bulun." },
+      { name: "twitter:image", content: "https://www.tasitsan.com.tr/og-image.jpg" },
+      { name: "twitter:image:alt", content: "Taşıtsan Parça Borsası — Otomotiv Yedek Parça Pazaryeri" },
     ];
     meta.push({ name: "google-site-verification", content: "5btdy3woANJj2uefmPtCejBLwHmcXm8Ljv" });
     return {
       meta,
       links: [
         { rel: "stylesheet", href: appCss },
+        // Turkish-safe web fonts (latin-ext subset covers Ç Ğ İ ı Ö Ş Ü)
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&display=swap&subset=latin,latin-ext",
+        },
         { rel: "manifest", href: "/manifest.json" },
         { rel: "icon", href: "/favicon.ico", sizes: "any" },
         { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon.png" },
@@ -111,6 +154,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "icon", type: "image/png", sizes: "512x512", href: "/android-chrome-512x512.png" },
         { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
         { rel: "mask-icon", href: "/favicon.png", color: "#d4a017" },
+        // Performance: preconnect / dns-prefetch to critical origins for LCP
+        { rel: "preconnect", href: "https://akasqaswpanbumrtdaak.supabase.co", crossOrigin: "anonymous" },
+        { rel: "dns-prefetch", href: "https://akasqaswpanbumrtdaak.supabase.co" },
+        { rel: "dns-prefetch", href: "https://www.googletagmanager.com" },
+        { rel: "dns-prefetch", href: "https://www.google-analytics.com" },
       ],
       scripts: [
         {
@@ -149,7 +197,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     try {
       if (window.Capacitor) return;
       var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-      var nativeLike = standalone || /; wv\)|\bwv\b|Capacitor/i.test(navigator.userAgent || '') || !!window.Capacitor;
+      var nativeLike = standalone || /; wv[)]|\bwv\b|Capacitor/i.test(navigator.userAgent || '') || !!window.Capacitor;
       var hydrated = document.documentElement.getAttribute('data-pwa-hydrated') === 'true';
       var text = (document.body && document.body.innerText || '').trim();
       var hasApp = !!document.querySelector('main, header, nav, [data-pwa-ready="true"]');
@@ -161,13 +209,67 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 })();`,
         },
         {
+          children: `(function(){
+  // Eski deploy sonrası tarayıcı, silinmiş bir /assets/index-*.js chunk'ını
+  // yüklemeye çalıştığında dinamik import hatası fırlatır. Bu durumda
+  // service worker + Cache Storage temizlenir ve tek sefer yenileme yapılır.
+  var RELOAD_FLAG = '__ts_chunk_reload_at';
+  function isChunkError(err) {
+    if (!err) return false;
+    var msg = (err && (err.message || err.toString())) || '';
+    // Desenler parçalı yazılır: hata metni HTML kaynağında düz metin olarak geçmesin.
+    var P = ['Failed to ' + 'fetch dynamically imported module', 'Importing a ' + 'module script failed', 'error loading ' + 'dynamically imported module', 'ChunkLoad' + 'Error', 'Loading chunk [\\\\d]+ failed'];
+    return new RegExp(P.join('|'), 'i').test(msg);
+
+  }
+  function recover() {
+    try {
+      var last = Number(sessionStorage.getItem(RELOAD_FLAG) || '0');
+      if (Date.now() - last < 15000) return; // reload loop guard
+      sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+    } catch (_) {}
+    var done = function(){ try { location.reload(); } catch(_) {} };
+    try {
+      var cleanups = [];
+      if (window.caches && caches.keys) {
+        cleanups.push(caches.keys().then(function(names){
+          return Promise.all(names.map(function(n){ return caches.delete(n); }));
+        }).catch(function(){}));
+      }
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        cleanups.push(navigator.serviceWorker.getRegistrations().then(function(regs){
+          return Promise.all(regs.map(function(r){ return r.unregister().catch(function(){}); }));
+        }).catch(function(){}));
+      }
+      Promise.all(cleanups).then(done, done);
+      setTimeout(done, 1500);
+    } catch (_) { done(); }
+  }
+  window.addEventListener('error', function(e){
+    if (isChunkError(e && (e.error || e))) recover();
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    if (isChunkError(e && e.reason)) recover();
+  });
+})();`,
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(organizationLdFromBuild()),
+        },
+        {
           type: "application/ld+json",
           children: JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "Organization",
+            "@type": "WebSite",
             name: "Taşıtsan Parça Borsası",
-            url: "https://tasitsan.com.tr",
-            logo: "https://tasitsan.com.tr/icon-512.png",
+            url: "https://www.tasitsan.com.tr",
+            inLanguage: "tr-TR",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://www.tasitsan.com.tr/parts?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
           }),
         },
       ],
@@ -198,7 +300,38 @@ function RootComponent() {
     if (!isCapacitorRuntime) {
       setEnablePwaHelpers(true);
     }
-    import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
+    // Yeni deployment tespiti: eski JS/CSS chunk ve eski service worker cache'i
+    // otomatik geçersiz kılınır (kullanıcı verisi silinmez).
+    let detachVersionWatch: (() => void) | null = null;
+    if (!isCapacitorRuntime) {
+      import("@/lib/build-version").then(({ startVersionWatcher }) => {
+        detachVersionWatch = startVersionWatcher();
+      }).catch(() => { /* sürüm izleyici opsiyoneldir */ });
+    }
+
+    // Ziyaretçi konum sistemi: OTOMATİK GPS istenmez. Sadece IP tabanlı yaklaşık
+    // konum arka planda alınır; GPS izin akışı LocationConsentDialog üzerinden
+    // kullanıcı butona tıkladığında çalışır.
+    let detachAuthGeo: (() => void) | null = null;
+    import("@/lib/geolocation").then(({ initGeolocation, attachAuthGeoSync }) => {
+      void initGeolocation();
+      detachAuthGeo = attachAuthGeoSync();
+    }).catch(() => { /* konum başarısız olursa uygulama etkilenmez */ });
+
+    let detachTimer: (() => void) | null = null;
+    const timerPromise = import("@/lib/page-timer").then(({ attachPageTimer, startPageTimer }) => {
+      detachTimer = attachPageTimer();
+      startPageTimer();
+      return startPageTimer;
+    }).catch(() => null);
+
+    // Canlı presence (heartbeat) — admin ekranında "şu an sitede" bilgisi için.
+    let detachPresence: (() => void) | null = null;
+    import("@/lib/presence").then(({ startPresence }) => {
+      detachPresence = startPresence();
+    }).catch(() => { /* presence opsiyoneldir */ });
+
+    const analyticsPromise = import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
       let ga4Id: string | null = null;
       import("@/integrations/supabase/client").then(({ supabase }) => {
         supabase
@@ -213,18 +346,30 @@ function RootComponent() {
       });
 
       const unsub = router.subscribe("onResolved", () => {
+        void timerPromise.then((startPageTimer) => startPageTimer?.());
         trackEvent("page_view");
         gaPageView(ga4Id, window.location.pathname);
       });
-      return () => unsub();
+      return unsub;
     }).catch((error) => {
       console.error("[Taşıtsan] analytics startup failed", error);
+      return () => {};
     });
+
+    return () => {
+      void analyticsPromise.then((unsub) => unsub?.());
+      detachTimer?.();
+      detachPresence?.();
+      detachAuthGeo?.();
+      detachVersionWatch?.();
+    };
   }, [router, isCapacitorRuntime]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <CartProvider>
         {enablePwaHelpers && (
           <Suspense fallback={null}>
             <PwaLaunchDiagnostics />
@@ -232,6 +377,7 @@ function RootComponent() {
         )}
         <div data-pwa-ready="true">
           <Outlet />
+          <SiteFooter />
         </div>
         {enablePwaHelpers && (
           <Suspense fallback={null}>
@@ -241,6 +387,13 @@ function RootComponent() {
           </Suspense>
         )}
         <Toaster theme="dark" position="top-center" />
+        <Suspense fallback={null}>
+          <LocationConsentDialog />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SupportChat />
+        </Suspense>
+        </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

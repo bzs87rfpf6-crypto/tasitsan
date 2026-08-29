@@ -1,3 +1,4 @@
+import { buildPartParam } from "@/lib/part-slug";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Search, Loader2, X } from "lucide-react";
@@ -91,7 +92,7 @@ export function OemQueryDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                   <Link
                     key={r.id}
                     to="/parts/$id"
-                    params={{ id: r.id }}
+                    params={{ id: buildPartParam(r) }}
                     onClick={() => onOpenChange(false)}
                     className="block rounded-xl overflow-hidden border border-border bg-card hover:border-gold/60 transition"
                   >

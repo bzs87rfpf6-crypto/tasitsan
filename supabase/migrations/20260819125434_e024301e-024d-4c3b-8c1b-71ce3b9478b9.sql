@@ -1,0 +1,2 @@
+DELETE FROM public.live_chat_messages WHERE conversation_id IN (SELECT id FROM public.live_chat_conversations WHERE subject IN ('E2E test','E2E test 2'));
+DELETE FROM public.live_chat_conversations WHERE subject IN ('E2E test','E2E test 2');

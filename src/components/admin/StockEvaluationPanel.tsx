@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { TrendingUp, Flame, Snowflake, Car, Sparkles, AlertTriangle } from "lucide-react";
 import { getStockDashboard, type StockDashboard } from "@/lib/stock-eval.functions";
+import { buildPartParam } from "@/lib/part-slug";
 
 function tl(n: number | null | undefined) {
   if (n == null) return "—";
@@ -35,7 +36,7 @@ export function StockEvaluationPanel() {
                 <div className="min-w-0">
                   <p className="font-mono font-semibold text-foreground truncate">{m.oem}</p>
                   {m.sample && (
-                    <Link to="/parts/$id" params={{ id: m.sample.id }} className="text-[10px] text-muted-foreground hover:text-gold line-clamp-1">
+                    <Link to="/parts/$id" params={{ id: buildPartParam(m.sample) }} className="text-[10px] text-muted-foreground hover:text-gold line-clamp-1">
                       {m.sample.title}
                     </Link>
                   )}
@@ -54,7 +55,7 @@ export function StockEvaluationPanel() {
         {data.fastest_selling.length === 0 ? <Empty /> : (
           <div className="space-y-1.5">
             {data.fastest_selling.map((p) => (
-              <Link key={p.id} to="/parts/$id" params={{ id: p.id }}
+              <Link key={p.id} to="/parts/$id" params={{ id: buildPartParam(p) }}
                 className="flex items-center justify-between gap-2 text-xs bg-background/50 rounded-lg p-2.5 hover:bg-background/80 transition-colors">
                 <div className="min-w-0">
                   <p className="font-semibold text-foreground truncate">{p.title}</p>
@@ -74,7 +75,7 @@ export function StockEvaluationPanel() {
         {data.slow_moving.length === 0 ? <Empty /> : (
           <div className="space-y-1.5">
             {data.slow_moving.map((p) => (
-              <Link key={p.id} to="/parts/$id" params={{ id: p.id }}
+              <Link key={p.id} to="/parts/$id" params={{ id: buildPartParam(p) }}
                 className="flex items-center justify-between gap-2 text-xs bg-background/50 rounded-lg p-2.5 hover:bg-background/80 transition-colors">
                 <div className="min-w-0">
                   <p className="font-semibold text-foreground truncate">{p.title}</p>
@@ -109,7 +110,7 @@ export function StockEvaluationPanel() {
             {data.stale_recs.map((r) => (
               <div key={r.id} className="bg-background/50 rounded-lg p-2.5 text-xs space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                  <Link to="/parts/$id" params={{ id: r.id }} className="font-semibold text-foreground hover:text-gold truncate">
+                  <Link to="/parts/$id" params={{ id: buildPartParam(r) }} className="font-semibold text-foreground hover:text-gold truncate">
                     {r.title}
                   </Link>
                   <span className="shrink-0 text-[10px] text-muted-foreground">{r.age_days} gün · {tl(r.price)}</span>

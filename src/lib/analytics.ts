@@ -1,9 +1,12 @@
 // Lightweight first-party analytics + GA4 forwarder.
 // Tüm olaylar Supabase'deki `analytics_events` tablosuna yazılır.
 import { supabase } from "@/integrations/supabase/client";
+import { getCachedGeo, initGeolocation } from "./geolocation";
+import { getFingerprint, markVisitAndCheckUnique, engagementOf } from "./fingerprint";
 
 const SESSION_KEY = "ts_session_id";
-const GEO_KEY = "ts_geo_v1";
+const VISITOR_KEY = "ts_visitor_id";
+
 
 type Geo = { city: string | null; country: string | null };
 
@@ -34,6 +37,34 @@ export function getSessionId(): string {
   }
 }
 
+/** Kalıcı ziyaretçi kimliği — oturumlar arası benzersiz ziyaretçi sayımı için. */
+export function getVisitorId(): string {
+  if (typeof window === "undefined") return "ssr";
+  try {
+    let v = localStorage.getItem(VISITOR_KEY);
+    if (!v) {
+      v = uid() + Math.random().toString(36).slice(2, 8);
+      localStorage.setItem(VISITOR_KEY, v);
+    }
+    return v;
+  } catch {
+    return getSessionId();
+  }
+}
+
+// AI search → product view bridge. Assistant writes ts_last_ai_search on click.
+export function getAiSearchBridge(partId?: string | null): { log_id: string; part_id: string; query: string; ts: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem("ts_last_ai_search");
+    if (!raw) return null;
+    const b = JSON.parse(raw) as { log_id: string; part_id: string; query: string; ts: number };
+    if (Date.now() - b.ts > 30 * 60 * 1000) return null;
+    if (partId && b.part_id !== partId) return null;
+    return b;
+  } catch { return null; }
+}
+
 function detectDevice(): string {
   if (typeof navigator === "undefined") return "unknown";
   const ua = navigator.userAgent;
@@ -41,6 +72,51 @@ function detectDevice(): string {
   if (/Mobi|Android|iPhone|iPod/i.test(ua)) return "mobile";
   return "desktop";
 }
+
+// Yalnızca editör/önizleme/geliştirme host'ları — yayındaki *.lovable.app alanı gerçek trafiktir.
+const INTERNAL_HOST_RE = /preview--|^id-preview|-dev\.lovable\.app$|(^|\.)lovable\.dev$|(^|\.)lovableproject\.com$|^localhost$|^127\.0\.0\.1$|^\[::1\]$/i;
+
+const STAFF_FLAG_KEY = "ts_staff_session";
+
+/** Yönetici/geliştirici oturumu işareti (sunucu tarafı doğrulaması ayrıca yapılır). */
+export function setStaffSession(isStaff: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (isStaff) sessionStorage.setItem(STAFF_FLAG_KEY, "1");
+    else sessionStorage.removeItem(STAFF_FLAG_KEY);
+  } catch { /* yok sayılır */ }
+}
+
+/**
+ * Lovable editörü / önizleme / geliştirme ortamı ya da yönetici oturumu tespiti.
+ * Bu oturumlar gerçek ziyaretçi sayılmaz; "Admin / Geliştirici" olarak işaretlenir.
+ */
+export function isInternalSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    try {
+      if (sessionStorage.getItem(STAFF_FLAG_KEY) === "1") return true;
+    } catch { /* yok sayılır */ }
+    const host = window.location.hostname;
+    if (INTERNAL_HOST_RE.test(host)) return true;
+
+    // Editör/preview iframe içinde çalışıyor mu?
+    if (window.self !== window.top) {
+      const ancestors = (location as Location & { ancestorOrigins?: DOMStringList }).ancestorOrigins;
+      if (!ancestors || ancestors.length === 0) return true;
+      for (let i = 0; i < ancestors.length; i++) {
+        if (/lovable\.(app|dev)|lovableproject\.com|localhost/i.test(ancestors[i])) return true;
+      }
+      return true; // bilinmeyen iframe gömmesi de gerçek ziyaretçi sayılmaz
+    }
+    if (/lovable\.(app|dev)|lovableproject\.com/i.test(document.referrer || "")) return true;
+    if (import.meta.env.DEV) return true;
+  } catch {
+    /* yok sayılır */
+  }
+  return false;
+}
+
 
 // Fallback regex used until the DB-managed rules load (and if the fetch fails).
 const FALLBACK_BOT_UA_RE = /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|whatsapp|telegram|preview|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptimerobot|semrush|ahrefs|mj12|dotbot|petalbot|yandex|baidu|duckduckbot|applebot|googlebot|bingbot|embedly|vercelbot|chrome-lighthouse|phantom|puppeteer|selenium/i;
@@ -114,43 +190,46 @@ async function isLikelyBot(): Promise<boolean> {
 
 async function loadGeo(): Promise<Geo> {
   if (typeof window === "undefined") return { city: null, country: null };
+  // Paylaşılan geolocation modülü ilk çağrıda GPS izni ister ve sonucu (veya IP fallback'i) cache'ler.
+  const cached = getCachedGeo();
+  if (cached.source !== "unknown") return { city: cached.city, country: cached.country };
   try {
-    const cached = sessionStorage.getItem(GEO_KEY);
-    if (cached) return JSON.parse(cached) as Geo;
+    const geo = await initGeolocation();
+    return { city: geo.city, country: geo.country };
   } catch {
-    /* ignore */
-  }
-  try {
-    const res = await fetch("https://ipapi.co/json/", { cache: "no-store" });
-    if (!res.ok) throw new Error("geo failed");
-    const j = (await res.json()) as { city?: string; country_name?: string };
-    const geo: Geo = {
-      city: j.city ?? null,
-      country: j.country_name ?? null,
-    };
-    try { sessionStorage.setItem(GEO_KEY, JSON.stringify(geo)); } catch {}
-    return geo;
-  } catch {
-    const geo: Geo = { city: null, country: null };
-    try { sessionStorage.setItem(GEO_KEY, JSON.stringify(geo)); } catch {}
-    return geo;
+    return { city: null, country: null };
   }
 }
 
 export async function trackEvent(
   eventType: string,
   metadata: Record<string, unknown> = {},
+  opts: { durationMs?: number; engagement?: string } = {},
 ) {
   if (typeof window === "undefined") return;
-  if (await isLikelyBot()) return;
+  const bot = await isLikelyBot();
+  const internal = isInternalSession();
   try {
-    const geo = await loadGeo();
+    const geo = bot || internal ? { city: null, country: null } : await loadGeo();
     const { data: userData } = await supabase.auth.getSession();
     const userId = userData.session?.user?.id ?? null;
+    const fingerprint = bot ? null : getFingerprint();
+    const firstVisit24h = !bot && !internal && eventType === "page_view" ? markVisitAndCheckUnique() : false;
+
+    // IP tabanlı anonim ziyaretçi anahtarı — presence heartbeat'i tarafından yazılır.
+    let visitorKey: string | null = null;
+    try { visitorKey = sessionStorage.getItem("ts_visitor_key"); } catch { /* yok sayılır */ }
 
     await supabase.from("analytics_events").insert({
       event_type: eventType,
       session_id: getSessionId(),
+      visitor_id: bot ? null : getVisitorId(),
+      visitor_key: visitorKey,
+      fingerprint,
+      is_bot: bot,
+      is_internal: internal,
+      duration_ms: opts.durationMs ?? null,
+      engagement: opts.engagement ?? null,
       user_id: userId,
       path: window.location.pathname + window.location.search,
       referrer: document.referrer || null,
@@ -158,10 +237,16 @@ export async function trackEvent(
       country: geo.country,
       device: detectDevice(),
       user_agent: navigator.userAgent,
-      metadata: metadata as never,
+      metadata: {
+        ...metadata,
+        ...(opts.durationMs ? { duration_ms: opts.durationMs } : {}),
+        ...(opts.engagement ? { engagement: opts.engagement } : {}),
+        ...(firstVisit24h ? { first_visit_24h: true } : {}),
+        ...(internal ? { internal_env: true } : {}),
+      } as never,
     });
 
-    if (typeof window.gtag === "function") {
+    if (!bot && !internal && typeof window.gtag === "function") {
       window.gtag("event", eventType, {
         ...metadata,
         page_path: window.location.pathname,
@@ -172,7 +257,21 @@ export async function trackEvent(
   } catch (err) {
     console.warn("[analytics] track failed", err);
   }
+
 }
+
+/** Sayfada geçirilen süreyi ilgi seviyesiyle birlikte kaydeder. */
+export async function trackPageDuration(
+  durationMs: number,
+  metadata: Record<string, unknown> = {},
+) {
+  if (durationMs < 1000) return;
+  await trackEvent("page_exit", metadata, {
+    durationMs: Math.round(durationMs),
+    engagement: engagementOf(durationMs),
+  });
+}
+
 
 let ga4Loaded = false;
 export function loadGa4(measurementId: string) {

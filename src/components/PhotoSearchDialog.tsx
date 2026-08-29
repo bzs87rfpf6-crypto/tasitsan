@@ -104,7 +104,7 @@ export function PhotoSearchDialog({ open, onOpenChange }: { open: boolean; onOpe
         if (v) ors.push(`model.ilike.%${v}%`);
       }
       let q = supabase.from("parts")
-        .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code")
+        .select("id,seo_slug,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code")
         .limit(12);
       if (ors.length) q = q.or(ors.join(","));
       const { data } = await q;
@@ -339,7 +339,7 @@ function ExpertRequestDialog({
 
         {!userId ? (
           <div className="text-sm text-muted-foreground py-2">
-            Talep oluşturmak için <Link to="/auth" className="text-gold font-semibold">giriş yapın</Link>.
+            Talep oluşturmak için <Link to="/auth" rel="nofollow" className="text-gold font-semibold">giriş yapın</Link>.
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">

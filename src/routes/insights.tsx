@@ -6,9 +6,30 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { SafePartImage } from "@/components/SafePartImage";
+import { buildPartParam } from "@/lib/part-slug";
 
 export const Route = createFileRoute("/insights")({
-  head: () => ({ meta: [{ title: "Hazır Müşteri Fırsatları — Taşıtsan" }] }),
+  head: () => {
+    const url = "https://www.tasitsan.com.tr/insights";
+    const title = "Hazır Müşteri Fırsatları — Taşıtsan";
+    const description =
+      "Taşıtsan'da en çok aranan parçalar, aktif talepler ve satıcılar için hazır müşteri fırsatları.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { name: "robots", content: "index,follow" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: "summary" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: InsightsPage,
 });
 
@@ -16,6 +37,7 @@ type Range = "today" | "7d" | "30d";
 
 interface SellerRow {
   part_id: string;
+  seo_slug: string | null;
   title: string;
   brand: string | null;
   model: string | null;
@@ -36,6 +58,7 @@ interface TopRow {
   sample_brand: string | null;
   sample_model: string | null;
   sample_part_id: string | null;
+  sample_seo_slug: string | null;
 }
 
 const RANGE_LABEL: Record<Range, string> = {
@@ -119,7 +142,7 @@ function InsightsPage() {
           ) : rows.length === 0 ? (
             <div className="text-center py-8 bg-card border border-border rounded-xl space-y-2">
               <p className="text-sm text-muted-foreground">Henüz ilanınız yok.</p>
-              <Link to="/sell" className="inline-block text-gold font-semibold text-xs hover:underline">+ Yeni ilan oluştur</Link>
+              <Link to="/sell" search={{ oem: undefined, title: undefined, brand: undefined, model: undefined, category: undefined }} className="inline-block text-gold font-semibold text-xs hover:underline">+ Yeni ilan oluştur</Link>
             </div>
           ) : (
             <ul className="space-y-3">
@@ -128,7 +151,7 @@ function InsightsPage() {
                 return (
                   <li key={r.part_id} className={`bg-card border rounded-xl p-3 ${hot ? "border-gold/50 shadow-gold/30" : "border-border"}`}>
                     <div className="flex gap-3">
-                      <Link to="/parts/$id" params={{ id: r.part_id }} className="size-16 shrink-0 rounded-lg overflow-hidden bg-secondary block">
+                      <Link to="/parts/$id" params={{ id: buildPartParam({ id: r.part_id, seo_slug: r.seo_slug, title: r.title, oem_codes: r.oem_codes }) }} className="size-16 shrink-0 rounded-lg overflow-hidden bg-secondary block">
                         <SafePartImage images={r.photos} alt={r.title} width={128} className="w-full h-full object-cover" />
                       </Link>
                       <div className="flex-1 min-w-0 space-y-0.5">
@@ -198,7 +221,7 @@ function InsightsPage() {
                 return (
                   <li key={t.oem}>
                     {t.sample_part_id ? (
-                      <Link to="/parts/$id" params={{ id: t.sample_part_id }} className="block">{inner}</Link>
+                      <Link to="/parts/$id" params={{ id: buildPartParam({ id: t.sample_part_id, seo_slug: t.sample_seo_slug, title: t.sample_title }) }} className="block">{inner}</Link>
                     ) : inner}
                   </li>
                 );

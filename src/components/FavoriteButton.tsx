@@ -1,11 +1,11 @@
 import { translateError } from "@/lib/error-messages";
 import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { addFavorite, removeFavorite } from "@/lib/favorites";
 import { supabase } from "@/integrations/supabase/client";
+import { SignupPromptDialog } from "@/components/SignupPromptDialog";
 
 interface Props {
   partId: string;
@@ -16,9 +16,9 @@ interface Props {
 
 export function FavoriteButton({ partId, size = "md", variant = "overlay", className = "" }: Props) {
   const { user } = useAuth();
-  const nav = useNavigate();
   const [fav, setFav] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [promptOpen, setPromptOpen] = useState(false);
 
   useEffect(() => {
     if (!user) { setFav(false); return; }
@@ -33,8 +33,7 @@ export function FavoriteButton({ partId, size = "md", variant = "overlay", class
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.info("Favorilere eklemek için giriş yapmalısın");
-      nav({ to: "/auth" });
+      setPromptOpen(true);
       return;
     }
     if (busy) return;
@@ -56,21 +55,17 @@ export function FavoriteButton({ partId, size = "md", variant = "overlay", class
   const iconSize = size === "lg" ? "size-6" : size === "sm" ? "size-3.5" : "size-4";
   const btnSize = size === "lg" ? "size-11" : size === "sm" ? "size-7" : "size-9";
 
-  if (variant === "overlay") {
-    return (
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label={fav ? "Favorilerden çıkar" : "Favorilere ekle"}
-        aria-pressed={fav}
-        className={`${btnSize} rounded-full grid place-items-center bg-background/85 backdrop-blur border border-border hover:border-gold active:scale-95 transition ${className}`}
-      >
-        <Heart className={`${iconSize} transition ${fav ? "fill-destructive text-destructive" : "text-foreground"}`} strokeWidth={2.2} />
-      </button>
-    );
-  }
-
-  return (
+  const button = variant === "overlay" ? (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={fav ? "Favorilerden çıkar" : "Favorilere ekle"}
+      aria-pressed={fav}
+      className={`${btnSize} rounded-full grid place-items-center bg-background/85 backdrop-blur border border-border hover:border-gold active:scale-95 transition ${className}`}
+    >
+      <Heart className={`${iconSize} transition ${fav ? "fill-destructive text-destructive" : "text-foreground"}`} strokeWidth={2.2} />
+    </button>
+  ) : (
     <button
       type="button"
       onClick={toggle}
@@ -81,5 +76,17 @@ export function FavoriteButton({ partId, size = "md", variant = "overlay", class
       <Heart className={`size-4 ${fav ? "fill-destructive text-destructive" : "text-foreground"}`} strokeWidth={2.2} />
       {fav ? "Favoride" : "Favoriye Ekle"}
     </button>
+  );
+
+  return (
+    <>
+      {button}
+      <SignupPromptDialog
+        open={promptOpen}
+        onOpenChange={setPromptOpen}
+        title="Favorilere eklemek için üye olun"
+        source="favorite_button"
+      />
+    </>
   );
 }

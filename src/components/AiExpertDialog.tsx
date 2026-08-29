@@ -80,7 +80,7 @@ export function AiExpertDialog({
       for (const { oem, kind } of allOems) {
         const { data } = await supabase
           .from("parts")
-          .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type,seller_id")
+          .select("id,seo_slug,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type,seller_id")
           .eq("status", "approved")
           .or(`oem_code.ilike.%${oem}%,oem_codes.cs.{${oem}}`)
           .limit(20);
@@ -99,7 +99,7 @@ export function AiExpertDialog({
       // Fallback brand+model+keyword search if no OEM matched anything.
       if (grouped.length === 0) {
         let qy = supabase.from("parts")
-          .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
+          .select("id,seo_slug,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
           .eq("status", "approved")
           .limit(12);
         if (r.brand) qy = qy.ilike("brand", `%${r.brand}%`);

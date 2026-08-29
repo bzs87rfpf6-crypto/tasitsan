@@ -20,10 +20,8 @@ export function SplashScreen() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-    const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv\)|\bwv\b|Capacitor/i.test(ua);
-    if (isCapacitorLike) {
-      return;
-    }
+    const isCapacitorLike = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) || /; wv[)]|\bwv\b|Capacitor/i.test(ua);
+    if (!isCapacitorLike) return;
 
     let shouldShow = false;
     try {
@@ -32,7 +30,7 @@ export function SplashScreen() {
         : false;
       const isStandalone = standaloneMedia || (window.navigator as unknown as { standalone?: boolean }).standalone === true;
       const shown = sessionStorage.getItem("tasitsan_splash_shown");
-      shouldShow = isStandalone || !shown;
+      shouldShow = isStandalone && !shown;
       if (shouldShow) sessionStorage.setItem("tasitsan_splash_shown", "1");
     } catch {
       // sessionStorage / matchMedia eski WebView'de patlayabilir — splash atla
@@ -69,6 +67,7 @@ export function SplashScreen() {
         color: "#f5f2eb",
         opacity: leaving ? 0 : 1,
         transition: "opacity 500ms ease",
+        pointerEvents: "none",
       }}
       aria-hidden="true"
     >

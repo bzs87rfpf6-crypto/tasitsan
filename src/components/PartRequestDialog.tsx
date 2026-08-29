@@ -177,7 +177,7 @@ export function PartRequestDialog({
 
         {!userId ? (
           <div className="text-sm text-muted-foreground py-4">
-            Talep oluşturmak için <Link to="/auth" className="text-gold font-semibold">giriş yapın</Link>.
+            Talep oluşturmak için <Link to="/auth" rel="nofollow" className="text-gold font-semibold">giriş yapın</Link>.
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-2.5">

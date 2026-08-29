@@ -26,10 +26,11 @@ export type StockDashboard = {
     oem: string;
     search_count: number;
     listing_count: number;
-    sample: { id: string; title: string; price: number | null } | null;
+    sample: { id: string; seo_slug: string | null; title: string; price: number | null } | null;
   }[];
   fastest_selling: {
     id: string;
+    seo_slug: string | null;
     title: string;
     brand: string | null;
     model: string | null;
@@ -38,6 +39,7 @@ export type StockDashboard = {
   }[];
   slow_moving: {
     id: string;
+    seo_slug: string | null;
     title: string;
     brand: string | null;
     model: string | null;

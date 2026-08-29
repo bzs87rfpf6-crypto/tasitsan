@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertOwnerAdmin } from "@/lib/admin-auth.server";
 
 const SubInput = z.object({
   endpoint: z.string().url().max(2000),
@@ -47,3 +48,31 @@ export const getVapidPublicKey = createServerFn({ method: "GET" }).handler(async
   if (error) throw new Error(error.message);
   return { key: (data as string) ?? "" };
 });
+
+/**
+ * Admin: test push. admin_notifications'a bir satır yazar — mevcut
+ * trg_dispatch_push tetikleyicisi push-dispatch endpoint'ini çağırır.
+ * Bildirim hemen okundu işaretlenir, böylece zil sayacını kirletmez.
+ */
+export const sendTestAdminPush = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertOwnerAdmin(context.supabase, context.userId);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("admin_notifications")
+      .insert({
+        kind: "live_chat_message",
+        priority: "high",
+        title: "Yeni müşteri mesajı",
+        body: "Test bildirimi — canlı sohbet push kurulumu çalışıyor.",
+        link: "/admin/live-support",
+        read_at: new Date().toISOString(),
+      } as never)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { ok: true as const, id: (data as { id: string }).id };
+  });
+

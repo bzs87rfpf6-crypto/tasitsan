@@ -109,7 +109,7 @@ export function AiExpertProDialog({
     }
     let q = supabase
       .from("parts")
-      .select("id,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
+      .select("id,seo_slug,title,brand,model,year,price,city,photos,condition,stock_quantity,oem_code,part_type")
       .eq("status", "approved")
       .limit(30);
     if (ors.length) q = q.or(ors.join(","));

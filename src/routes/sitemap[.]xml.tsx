@@ -1,46 +1,76 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SITE_URL, getSitemapParts, getSitemapRequests } from "@/lib/seo.functions";
+import {
+  SITE_URL,
+  getSitemapPartsCount,
+  getSitemapRequests,
+  PRODUCTS_SITEMAP_PAGE_SIZE,
+} from "@/lib/seo.functions";
+import { getOemSitemapCount } from "@/lib/oem-seo.functions";
+import { getSitemapStok } from "@/lib/stok-public.functions";
+import { listIndexableLandingPages } from "@/lib/model-seo.functions";
+import { getBrandIndex } from "@/lib/brand-seo.functions";
 
-const STATIC_PATHS = ["/", "/auth", "/requests", "/sell"];
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const [parts, reqs] = await Promise.all([getSitemapParts(), getSitemapRequests()]);
+        const [total, reqs, stoks, oemMeta, landings, brands] = await Promise.all([
+          getSitemapPartsCount(),
+          getSitemapRequests().catch(() => []),
+          getSitemapStok().catch(() => []),
+          getOemSitemapCount().catch(() => ({ total: 0, pageSize: 5000, pageCount: 0 })),
+          listIndexableLandingPages().catch(() => []),
+          getBrandIndex().catch(() => []),
+        ]);
+
+        const pageCount = Math.max(1, Math.ceil(total / PRODUCTS_SITEMAP_PAGE_SIZE));
         const today = new Date().toISOString().slice(0, 10);
-        const staticUrls = STATIC_PATHS.map((p) => [
-          "  <url>",
-          `    <loc>${SITE_URL}${p}</loc>`,
-          `    <lastmod>${today}</lastmod>`,
-          `    <changefreq>${p === "/" ? "daily" : "weekly"}</changefreq>`,
-          `    <priority>${p === "/" ? "1.0" : "0.7"}</priority>`,
-          "  </url>",
-        ].join("\n"));
-        const partUrls = parts.map((p) => [
-          "  <url>",
-          `    <loc>${SITE_URL}/parts/${p.id}</loc>`,
-          `    <lastmod>${new Date(p.updated_at).toISOString().slice(0, 10)}</lastmod>`,
-          "    <changefreq>weekly</changefreq>",
-          "    <priority>0.8</priority>",
-          "  </url>",
-        ].join("\n"));
-        const reqUrls = reqs.map((r) => [
-          "  <url>",
-          `    <loc>${SITE_URL}/requests/${r.id}</loc>`,
-          `    <lastmod>${new Date(r.updated_at).toISOString().slice(0, 10)}</lastmod>`,
-          "    <changefreq>daily</changefreq>",
-          "    <priority>0.6</priority>",
-          "  </url>",
-        ].join("\n"));
+
+        const entries: string[] = [
+          `  <sitemap><loc>${SITE_URL}/sitemaps/static.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+          `  <sitemap><loc>${SITE_URL}/sitemaps/categories.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+        ];
+        // Boş alt sitemap yayınlama — Google "0 URL" hatası veriyor.
+        if (brands.length > 0) {
+          entries.push(
+            `  <sitemap><loc>${SITE_URL}/sitemaps/brands.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+          );
+        }
+        if (reqs.length > 0) {
+          entries.push(
+            `  <sitemap><loc>${SITE_URL}/sitemaps/requests.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+          );
+        }
+        if (stoks.length > 0) {
+          entries.push(
+            `  <sitemap><loc>${SITE_URL}/sitemaps/stok.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+          );
+        }
+        for (let i = 1; i <= pageCount; i++) {
+          entries.push(
+            `  <sitemap><loc>${SITE_URL}/sitemaps/products-${i}.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+          );
+        }
+        for (let i = 1; i <= oemMeta.pageCount; i++) {
+          entries.push(
+            `  <sitemap><loc>${SITE_URL}/sitemaps/oem-${i}.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+          );
+        }
+        if (landings.length > 0) {
+          entries.push(
+            `  <sitemap><loc>${SITE_URL}/sitemaps/landings.xml</loc><lastmod>${today}</lastmod></sitemap>`,
+          );
+        }
+
+
+
 
         const xml = [
           `<?xml version="1.0" encoding="UTF-8"?>`,
-          `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
-          ...staticUrls,
-          ...partUrls,
-          ...reqUrls,
-          `</urlset>`,
+          `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+          ...entries,
+          `</sitemapindex>`,
         ].join("\n");
 
         return new Response(xml, {
@@ -53,3 +83,4 @@ export const Route = createFileRoute("/sitemap.xml")({
     },
   },
 });
+

@@ -1,3 +1,4 @@
+import { buildPartParam } from "@/lib/part-slug";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Package, Calendar, Phone, MessageCircle, Lock } from "lucide-react";
@@ -6,9 +7,16 @@ import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { TrustedSellerBadge } from "@/components/TrustedSellerBadge";
 import { SafePartImage } from "@/components/SafePartImage";
 import { useAuth } from "@/hooks/use-auth";
 import { trackEvent } from "@/lib/analytics";
+import { TrustCard } from "@/components/trust/TrustCard";
+import { TrustBadgePill } from "@/components/trust/TrustBadge";
+import { VerificationBadgeList } from "@/components/trust/VerificationBadgePill";
+import { getSellerTrust } from "@/lib/trust.functions";
+import { useServerFn } from "@tanstack/react-start";
+import type { SellerScore } from "@/lib/trust";
 
 
 export const Route = createFileRoute("/u/$id")({
@@ -25,6 +33,11 @@ interface Profile {
   created_at: string;
   whatsapp: string | null;
   verified_phone: string | null;
+  user_badges: string[];
+  seller_badges: string[];
+  seller_verified: boolean;
+  user_verified: boolean;
+  trusted_seller: boolean;
 }
 
 const digits = (s: string | null) => (s ?? "").replace(/\D+/g, "");
@@ -51,6 +64,8 @@ function PublicProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [parts, setParts] = useState<PartCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [score, setScore] = useState<SellerScore | null>(null);
+  const loadTrust = useServerFn(getSellerTrust);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +74,7 @@ function PublicProfilePage() {
       const [{ data: p }, { data: ps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id,display_name,city,avatar_url,is_verified,created_at")
+          .select("id,display_name,city,avatar_url,is_verified,trusted_seller,created_at,user_badges,seller_badges,seller_verified,user_verified")
           .eq("id", id)
           .maybeSingle(),
         supabase
@@ -93,6 +108,14 @@ function PublicProfilePage() {
 
   }, [id, user]);
 
+  useEffect(() => {
+    let cancelled = false;
+    loadTrust({ data: { sellerId: id } }).then((res) => {
+      if (!cancelled) setScore(((res as any).score as SellerScore) ?? null);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [id, loadTrust]);
+
   if (loading) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Yükleniyor...</div>;
   }
@@ -117,9 +140,11 @@ function PublicProfilePage() {
         <section className="bg-card border border-border rounded-xl p-5 flex items-center gap-4">
           <UserAvatar url={profile.avatar_url} name={profile.display_name} size={80} />
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-xl tracking-wide truncate flex items-center gap-1.5">
+            <h1 className="font-display text-xl tracking-wide truncate flex items-center gap-1.5 flex-wrap">
               <span className="truncate">{profile.display_name ?? "Satıcı"}</span>
               {profile.is_verified && <VerifiedBadge size={18} />}
+              {profile.trusted_seller && <TrustedSellerBadge size={18} showLabel />}
+              {score?.badge && <TrustBadgePill badge={score.badge} />}
             </h1>
             {profile.is_verified && (
               <p className="text-[11px] text-sky-400 font-semibold">Doğrulanmış Satıcı</p>
@@ -135,8 +160,14 @@ function PublicProfilePage() {
                 <Package className="size-3 text-gold" /> {parts.length} ilan
               </span>
             </div>
+            <VerificationBadgeList
+              badges={[...(profile.seller_badges ?? []), ...(profile.user_badges ?? [])]}
+              className="mt-2"
+            />
           </div>
         </section>
+
+        <TrustCard score={score} />
 
         {!user && (
           <section className="bg-card border border-gold/30 rounded-xl p-4 flex items-center gap-3">
@@ -150,7 +181,7 @@ function PublicProfilePage() {
               </p>
             </div>
             <Link
-              to="/auth"
+              to="/auth" rel="nofollow"
               search={{ redirect: `/u/${id}` } as any}
               className="text-xs text-gold font-semibold shrink-0"
             >
@@ -199,11 +230,11 @@ function PublicProfilePage() {
             <ul className="space-y-3">
               {parts.map((p) => (
                 <li key={p.id} className="bg-card border border-border rounded-xl p-3 flex gap-3">
-                  <Link to="/parts/$id" params={{ id: p.id }} className="size-20 shrink-0 rounded-lg overflow-hidden bg-secondary block">
+                  <Link to="/parts/$id" params={{ id: buildPartParam(p) }} className="size-20 shrink-0 rounded-lg overflow-hidden bg-secondary block">
                     <SafePartImage images={p.photos} alt={p.title} width={160} className="w-full h-full object-cover" />
                   </Link>
                   <div className="flex-1 min-w-0 space-y-1">
-                    <Link to="/parts/$id" params={{ id: p.id }} className="text-sm font-semibold leading-tight line-clamp-2 hover:text-gold">
+                    <Link to="/parts/$id" params={{ id: buildPartParam(p) }} className="text-sm font-semibold leading-tight line-clamp-2 hover:text-gold">
                       {p.title}
                     </Link>
                     {(p.brand || p.model) && (

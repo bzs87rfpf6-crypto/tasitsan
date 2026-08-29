@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertOwnerAdmin } from "@/lib/admin-auth.server";
 
 export type ActiveFirm = {
   seller_id: string;
@@ -40,6 +41,7 @@ export type AdminDashboardOverview = {
 export const getAdminDashboardOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await assertOwnerAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase.rpc("admin_dashboard_overview");
     if (error) throw new Error(error.message);
     return data as unknown as AdminDashboardOverview;
