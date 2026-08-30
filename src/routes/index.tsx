@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, Plus, SlidersHorizontal, X, PackageSearch, Phone, MessageCircle, BellPlus, ScanSearch, LayoutGrid, Rows, Clock, TrendingUp, Hash, Rocket, CheckCircle2, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { homePublicRpc } from "@/lib/home-public-rpc";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
@@ -168,7 +169,7 @@ function Index() {
   const loadShowcase = useCallback(
     async (count: number, silent = false) => {
       if (!silent) setShowcaseLoading(true);
-      const { data } = await (supabase as any).rpc("home_new_feed", {
+      const data = await homePublicRpc<any>("home_new_feed", {
         _vehicle_class: vc,
         _limit: Math.min(Math.max(count, SHOWCASE_PAGE), 60),
         _offset: 0,
@@ -178,7 +179,7 @@ function Index() {
       // 60'tan fazla yüklüyse kalanları sırayla tamamla.
       let offset = items.length;
       while (offset < Math.min(count, total)) {
-        const { data: more } = await (supabase as any).rpc("home_new_feed", {
+        const more = await homePublicRpc<any>("home_new_feed", {
           _vehicle_class: vc,
           _limit: 60,
           _offset: offset,
@@ -197,7 +198,7 @@ function Index() {
   const loadMoreShowcase = useCallback(async () => {
     setShowcaseMore(true);
     const offset = showcase.items.length;
-    const { data } = await (supabase as any).rpc("home_new_feed", {
+    const data = await homePublicRpc<any>("home_new_feed", {
       _vehicle_class: vc,
       _limit: SHOWCASE_PAGE,
       _offset: offset,

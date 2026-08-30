@@ -28,7 +28,7 @@ async function resolvePartUuid(
     return raw.toLowerCase();
   }
   // Slug path — resolve via parts.seo_slug, then parts_slug_history.
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const bySlug = await supabaseAdmin
     .from("parts").select("id").eq("seo_slug", raw).maybeSingle();
   if (bySlug.data?.id) {
@@ -70,7 +70,7 @@ export const getProductSeoMeta = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<StoredProductSeoMeta | null> => {
     const partUuid = await resolvePartUuid(data.partId, "getProductSeoMeta");
     if (!partUuid) return null;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { data: row, error } = await supabaseAdmin
       .from("product_seo_meta")
       .select("title,description,score,title_variant,content_hash,needs_rewrite,generated_at,attributes,internal_links,alt_texts,ai_faqs")
@@ -88,7 +88,8 @@ export const upsertProductSeoMeta = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ partId: z.string().min(1).max(200) }).parse(d))
   .handler(async ({ data, context }): Promise<StoredProductSeoMeta> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { requireServiceRoleClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = requireServiceRoleClient("upsertProductSeoMeta");
     await assertOwnerAdmin(context.supabase, context.userId);
 
     const partUuid = await resolvePartUuid(data.partId, "upsertProductSeoMeta");
@@ -151,7 +152,7 @@ export const upsertProductSeoMeta = createServerFn({ method: "POST" })
 export const getProductSeoMetaStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
     await assertOwnerAdmin(context.supabase, context.userId);
 
     const [{ count: total }, { count: withMeta }, { count: needsRewrite }] = await Promise.all([

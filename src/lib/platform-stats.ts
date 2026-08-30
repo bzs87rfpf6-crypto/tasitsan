@@ -1,7 +1,7 @@
 // Merkezi istatistik servisi — ana sayfa, açılış ekranı ve yönetici paneli
 // aynı `platform_stats()` RPC'sinden beslenir. Sunucu tarafında 60 sn cache var.
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { homePublicRpc } from "@/lib/home-public-rpc";
 
 export interface PlatformStats {
   active_parts: number;
@@ -67,8 +67,8 @@ export async function fetchPlatformStats(force = false): Promise<PlatformStats |
   if (inflight) return inflight;
   inflight = (async () => {
     try {
-      const { data, error } = await (supabase as any).rpc("platform_stats");
-      if (error || !data) return cache?.data ?? null;
+      const data = await homePublicRpc<Record<string, unknown>>("platform_stats");
+      if (!data) return cache?.data ?? null;
       const stats = normalize(data as Record<string, unknown>);
       cache = { data: stats, t: Date.now() };
       listeners.forEach((fn) => fn(stats));

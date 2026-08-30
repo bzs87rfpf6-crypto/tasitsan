@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { serverReadClient as supabaseAdmin } from "@/lib/supabase-admin.server";
 import { z } from "zod";
 
 // Curated category slug → display name. Sitemap ve route gating için tek kaynak.

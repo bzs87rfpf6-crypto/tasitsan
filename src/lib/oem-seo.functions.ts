@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { serverReadClient as supabaseAdmin } from "@/lib/supabase-admin.server";
 import { z } from "zod";
 
 const OEM_SITEMAP_PAGE = 5000;

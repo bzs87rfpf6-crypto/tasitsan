@@ -42,7 +42,7 @@ async function fetchSlice(
 
 export const getHomeSeoBlocks = createServerFn({ method: "GET" }).handler(
   async (): Promise<HomeSeoBlocks> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
     const [toyotaHilux, mitsubishiL200, construction, recent, oemRes] = await Promise.all([
       fetchSlice(supabaseAdmin, (q) => q.ilike("brand", "%toyota%").ilike("model", "%hilux%"), 8),
@@ -83,7 +83,7 @@ export interface SeoReport {
 }
 
 export const getSeoReport = createServerFn({ method: "GET" }).handler(async (): Promise<SeoReport> => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
   const head = (q: any) => q.select("id", { count: "exact", head: true });
 

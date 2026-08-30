@@ -47,7 +47,7 @@ async function signOne(supabase: any, path: string, ttl = 60 * 30): Promise<stri
 export const listPublicStok = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => FilterSchema.parse(d ?? {}))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
     let q = supabaseAdmin
       .from("stok_listings")
       .select(
@@ -111,7 +111,7 @@ export const listPublicStok = createServerFn({ method: "GET" })
 export const getPublicStok = createServerFn({ method: "GET" })
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { data: r, error } = await supabaseAdmin
       .from("stok_listings")
       .select(
@@ -194,7 +194,7 @@ export const submitStokOffer = createServerFn({ method: "POST" })
   });
 
 export const getSitemapStok = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const { data } = await supabaseAdmin
     .from("stok_listings")
     .select("id,updated_at")
@@ -205,7 +205,7 @@ export const getSitemapStok = createServerFn({ method: "GET" }).handler(async ()
 });
 
 export const getActiveStokCount = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { serverReadClient: supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const { count, error } = await supabaseAdmin
     .from("stok_listings")
     .select("*", { count: "exact", head: true })

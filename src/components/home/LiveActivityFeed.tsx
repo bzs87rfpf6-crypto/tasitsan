@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Package, UserPlus, PackageSearch, Radio } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { homePublicRpc } from "@/lib/home-public-rpc";
 
 type Kind = "part" | "seller" | "request";
 interface ActivityItem { kind: Kind; label: string; at: string }
@@ -35,7 +35,7 @@ export function LiveActivityFeed() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data } = await (supabase as any).rpc("home_activity_feed", { _limit: 6 });
+      const data = await homePublicRpc<ActivityItem[]>("home_activity_feed", { _limit: 6 });
       if (!cancelled && Array.isArray(data)) {
         // Tek tür akışı doldurmasın: her türden en fazla 3 olay göster.
         const counts: Record<string, number> = {};

@@ -127,3 +127,22 @@ export function logSupabaseServerEnvOnce(scope: string) {
     }),
   );
 }
+
+/**
+ * Genel (public) okuma istemcisi — proxy.
+ * Service-role varsa onu, yoksa publishable (RLS'e tabi) client'ı kullanır.
+ * Böylece Lovable Cloud davranışı birebir korunur, self-host'ta ise
+ * anon EXECUTE/SELECT yetkisi verilmiş public veri akışları çalışmaya devam eder.
+ * SADECE public/read-only işlemler için; admin işlemleri requireServiceRoleClient kullanmalı.
+ */
+export const serverReadClient = new Proxy({} as Client, {
+  get(_, prop, receiver) {
+    const c = getServerReadClient();
+    if (!c) {
+      throw new Error(
+        "Supabase sunucu istemcisi yapılandırılmamış. SUPABASE_URL ve SUPABASE_PUBLISHABLE_KEY (veya SUPABASE_SERVICE_ROLE_KEY) tanımlayın.",
+      );
+    }
+    return Reflect.get(c, prop, receiver);
+  },
+});
