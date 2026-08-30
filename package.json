@@ -8,8 +8,9 @@
     "build": "vite build",
     "postbuild": "node scripts/generate-capacitor-shell.mjs",
     "build:dev": "vite build --mode development",
-    "build:selfhost": "VITE_SELFHOST=true vite build --config vite.selfhost.config.ts && node scripts/verify-selfhost-build.mjs",
-    "start:selfhost": "node scripts/start-selfhost.mjs",
+    "build:selfhost": "NODE_OPTIONS=--max-old-space-size=3072 VITE_SELFHOST=true vite build --config vite.selfhost.config.ts && node scripts/verify-selfhost-build.mjs",
+    "start:selfhost": "node --max-old-space-size=1536 scripts/start-selfhost.mjs",
+
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",

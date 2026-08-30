@@ -5,7 +5,7 @@ import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithGoogle } from "@/lib/oauth-google";
 import { AppHeader } from "@/components/AppHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -122,9 +122,7 @@ function AuthPage() {
       const target = getRedirect();
       const callback = new URL("/auth", window.location.origin);
       if (target !== "/") callback.searchParams.set("redirect", target);
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: callback.toString(),
-      });
+      const result = await signInWithGoogle(callback.toString());
       if (result.error) {
         if (isSignup) void trackEvent("signup_error", { method: "google", error_code: "oauth_error" });
         toast.error(translateError(result.error, "Google ile giriş başarısız"));

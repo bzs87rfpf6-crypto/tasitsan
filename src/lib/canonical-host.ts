@@ -3,8 +3,25 @@
 // kanonik URL'ye taşınır. Preview/lovable.app/localhost host'ları dokunulmaz,
 // böylece yönlendirme zinciri veya loop oluşmaz.
 
-export const CANONICAL_HOST = "www.tasitsan.com.tr";
-export const APEX_HOSTS = ["tasitsan.com.tr"];
+function envHost(name: string): string | null {
+  try {
+    const v = typeof process !== "undefined" ? process.env?.[name] : undefined;
+    if (typeof v === "string" && v.trim()) {
+      return v.trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0]!.split(":")[0]!;
+    }
+  } catch {
+    /* env yoksa varsayılan kullanılır */
+  }
+  return null;
+}
+
+// Kanonik host env ile geçersiz kılınabilir (self-host / farklı alan adı).
+// CANONICAL_HOST="" verilirse yönlendirme tamamen kapanır.
+export const CANONICAL_HOST = envHost("CANONICAL_HOST") ?? "www.tasitsan.com.tr";
+export const APEX_HOSTS = (envHost("CANONICAL_APEX_HOST") ?? "tasitsan.com.tr")
+  .split(",")
+  .map((h) => h.trim())
+  .filter(Boolean);
 
 export function canonicalHostRedirect(request: Request): Response | null {
   let url: URL;
@@ -22,6 +39,10 @@ export function canonicalHostRedirect(request: Request): Response | null {
     .toLowerCase()
     .split(",")[0]!
     .trim();
+
+  // IP üzerinden (veya yapılandırılmamışsa) erişimde asla alan adına zorlanmaz.
+  if (!CANONICAL_HOST) return null;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host === "localhost") return null;
 
   const isCanonicalHost = host === CANONICAL_HOST;
   const isApex = APEX_HOSTS.includes(host);

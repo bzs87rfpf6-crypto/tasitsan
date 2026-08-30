@@ -56,7 +56,7 @@ export function SystemHealthPanel() {
         <div>
           <h2 className="font-display text-lg">Yedekleme & Sistem Sağlığı</h2>
           <p className="text-xs text-muted-foreground">
-            Lovable Cloud otomatik yedekleme + kritik veri özeti
+            {data?.selfhost ? "Self-host yedekleme durumu" : "Otomatik yedekleme"} + kritik veri özeti
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
@@ -80,29 +80,40 @@ export function SystemHealthPanel() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-semibold">Otomatik Yedekleme</h3>
-              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-semibold">
-                <CheckCircle2 className="w-3 h-3" /> Aktif
-              </span>
+              {data?.selfhost ? (
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 font-semibold">
+                  <AlertTriangle className="w-3 h-3" /> Operatör sorumluluğunda
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-semibold">
+                  <CheckCircle2 className="w-3 h-3" /> Aktif
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {data?.backup.note ?? "Lovable Cloud her gün veritabanını otomatik yedekler ve farklı bölgede saklar."}
+              {data?.backup.note ?? "Yedekleme durumu yükleniyor…"}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border">
           <Field label="Sağlayıcı" value={data?.backup.provider ?? "—"} />
-          <Field label="Sıklık" value={data?.backup.frequency === "daily" ? "Günlük" : "—"} />
-          <Field label="Saklama" value={data ? `${data.backup.retentionDays} gün` : "—"} />
-          <Field label="Lokasyon" value={data?.backup.offsite ? "Farklı bölge" : "—"} />
+          <Field label="Sıklık" value={data ? (data.backup.frequency === "daily" ? "Günlük" : "Manuel") : "—"} />
+          <Field
+            label="Saklama"
+            value={data ? (data.backup.retentionDays > 0 ? `${data.backup.retentionDays} gün` : "Operatör tanımlı") : "—"}
+          />
+          <Field label="Lokasyon" value={data ? (data.backup.offsite ? "Farklı bölge" : "Sunucu tanımlı") : "—"} />
         </div>
 
         <div className="text-xs text-muted-foreground pt-2 border-t border-border flex items-start gap-2">
           <Clock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>
             <strong>RPO ~24 sa</strong> (en fazla 1 günlük veri kaybı) ·{" "}
-            <strong>RTO ~1 sa</strong> (geri yükleme süresi). Geri yükleme talebi için Lovable Cloud
-            panelini kullanın.
+            <strong>RTO ~1 sa</strong> (geri yükleme süresi).{" "}
+            {data?.selfhost
+              ? "Self-host'ta geri yükleme, Supabase proje yedeklerinden veya sunucudaki pg_dump arşivinden yapılır."
+              : "Geri yükleme talebi için yönetilen bulut panelini kullanın."}
           </span>
         </div>
       </div>
@@ -130,7 +141,9 @@ export function SystemHealthPanel() {
           </div>
           <div>
             <p className="font-semibold">Dosya Depolama</p>
-            <p className="text-xs text-muted-foreground">Otomatik replikalı (Lovable Cloud)</p>
+            <p className="text-xs text-muted-foreground">
+              {data?.selfhost ? "Supabase Storage (self-host yapılandırması)" : "Otomatik replikalı"}
+            </p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -166,6 +179,11 @@ export function SystemHealthPanel() {
         </div>
       </div>
 
+      {data && !data.serviceRole && (
+        <p className="text-[11px] text-amber-500 text-center">
+          Yönetici (service-role) anahtarı tanımlı değil — sayımlar RLS kurallarıyla sınırlı olabilir.
+        </p>
+      )}
       <p className="text-[11px] text-muted-foreground text-center pt-2">
         Son güncelleme: {data ? fmtDate(data.generatedAt) : "—"}
       </p>

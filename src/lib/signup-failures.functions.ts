@@ -27,7 +27,9 @@ const logSchema = z.object({
 export const logSignupFailure = createServerFn({ method: "POST" })
   .inputValidator((d) => logSchema.parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = getServerReadClient();
+    if (!supabaseAdmin) return { ok: false };
     const ua = (() => {
       try { return getRequestHeader("user-agent") ?? null; } catch { return null; }
     })();

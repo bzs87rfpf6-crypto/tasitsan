@@ -19,19 +19,26 @@ export const getSystemHealth = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertOwnerAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const SELFHOST =
+      process.env["VITE_SELFHOST"] === "true" || process.env["SELFHOST"] === "true";
+    // Self-host'ta service-role anahtarı olmayabilir. Bu ekran yalnızca OKUMA
+    // yapar; service-role varsa onu, yoksa publishable (RLS'e tabi) client'ı kullan.
+    const { getServerReadClient, hasServiceRole } = await import("@/lib/supabase-admin.server");
+    const client = getServerReadClient();
+    if (!client) throw new Error("Supabase sunucu istemcisi yapılandırılmamış.");
+    const serviceRole = hasServiceRole();
 
     const tables: TableStat[] = [];
     let totalRows = 0;
     let latestWrite: string | null = null;
 
     for (const t of CRITICAL_TABLES) {
-      const { count } = await (supabaseAdmin as any)
+      const { count } = await (client as any)
         .from(t.table)
         .select("*", { count: "exact", head: true });
       let latest: string | null = null;
       try {
-        const { data } = await (supabaseAdmin as any)
+        const { data } = await (client as any)
           .from(t.table)
           .select("created_at")
           .order("created_at", { ascending: false })
@@ -51,9 +58,9 @@ export const getSystemHealth = createServerFn({ method: "GET" })
     let partPhotosCount = 0;
     let avatarsCount = 0;
     try {
-      const { data: pp } = await supabaseAdmin.storage.from("part-photos").list("", { limit: 1000 });
+      const { data: pp } = await client.storage.from("part-photos").list("", { limit: 1000 });
       partPhotosCount = pp?.length ?? 0;
-      const { data: av } = await supabaseAdmin.storage.from("avatars").list("", { limit: 1000 });
+      const { data: av } = await client.storage.from("avatars").list("", { limit: 1000 });
       avatarsCount = av?.length ?? 0;
     } catch {
       // ignore
@@ -68,15 +75,19 @@ export const getSystemHealth = createServerFn({ method: "GET" })
         avatars: avatarsCount,
       },
       latestWrite,
+      serviceRole,
+      selfhost: SELFHOST,
       backup: {
-        // Lovable Cloud / Supabase managed automated daily backups.
-        // No public API exposed for last-backup timestamp on the current plan;
-        // we report the policy and a derived "expected next backup" window.
-        provider: "Lovable Cloud (otomatik günlük)",
-        frequency: "daily",
-        retentionDays: 7,
-        offsite: true,
-        note: "Yedekler farklı bölgede saklanır. Geri yükleme Lovable Cloud panelinden yapılır.",
+        // Yönetilen ortamda (Lovable Cloud) günlük otomatik yedek vardır.
+        // Self-host'ta yedekleme sunucu operatörünün sorumluluğundadır; bu ekran
+        // yalnızca durumu raporlar, veritabanına dokunmaz.
+        provider: SELFHOST ? "Self-host (Supabase projesi + sunucu operatörü)" : "Lovable Cloud (otomatik günlük)",
+        frequency: SELFHOST ? "manual" : "daily",
+        retentionDays: SELFHOST ? 0 : 7,
+        offsite: !SELFHOST,
+        note: SELFHOST
+          ? "Self-host kurulumunda yedekleme Supabase proje ayarlarından veya sunucudaki pg_dump zamanlayıcısından yönetilir."
+          : "Yedekler farklı bölgede saklanır. Geri yükleme Lovable Cloud panelinden yapılır.",
       },
     };
   });

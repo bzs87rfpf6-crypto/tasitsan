@@ -6,8 +6,32 @@ export const Route = createFileRoute("/api/public/health")({
   server: {
     handlers: {
       GET: async () => {
-        const { getSupabaseServerEnv } = await import("@/lib/supabase-admin.server");
+        const { getSupabaseServerEnv, getServerReadClient, getServiceRoleClient } = await import(
+          "@/lib/supabase-admin.server"
+        );
         const env = getSupabaseServerEnv();
+
+        // Gerçek bağlantı testi — yalnızca "ok/fail" bilgisi döner, veri sızmaz.
+        let dbConnection: "ok" | "fail" | "unconfigured" = "unconfigured";
+        const read = getServerReadClient();
+        if (read) {
+          try {
+            const { error } = await read.from("parts").select("id", { head: true, count: "exact" }).limit(1);
+            dbConnection = error ? "fail" : "ok";
+          } catch {
+            dbConnection = "fail";
+          }
+        }
+        let serviceRole: "ok" | "fail" | "missing" = "missing";
+        const admin = getServiceRoleClient();
+        if (admin) {
+          try {
+            const { error } = await admin.from("parts").select("id", { head: true, count: "exact" }).limit(1);
+            serviceRole = error ? "fail" : "ok";
+          } catch {
+            serviceRole = "fail";
+          }
+        }
         const onlineparca =
           !!process.env["ONLINEPARCA_LOGIN_URL"] &&
           !!process.env["ONLINEPARCA_USERNAME"] &&
@@ -21,6 +45,8 @@ export const Route = createFileRoute("/api/public/health")({
               supabase_publishable_key: env.publishableKey ? "set" : "missing",
               supabase_service_role_key: env.serviceRoleKey ? "set" : "missing",
               onlineparca_env_fallback: onlineparca ? "set" : "missing",
+              db_connection: dbConnection,
+              service_role_connection: serviceRole,
             },
           }),
           {

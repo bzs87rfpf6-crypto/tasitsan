@@ -68,7 +68,9 @@ export const presenceHeartbeat = createServerFn({ method: "POST" })
 
     const { getRequestHeader, getRequestIP } = await import("@tanstack/react-start/server");
     const { resolveClientIp, visitorKeyFrom } = await import("@/lib/presence.server");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = getServerReadClient();
+    if (!supabaseAdmin) return { ok: false as const, visitorKey: null };
 
     let ip: string | null = null;
     let ua: string | null = null;

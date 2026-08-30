@@ -27,7 +27,9 @@ function getCallerMeta() {
 export const logSecurityEvent = createServerFn({ method: "POST" })
   .inputValidator((input) => eventSchema.parse(input))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = getServerReadClient();
+    if (!supabaseAdmin) return { ok: false };
     const { ip, ua } = getCallerMeta();
     let userId: string | null = null;
     try {
@@ -64,7 +66,11 @@ export const checkRateLimit = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = getServerReadClient();
+    if (!supabaseAdmin) {
+      return { allowed: true, count: 0, limit: data.max, retry_after_seconds: 0 };
+    }
     const { ip } = getCallerMeta();
     let userId: string | null = null;
     try {
@@ -111,11 +117,17 @@ export const checkRateLimit = createServerFn({ method: "POST" })
 export const checkAuthLockout = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ identifier: z.string().min(1).max(255) }).parse(input))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: res } = await supabaseAdmin.rpc("check_auth_lockout", {
-      _identifier: data.identifier,
-    });
-    return res as { locked: boolean; fail_count: number };
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = getServerReadClient();
+    if (!supabaseAdmin) return { locked: false, fail_count: 0 };
+    try {
+      const { data: res } = await supabaseAdmin.rpc("check_auth_lockout", {
+        _identifier: data.identifier,
+      });
+      return (res as { locked: boolean; fail_count: number } | null) ?? { locked: false, fail_count: 0 };
+    } catch {
+      return { locked: false, fail_count: 0 };
+    }
   });
 
 export const recordAuthFailure = createServerFn({ method: "POST" })
@@ -128,7 +140,9 @@ export const recordAuthFailure = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = getServerReadClient();
+    if (!supabaseAdmin) return { ok: false };
     const { ip, ua } = getCallerMeta();
     await supabaseAdmin.rpc("record_auth_failure", {
       _identifier: data.identifier,
@@ -147,7 +161,9 @@ export const recordAuthFailure = createServerFn({ method: "POST" })
 export const clearAuthFailures = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ identifier: z.string().min(1).max(255) }).parse(input))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = getServerReadClient();
+    if (!supabaseAdmin) return { ok: false };
     await supabaseAdmin.rpc("clear_auth_failures", { _identifier: data.identifier });
     return { ok: true };
   });
@@ -172,7 +188,8 @@ export const listSecurityEvents = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { requireServiceRoleClient } = await import("@/lib/supabase-admin.server");
+    const supabaseAdmin = requireServiceRoleClient("listSecurityEvents");
     await assertOwnerAdmin(context.supabase, context.userId);
     let q = supabaseAdmin
       .from("security_events")

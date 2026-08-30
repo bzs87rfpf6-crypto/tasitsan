@@ -1,48 +1,45 @@
 #!/usr/bin/env node
 /**
- * Self-host launcher: loads .env into process.env (without overriding vars
- * already provided by the environment, e.g. Docker env_file), then starts
- * the built server. Works on any Node >= 18, no --env-file flag needed.
+ * Self-host launcher: `.env` dosyalarını process.env'e yükler (ortamda zaten
+ * tanımlı olanları EZMEDEN), isim normalizasyonu/aynalamasını yapar ve derlenmiş
+ * sunucuyu başlatır. Node >= 18, --env-file bayrağına gerek yok.
+ *
+ * Öncelik: gerçek ortam değişkenleri > SELFHOST_ENV_FILE > .env.local > .env
+ * `.env` repoda izlendiği için `git pull` onu geri yazabilir; sunucuya özel
+ * sırlar (service-role vb.) `.env.local` veya SELFHOST_ENV_FILE içinde tutulmalı.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { loadEnvFile, normalizeEnv } from "./selfhost-env.mjs";
 
-const envPath = resolve(process.cwd(), ".env");
+const candidateFiles = [
+  process.env.SELFHOST_ENV_FILE,
+  resolve(process.cwd(), ".env.local"),
+  resolve(process.cwd(), ".env"),
+].filter(Boolean);
 
-function parseLine(line) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith("#")) return null;
-  const eq = trimmed.indexOf("=");
-  if (eq <= 0) return null;
-  const key = trimmed.slice(0, eq).trim().replace(/^export\s+/, "");
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) return null;
-  let value = trimmed.slice(eq + 1).trim();
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    value = value.slice(1, -1);
-  }
-  return [key, value];
+let anyLoaded = false;
+for (const file of candidateFiles) {
+  const { loaded, found } = loadEnvFile(file, process.env);
+  if (!found) continue;
+  anyLoaded = true;
+  console.log(`[selfhost] ${file} yüklendi (${loaded} değişken eklendi).`);
+}
+if (!anyLoaded) {
+  console.warn("[selfhost] env dosyası bulunamadı; yalnızca ortam değişkenleri kullanılacak.");
 }
 
-if (existsSync(envPath)) {
-  let loaded = 0;
-  for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
-    const parsed = parseLine(line);
-    if (!parsed) continue;
-    const [key, value] = parsed;
-    // Never override variables already set by the shell / Docker env_file.
-    if (process.env[key] === undefined) {
-      process.env[key] = value;
-      loaded += 1;
-    }
-  }
-  console.log(`[selfhost] .env yüklendi (${loaded} değişken eklendi).`);
-} else {
-  console.warn("[selfhost] .env bulunamadı; yalnızca ortam değişkenleri kullanılacak.");
-}
+normalizeEnv(process.env);
+
+console.log(
+  "[selfhost] Supabase env:",
+  JSON.stringify({
+    SUPABASE_URL: process.env.SUPABASE_URL ? "set" : "missing",
+    SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY ? "set" : "missing",
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? "set" : "missing",
+  }),
+);
 
 const entry = resolve(process.cwd(), ".output/server/index.mjs");
 if (!existsSync(entry)) {
