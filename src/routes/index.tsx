@@ -5,6 +5,7 @@ import { Search, Plus, SlidersHorizontal, X, PackageSearch, Phone, MessageCircle
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { homePublicRpc } from "@/lib/home-public-rpc";
+import { primePlatformStats } from "@/lib/platform-stats";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
@@ -45,12 +46,27 @@ import { useVehicleSuggest } from "@/lib/use-vehicle-suggest";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    try {
-      const { getHomeSeoBlocks } = await import("@/lib/seo-blocks.functions");
-      return await getHomeSeoBlocks();
-    } catch {
-      return null;
-    }
+    // Public SSR verisi — service-role gerektirmez (getServerReadClient).
+    const [seo, bootstrap] = await Promise.all([
+      (async () => {
+        try {
+          const { getHomeSeoBlocks } = await import("@/lib/seo-blocks.functions");
+          return await getHomeSeoBlocks();
+        } catch {
+          return null;
+        }
+      })(),
+      (async () => {
+        try {
+          const { getHomeBootstrap } = await import("@/lib/home-public.functions");
+          const res = await getHomeBootstrap({ data: { vehicleClass: "automobile", limit: 24 } });
+          return res?.json ? (JSON.parse(res.json) as HomeBootstrap) : null;
+        } catch {
+          return null;
+        }
+      })(),
+    ]);
+    return { seo, bootstrap };
   },
   head: () => ({
     meta: [
@@ -79,10 +95,18 @@ const CURRENT_YEAR = new Date().getFullYear();
 const PAGE_SIZE = 60;
 // Ana sayfa vitrini ilk yüklemede 24 farklı ürün getirir.
 const HOME_PAGE_SIZE = 24;
+type HomeBootstrap = {
+  vehicleClass: string;
+  stats: Record<string, unknown> | null;
+  feed: { items?: ShowcasePart[]; total?: number } | null;
+};
+
 type SearchPage = { rows: (Part & { seller_id: string })[]; hasMore: boolean; elapsedMs: string };
 
 function Index() {
-  const seoBlocks = Route.useLoaderData();
+  const loaderData = Route.useLoaderData();
+  const seoBlocks = loaderData?.seo ?? null;
+  const bootstrap = loaderData?.bootstrap ?? null;
   const { user } = useAuth();
   const [vc, setVc] = useState<VehicleClass>(() => {
     if (typeof window === "undefined") return "automobile";
@@ -133,8 +157,14 @@ function Index() {
     if (typeof window === "undefined") return "grid";
     return (localStorage.getItem("ts:view") as "grid" | "list") || "grid";
   });
-  const [showcase, setShowcase] = useState<{ items: ShowcasePart[]; total: number }>({ items: [], total: 0 });
-  const [showcaseLoading, setShowcaseLoading] = useState(true);
+  // SSR loader'ından gelen public veri — ilk boyamada boş/0 görünmesini engeller.
+  const ssrFeed = bootstrap?.vehicleClass === vc ? bootstrap?.feed : null;
+  const [showcase, setShowcase] = useState<{ items: ShowcasePart[]; total: number }>(() => ({
+    items: (ssrFeed?.items ?? []) as ShowcasePart[],
+    total: Number(ssrFeed?.total ?? 0),
+  }));
+  const [showcaseLoading, setShowcaseLoading] = useState(() => (ssrFeed?.items?.length ?? 0) === 0);
+  useState(() => primePlatformStats(bootstrap?.stats ?? null));
   const [showcaseMore, setShowcaseMore] = useState(false);
   const [showcasePage, setShowcasePage] = useState(0);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);

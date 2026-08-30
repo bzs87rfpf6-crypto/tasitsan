@@ -62,6 +62,15 @@ function normalize(raw: Record<string, unknown> | null): PlatformStats {
   };
 }
 
+/** SSR loader'ından gelen ham istatistikleri istemci önbelleğine yerleştirir. */
+export function primePlatformStats(raw: unknown): PlatformStats | null {
+  if (!raw || typeof raw !== "object") return null;
+  const stats = normalize(raw as Record<string, unknown>);
+  cache = { data: stats, t: Date.now() };
+  listeners.forEach((fn) => fn(stats));
+  return stats;
+}
+
 export async function fetchPlatformStats(force = false): Promise<PlatformStats | null> {
   if (!force && cache && Date.now() - cache.t < REFRESH_MS) return cache.data;
   if (inflight) return inflight;

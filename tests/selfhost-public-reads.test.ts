@@ -31,6 +31,16 @@ describe("self-host public read paths", () => {
     expect(read("src/components/home/LiveActivityFeed.tsx")).toContain('homePublicRpc<ActivityItem[]>("home_activity_feed"');
   });
 
+  it("ana sayfa loader'ı SSR public verisini service-role'süz çeker", () => {
+    const idx = read("src/routes/index.tsx");
+    expect(idx).toContain("getHomeBootstrap");
+    expect(idx).toContain("primePlatformStats");
+    const fn = read("src/lib/home-public.functions.ts");
+    expect(fn).toContain("export const getHomeBootstrap");
+    expect(fn).toContain('client.rpc("platform_stats")');
+    expect(fn).toContain('.rpc("home_new_feed"');
+  });
+
   it("sunucu fallback'i yalnızca izin verilen public RPC'leri çağırır", () => {
     const fn = read("src/lib/home-public.functions.ts");
     expect(fn).toContain('const PUBLIC_RPCS = ["platform_stats", "home_new_feed", "home_activity_feed"] as const;');

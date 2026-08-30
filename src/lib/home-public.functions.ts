@@ -32,3 +32,38 @@ export const callPublicHomeRpc = createServerFn({ method: "GET" })
     if (error) return { json: null };
     return { json: row == null ? null : JSON.stringify(row) };
   });
+
+const BootstrapSchema = z.object({
+  vehicleClass: z.enum(["automobile", "heavy_vehicle", "construction", "agriculture"]).optional(),
+  limit: z.number().int().min(1).max(60).optional(),
+});
+
+/**
+ * SSR başlangıç verisi: ana sayfa istatistikleri + yeni ürün vitrini.
+ * Service-role gerektirmez; `getServerReadClient()` service-role yoksa
+ * publishable key ile SECURITY DEFINER RPC'leri çağırır.
+ */
+export const getHomeBootstrap = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => BootstrapSchema.parse(d ?? {}))
+  .handler(async ({ data }): Promise<{ json: string | null }> => {
+    const { getServerReadClient } = await import("@/lib/supabase-admin.server");
+    const client = getServerReadClient() as unknown as {
+      rpc: (n: string, a?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+    } | null;
+    if (!client) return { json: null };
+    const vc = data.vehicleClass ?? "automobile";
+    const limit = data.limit ?? 24;
+    const [statsRes, feedRes] = await Promise.all([
+      client.rpc("platform_stats").catch(() => ({ data: null, error: true })),
+      client
+        .rpc("home_new_feed", { _vehicle_class: vc, _limit: limit, _offset: 0 })
+        .catch(() => ({ data: null, error: true })),
+    ]);
+    const payload = {
+      vehicleClass: vc,
+      stats: statsRes.error ? null : statsRes.data,
+      feed: feedRes.error ? null : feedRes.data,
+    };
+    return { json: JSON.stringify(payload) };
+  });
+
