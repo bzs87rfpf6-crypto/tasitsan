@@ -3,8 +3,7 @@ import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { addFavorite, removeFavorite } from "@/lib/favorites";
-import { supabase } from "@/integrations/supabase/client";
+import { addFavorite, removeFavorite, getMyFavoriteIds } from "@/lib/favorites";
 import { SignupPromptDialog } from "@/components/SignupPromptDialog";
 
 interface Props {
@@ -14,6 +13,34 @@ interface Props {
   className?: string;
 }
 
+// Aynı kullanıcı için bütün FavoriteButton örnekleri tek sorguyu paylaşır.
+let favoriteCacheUserId: string | null = null;
+let favoriteIdsCache: Set<string> | null = null;
+let favoriteIdsPromise: Promise<Set<string>> | null = null;
+
+function loadFavoriteIds(userId: string): Promise<Set<string>> {
+  if (favoriteCacheUserId !== userId) {
+    favoriteCacheUserId = userId;
+    favoriteIdsCache = null;
+    favoriteIdsPromise = null;
+  }
+
+  if (favoriteIdsCache) {
+    return Promise.resolve(favoriteIdsCache);
+  }
+
+  if (!favoriteIdsPromise) {
+    favoriteIdsPromise = getMyFavoriteIds(userId).then((ids) => {
+      favoriteIdsCache = ids;
+      return ids;
+    }).finally(() => {
+      favoriteIdsPromise = null;
+    });
+  }
+
+  return favoriteIdsPromise;
+}
+
 export function FavoriteButton({ partId, size = "md", variant = "overlay", className = "" }: Props) {
   const { user } = useAuth();
   const [fav, setFav] = useState(false);
@@ -21,12 +48,20 @@ export function FavoriteButton({ partId, size = "md", variant = "overlay", class
   const [promptOpen, setPromptOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) { setFav(false); return; }
+    if (!user) {
+      setFav(false);
+      return;
+    }
+
     let active = true;
-    supabase.from("favorites").select("part_id")
-      .eq("user_id", user.id).eq("part_id", partId).maybeSingle()
-      .then(({ data }) => { if (active) setFav(!!data); });
-    return () => { active = false; };
+
+    loadFavoriteIds(user.id).then((ids) => {
+      if (active) setFav(ids.has(partId));
+    });
+
+    return () => {
+      active = false;
+    };
   }, [user, partId]);
 
   const toggle = async (e: React.MouseEvent) => {
@@ -43,6 +78,12 @@ export function FavoriteButton({ partId, size = "md", variant = "overlay", class
     try {
       if (next) await addFavorite(user.id, partId);
       else await removeFavorite(user.id, partId);
+
+      if (favoriteCacheUserId === user.id && favoriteIdsCache) {
+        if (next) favoriteIdsCache.add(partId);
+        else favoriteIdsCache.delete(partId);
+      }
+
       toast.success(next ? "Favorilere eklendi" : "Favorilerden çıkarıldı");
     } catch (err: any) {
       setFav(!next);
