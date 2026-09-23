@@ -41,6 +41,9 @@ export function AppHeader({ subtitle: _subtitle }: { subtitle?: string }) {
           <div className="shrink-0"><UserNotificationsBell /></div>
         </div>
       </div>
+      <div className="w-full border-t border-gold/30 bg-gradient-to-r from-[#0a0a0a] via-[#14110e] to-[#0a0a0a] px-3 py-2 text-center text-xs sm:text-sm text-white/85">
+        Orijinal parça aramak için <span className="font-bold text-gold">OEM No</span> yazınız.
+      </div>
     </header>
   );
 }
