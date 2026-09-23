@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, Plus, SlidersHorizontal, X, PackageSearch, Phone, MessageCircle, BellPlus, ScanSearch, LayoutGrid, Rows, Clock, TrendingUp, Hash, Rocket, CheckCircle2, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getPublicSiteSettings } from "@/lib/public-site-settings";
 import { homePublicRpc } from "@/lib/home-public-rpc";
 import { primePlatformStats } from "@/lib/platform-stats";
 import { useAuth } from "@/hooks/use-auth";
@@ -317,10 +318,9 @@ function Index() {
 
 
   useEffect(() => {
-    supabase
-      .rpc("get_public_site_settings")
-      .maybeSingle()
-      .then(({ data }) => setContactPhone(((data as any)?.contact_phone as string) ?? ""));
+    getPublicSiteSettings()
+      .then((data) => setContactPhone((data.contact_phone as string) ?? ""))
+      .catch(() => setContactPhone(""));
   }, []);
 
   // If the user was bounced through /auth after clicking the "no-results" CTA,

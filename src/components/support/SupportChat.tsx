@@ -19,6 +19,7 @@ import { trackEvent, getSessionId } from "@/lib/analytics";
 import { toast } from "sonner";
 import { playNotificationSound, isSoundEnabled } from "@/lib/notification-sounds";
 import { supabase } from "@/integrations/supabase/client";
+import { getPublicSiteSettings } from "@/lib/public-site-settings";
 
 const LS_OPENED = "ts_support_opened_v1";
 const LS_WELCOMED = "ts_support_welcomed_v1";
@@ -47,8 +48,9 @@ export default function SupportChat() {
 
   // WhatsApp alternatifi (canlı sohbetin yerine geçmez).
   useEffect(() => {
-    supabase.rpc("get_public_site_settings").maybeSingle()
-      .then(({ data }) => setSupportPhone(((data as { contact_phone?: string } | null)?.contact_phone) ?? ""));
+    getPublicSiteSettings()
+      .then((data) => setSupportPhone((data.contact_phone as string) ?? ""))
+      .catch(() => setSupportPhone(""));
   }, []);
 
   useEffect(() => {

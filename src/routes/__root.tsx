@@ -17,6 +17,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/lib/cart";
 import { SiteFooter } from "@/components/SiteFooter";
+import { getPublicSiteSettings } from "@/lib/public-site-settings";
 
 const PwaLaunchDiagnostics = lazy(() => import("@/components/PwaLaunchDiagnostics").then((mod) => ({ default: mod.PwaLaunchDiagnostics })));
 const DeepLinkHandler = lazy(() => import("@/components/DeepLinkHandler").then((mod) => ({ default: mod.DeepLinkHandler })));
@@ -333,17 +334,17 @@ function RootComponent() {
 
     const analyticsPromise = import("@/lib/analytics").then(({ trackEvent, loadGa4, gaPageView }) => {
       let ga4Id: string | null = null;
-      import("@/integrations/supabase/client").then(({ supabase }) => {
-        supabase
-          .rpc("get_public_site_settings")
-          .maybeSingle()
-          .then(({ data }) => {
-            ga4Id = ((data as any)?.ga4_measurement_id as string | null) ?? null;
-            if (ga4Id) loadGa4(ga4Id);
-            trackEvent("page_view");
-            gaPageView(ga4Id, window.location.pathname);
-          });
-      });
+      getPublicSiteSettings()
+        .then((data) => {
+          ga4Id = (data.ga4_measurement_id as string | null) ?? null;
+          if (ga4Id) loadGa4(ga4Id);
+          trackEvent("page_view");
+          gaPageView(ga4Id, window.location.pathname);
+        })
+        .catch(() => {
+          trackEvent("page_view");
+          gaPageView(null, window.location.pathname);
+        });
 
       const unsub = router.subscribe("onResolved", () => {
         void timerPromise.then((startPageTimer) => startPageTimer?.());
