@@ -12,7 +12,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+
     steps:
       - name: Deploy to Taşıtsan server
         uses: appleboy/ssh-action@v1.2.0
@@ -23,18 +24,45 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           script_stop: true
           script: |
-            set -e
-            cd "${{ secrets.DEPLOY_PATH }}"
-            git fetch origin main
-            git checkout main
-            git reset --hard origin/main
-            if [ -f package-lock.json ]; then npm ci; else npm install; fi
-            npm run build
-            if command -v pm2 >/dev/null 2>&1; then
-              pm2 reload all --update-env
-            elif [ -f docker-compose.yml ] || [ -f compose.yml ] || [ -f compose.yaml ]; then
-              docker compose up -d --build
-            else
-              echo "No supported restart method found (pm2/docker compose)."
+            set -euo pipefail
+
+            REPO_DIR="${{ secrets.DEPLOY_PATH }}"
+            APP_LINK="/opt/tasitsan/tasitsan"
+            RELEASES_DIR="/opt/tasitsan/releases"
+            INCOMING="/opt/tasitsan/incoming-$(date +%Y%m%d-%H%M%S)"
+
+            cleanup() {
+              rm -rf "$INCOMING"
+            }
+            trap cleanup EXIT
+
+            echo "==> Güncel kaynak hazırlanıyor"
+            mkdir -p "$INCOMING"
+
+            git -C "$REPO_DIR" fetch origin main
+
+            git -C "$REPO_DIR" archive origin/main \
+              | tar -x -C "$INCOMING"
+
+            echo "==> Production .env aktarılıyor"
+            cp "$APP_LINK/.env" "$INCOMING/.env"
+
+            test -f "$INCOMING/deploy/deploy-systemd.sh" || {
+              echo "HATA: deploy-systemd.sh bulunamadı"
               exit 1
-            fi
+            }
+
+            chmod +x "$INCOMING/deploy/deploy-systemd.sh"
+
+            echo "==> Safe release deploy başlıyor"
+
+            SOURCE_DIR="$INCOMING" \
+            APP_LINK="$APP_LINK" \
+            RELEASES_DIR="$RELEASES_DIR" \
+            SERVICE="tasitsan.service" \
+            HEALTH_URL="http://127.0.0.1:3000/api/public/health" \
+              bash "$INCOMING/deploy/deploy-systemd.sh"
+
+            echo "==> Production deploy tamamlandı"
+            echo "Current release:"
+            readlink -f "$APP_LINK"
