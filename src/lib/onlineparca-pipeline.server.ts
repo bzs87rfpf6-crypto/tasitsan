@@ -819,7 +819,16 @@ async function runPipelineInner(opts: {
   // 3) PRODUCT_MATCH — asla "ilk sonucu al" değil; öncelik sırasına göre eşleştir.
   const scored = rows
     .map((row) => ({ row, matchType: matchRow(row, oem, normalizedOem) }))
-    .sort((a, b) => MATCH_RANK[a.matchType] - MATCH_RANK[b.matchType]);
+    .sort((a, b) => {
+      const rank = MATCH_RANK[a.matchType] - MATCH_RANK[b.matchType];
+      if (rank !== 0) return rank;
+      // Aynı OEM eşleşme seviyesinde sepete eklenebilir/doğrulanmış satırı öne al.
+      const stock = Number(b.row.stock === "in_stock") - Number(a.row.stock === "in_stock");
+      if (stock !== 0) return stock;
+      const price = Number((b.row.actualPrice ?? b.row.listPrice) != null) - Number((a.row.actualPrice ?? a.row.listPrice) != null);
+      if (price !== 0) return price;
+      return Number(!!b.row.name) - Number(!!a.row.name);
+    });
   result.candidates = scored.map(({ row, matchType }) => ({
     url: row.url,
     name: row.name,
