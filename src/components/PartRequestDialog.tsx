@@ -62,22 +62,22 @@ export function PartRequestDialog({
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // Prefill from search context once dialog opens
-  const handleOpenChange = (v: boolean) => {
-    if (v) {
-      setForm((f) => ({
-        ...f,
-        part_name: f.part_name || initial.search_query || "",
-        brand: f.brand || initial.brand || "",
-        model: f.model || initial.model || "",
-        year: f.year || initial.year || "",
-        oem_code: f.oem_code || initial.oem || "",
-        category: f.category || initial.category || "",
-        urgency: initial.urgency ?? f.urgency,
-      }));
-    }
-    onOpenChange(v);
-  };
+  // Parent `open` prop ile dialogu açtığında da arama bağlamını forma taşı.
+  useEffect(() => {
+    if (!open) return;
+    setForm((f) => ({
+      ...f,
+      part_name: f.part_name || initial.search_query || "",
+      brand: f.brand || initial.brand || "",
+      model: f.model || initial.model || "",
+      year: f.year || initial.year || "",
+      oem_code: f.oem_code || initial.oem || "",
+      category: f.category || initial.category || "",
+      urgency: initial.urgency ?? f.urgency,
+    }));
+  }, [open, initial.search_query, initial.brand, initial.model, initial.year, initial.oem, initial.category, initial.urgency]);
+
+  const handleOpenChange = (v: boolean) => onOpenChange(v);
 
   // Stable blob URLs to prevent iOS memory exhaustion (which can force the
   // page to auto-reload after picking many photos).

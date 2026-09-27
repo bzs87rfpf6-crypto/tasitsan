@@ -108,7 +108,7 @@ function Index() {
   const loaderData = Route.useLoaderData();
   const seoBlocks = loaderData?.seo ?? null;
   const bootstrap = loaderData?.bootstrap ?? null;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [vc, setVc] = useState<VehicleClass>(() => {
     if (typeof window === "undefined") return "automobile";
     const saved = localStorage.getItem("ts:vc");
@@ -327,9 +327,10 @@ function Index() {
   // rehydrate the search context from sessionStorage and auto-open the request
   // dialog on their return. Fires once per URL visit.
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || authLoading) return;
     const url = new URL(window.location.href);
     if (url.searchParams.get("request") !== "1") return;
+    if (!user) return;
     try {
       const raw = sessionStorage.getItem("ts:pendingRequest");
       if (raw) {
@@ -343,15 +344,11 @@ function Index() {
       }
       sessionStorage.removeItem("ts:pendingRequest");
     } catch { /* ignore */ }
-    if (user) {
-      setRequestOpen(true);
-      trackEvent("no_results_request_opened", { source: "post_auth_redirect" });
-    }
-    // strip the flag from the URL so a refresh doesn't re-trigger
+    setRequestOpen(true);
+    trackEvent("no_results_request_opened", { source: "post_auth_redirect" });
     url.searchParams.delete("request");
     window.history.replaceState({}, "", url.pathname + (url.search ? url.search : "") + url.hash);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [authLoading, user?.id]);
 
   // Load recent searches from localStorage + popular from DB (once).
   useEffect(() => {
